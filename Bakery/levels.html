@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Bakery Levels - Bites of Control</title>
+
+
+  <style>
+
+    /* =====================================================
+       GENERAL
+    ===================================================== */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+
+    body {
+      width: 100vw;
+      min-height: 100vh;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      padding: 30px;
+
+      font-family: Arial, sans-serif;
+
+      background: #f8d3c2;
+    }
+
+
+    /* =====================================================
+       LEVEL PANEL
+    ===================================================== */
+
+    .levels-panel {
+      width: min(900px, 95%);
+
+      padding: 45px;
+
+      background:
+        rgba(255, 255, 255, 0.88);
+
+      border-radius: 40px;
+
+      text-align: center;
+    }
+
+
+    /* =====================================================
+       TITLE
+    ===================================================== */
+
+    h1 {
+      margin-bottom: 35px;
+
+      color: #e83f78;
+
+      font-size:
+        clamp(
+          38px,
+          6vw,
+          70px
+        );
+    }
+
+
+    /* =====================================================
+       LEVEL GRID
+    ===================================================== */
+
+    .levels-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0, 1fr)
+        );
+
+      gap: 20px;
+    }
+
+
+    /* =====================================================
+       LEVEL CARDS
+    ===================================================== */
+
+    .level-card {
+      min-height: 160px;
+
+      padding: 25px;
+
+      border: none;
+      border-radius: 25px;
+
+      background: #ffd65a;
+
+      color: #703249;
+
+      cursor: pointer;
+
+      box-shadow:
+        0 6px 0 #d8a92e;
+
+      font-size: 20px;
+      font-weight: bold;
+
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+
+    .level-card:hover {
+      transform:
+        translateY(-3px);
+    }
+
+
+    .level-card:active {
+      transform:
+        translateY(3px);
+
+      box-shadow:
+        0 3px 0 #d8a92e;
+    }
+
+
+    .level-card span {
+      display: block;
+
+      margin-top: 10px;
+
+      font-size: 14px;
+      font-weight: normal;
+    }
+
+
+    /* =====================================================
+       LOCKED LEVELS
+    ===================================================== */
+
+    .level-card.locked {
+      opacity: 0.55;
+
+      cursor: not-allowed;
+
+      background: #ddd;
+
+      box-shadow:
+        0 6px 0 #aaa;
+    }
+
+
+    .level-card.locked:hover {
+      transform: none;
+    }
+
+
+    /* =====================================================
+       BACK BUTTON
+    ===================================================== */
+
+    .back-button {
+      margin-top: 35px;
+
+      padding:
+        12px 28px;
+
+      border: none;
+      border-radius: 25px;
+
+      background: #e83f78;
+
+      color: white;
+
+      font-size: 17px;
+      font-weight: bold;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.15s ease;
+    }
+
+
+    .back-button:hover {
+      transform:
+        translateY(-2px);
+    }
+
+
+    .back-button:active {
+      transform:
+        translateY(2px);
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 700px) {
+
+      body {
+        padding: 20px;
+      }
+
+
+      .levels-panel {
+        width: 100%;
+
+        padding:
+          35px 20px;
+
+        border-radius: 30px;
+      }
+
+
+      .levels-grid {
+        grid-template-columns: 1fr;
+      }
+
+
+      .level-card {
+        min-height: 130px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <div class="levels-panel">
+
+
+    <!-- =================================================
+         TITLE
+    ================================================== -->
+
+    <h1>
+      Bakery Levels
+    </h1>
+
+
+    <!-- =================================================
+         LEVELS
+    ================================================== -->
+
+    <div class="levels-grid">
+
+
+      <!-- LEVEL 1 -->
+
+      <button
+        class="level-card"
+        type="button"
+        onclick="openKitchen()"
+      >
+
+        Level 1
+
+        <span>
+          Kitchen Puzzle
+        </span>
+
+      </button>
+
+
+      <!-- LEVEL 2 -->
+
+      <button
+        class="level-card"
+        type="button"
+        onclick="openLabels()"
+      >
+
+        Level 2
+
+        <span>
+          Labels
+        </span>
+
+      </button>
+
+
+      <!-- LEVEL 3 -->
+
+      <button
+        class="level-card locked"
+        type="button"
+        disabled
+      >
+
+        Level 3
+
+        <span>
+          Locked
+        </span>
+
+      </button>
+
+
+      <!-- LEVEL 4 -->
+
+      <button
+        class="level-card locked"
+        type="button"
+        disabled
+      >
+
+        Level 4
+
+        <span>
+          Locked
+        </span>
+
+      </button>
+
+
+    </div>
+
+
+    <!-- =================================================
+         BACK
+    ================================================== -->
+
+    <button
+      class="back-button"
+      type="button"
+      onclick="goBack()"
+    >
+
+      ← Back
+
+    </button>
+
+
+  </div>
+
+
+  <script>
+
+    /* =====================================================
+       LEVEL 1 — KITCHEN PUZZLE
+    ===================================================== */
+
+    function openKitchen() {
+
+      window.location.href =
+        "Kitchen/index.html";
+
+    }
+
+
+    /* =====================================================
+       LEVEL 2 — LABELS
+    ===================================================== */
+
+    function openLabels() {
+
+      window.location.href =
+        "Labels/index.html";
+
+    }
+
+
+    /* =====================================================
+       BACK TO BAKERY INTRO
+    ===================================================== */
+
+    function goBack() {
+
+      window.location.href =
+        "index.html";
+
+    }
+
+  </script>
+
+
+</body>
+
+</html>

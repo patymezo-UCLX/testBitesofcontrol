@@ -1,0 +1,7997 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, user-scalable=no"
+>
+
+<title>Bites of Control</title>
+
+<style>
+
+/* =========================================================
+   OPTIONAL CUSTOM FONT
+
+   When you choose your font, place the .woff2 file in:
+   Intro/fonts/
+
+   Then uncomment this block and replace the file/name.
+
+@font-face {
+  font-family: "BOCFont";
+  src: url("Intro/fonts/your-font.woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+========================================================= */
+
+
+/* =========================================================
+   GENERAL
+========================================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  background: #000;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  touch-action: none;
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   GAME CANVAS
+========================================================= */
+
+#game-canvas {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+}
+
+
+/* =========================================================
+   LOADING + GAME INTRO
+========================================================= */
+
+#loading,
+#cover-screen,
+#intro-screen {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#loading {
+  z-index: 9999;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  background: #ffad27;
+  color: white;
+}
+
+.loading-logo {
+  width: clamp(180px, 22vw, 320px);
+  height: auto;
+  margin-bottom: 52px;
+  animation: loadingLogoFloat 1.8s ease-in-out infinite;
+}
+
+.loading-title {
+  margin-bottom: 44px;
+
+  color: #f13b91;
+
+  font-size: clamp(30px, 5vw, 58px);
+  font-weight: 1000;
+  letter-spacing: 1px;
+
+  text-shadow:
+    0 4px 0 #a82b68,
+    0 6px 0 rgba(255,255,255,0.18);
+
+  animation: loadingPulse 0.8s ease-in-out infinite alternate;
+}
+
+.loading-dots {
+  position: relative;
+  width: 90px;
+  height: 90px;
+
+  animation: rotateLoading 1.35s linear infinite;
+}
+
+.loading-dots span {
+  position: absolute;
+
+  width: 28px;
+  height: 28px;
+
+  border-radius: 50%;
+
+  box-shadow: 0 4px 5px rgba(89, 62, 22, 0.22);
+}
+
+.loading-dots span:nth-child(1) {
+  top: 0;
+  left: 31px;
+  background: #d63a90;
+}
+
+.loading-dots span:nth-child(2) {
+  top: 31px;
+  right: 0;
+  background: #8fa43d;
+}
+
+.loading-dots span:nth-child(3) {
+  bottom: 0;
+  left: 31px;
+  background: #d63a90;
+}
+
+.loading-dots span:nth-child(4) {
+  top: 31px;
+  left: 0;
+  background: #8fa43d;
+}
+
+@keyframes rotateLoading {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes loadingPulse {
+  from {
+    transform: scale(1);
+    opacity: 0.82;
+  }
+
+  to {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes loadingLogoFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+
+/* =========================================================
+   COVER / START SCREEN
+========================================================= */
+
+#cover-screen {
+  z-index: 9400;
+
+  display: none;
+
+  overflow: hidden;
+
+  background-image: url("Intro/Cover_desktop_Bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.cover-logo {
+  position: absolute;
+
+  top: clamp(24px, 5vh, 62px);
+  left: clamp(24px, 6vw, 90px);
+
+  width: clamp(180px, 20vw, 320px);
+  height: auto;
+
+  filter: drop-shadow(0 8px 6px rgba(97, 46, 18, 0.18));
+}
+
+.cover-settings {
+  position: absolute;
+
+  top: 28px;
+  right: 32px;
+
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 4px solid #f6bd45;
+  border-radius: 50%;
+
+  background: #d83a8f;
+  color: white;
+
+  font-size: 26px;
+  font-weight: 900;
+
+  box-shadow: 0 4px 0 #98305e;
+}
+
+.cover-actions {
+  position: absolute;
+
+  left: 50%;
+  bottom: clamp(28px, 6vh, 74px);
+
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 18px;
+
+  width: min(620px, 90vw);
+}
+
+.game-pink-button {
+  min-width: 170px;
+
+  padding: 12px 28px;
+
+  border: 3px solid #f6bc45;
+  border-radius: 28px;
+
+  background: #d63a90;
+  color: white;
+
+  font-size: 18px;
+  font-weight: 900;
+
+  box-shadow: 0 5px 0 #8f2d60;
+
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.game-pink-button:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.game-pink-button:active {
+  transform: translateY(2px) scale(0.97);
+}
+
+.game-pink-button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
+/* =========================================================
+   MELI INTRO
+========================================================= */
+
+#intro-screen {
+  z-index: 9300;
+
+  display: none;
+
+  overflow: hidden;
+
+  background-image:
+    linear-gradient(rgba(51, 61, 13, 0.27), rgba(51, 61, 13, 0.27)),
+    url("Intro/map.png");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.intro-logo {
+  position: absolute;
+
+  top: 24px;
+  left: 28px;
+
+  width: clamp(120px, 14vw, 215px);
+  height: auto;
+
+  z-index: 3;
+}
+
+.intro-dialogue-panel {
+  position: absolute;
+
+  left: 50%;
+  top: 49%;
+
+  transform: translate(-50%, -50%);
+
+  width: min(760px, 78vw);
+  min-height: 390px;
+
+  padding:
+    54px
+    70px
+    120px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  border-radius: 44px;
+
+  background: rgba(238, 133, 13, 0.84);
+
+  color: white;
+
+  box-shadow: 0 18px 40px rgba(87, 57, 8, 0.16);
+}
+
+.intro-step {
+  display: none;
+
+  width: 100%;
+}
+
+.intro-step.active {
+  display: block;
+}
+
+.intro-step h2 {
+  margin-bottom: 30px;
+
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 1000;
+  line-height: 0.98;
+}
+
+.intro-step p {
+  max-width: 650px;
+  margin: 0 auto 24px;
+
+  font-size: clamp(15px, 1.6vw, 19px);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.player-name-input {
+  display: block;
+
+  width: min(380px, 82%);
+  height: 52px;
+
+  margin: 8px auto 22px;
+  padding: 0 18px;
+
+  border: 4px solid #f6bd45;
+  border-radius: 20px;
+
+  outline: none;
+
+  background: rgba(255,255,255,0.96);
+
+  color: #71334a;
+
+  font-size: 18px;
+  font-weight: 800;
+
+  text-align: center;
+
+  box-shadow: 0 5px 0 rgba(135, 73, 31, 0.28);
+}
+
+.player-name-input:focus {
+  border-color: #d63a90;
+}
+
+.intro-meli {
+  position: absolute;
+
+  z-index: 4;
+
+  left: 50%;
+  bottom: clamp(34px, 5vh, 70px);
+
+  transform: translateX(-50%);
+
+  height: clamp(150px, 25vh, 250px);
+  width: auto;
+
+  pointer-events: none;
+
+  filter: drop-shadow(0 8px 5px rgba(73, 70, 17, 0.16));
+}
+
+.intro-skip {
+  position: absolute;
+
+  right: 32px;
+  bottom: 30px;
+
+  z-index: 5;
+}
+
+.intro-final-button {
+  margin-top: 55px;
+}
+
+
+/* =========================================================
+   INTRO RESPONSIVE
+========================================================= */
+
+@media (orientation: portrait) {
+
+  #cover-screen {
+    background-image: url("Intro/Cover_mobile_Bg.jpg");
+    background-position: center top;
+  }
+
+  .cover-logo {
+    display: block;
+
+    top: 34px;
+    left: 50%;
+
+    width: min(62vw, 285px);
+
+    transform: translateX(-50%);
+
+    z-index: 3;
+  }
+
+  .cover-actions {
+    bottom: max(30px, 6vh);
+
+    flex-direction: column;
+
+    gap: 12px;
+  }
+
+  .game-pink-button {
+    min-width: min(250px, 72vw);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .cover-settings {
+    top: 16px;
+    right: 16px;
+
+    width: 46px;
+    height: 46px;
+
+    border-width: 3px;
+
+    font-size: 22px;
+  }
+
+  .intro-logo {
+    top: 15px;
+    left: 15px;
+
+    width: 125px;
+  }
+
+  .intro-dialogue-panel {
+    top: 46%;
+
+    width: 90vw;
+    min-height: 370px;
+
+    padding:
+      38px
+      24px
+      118px;
+
+    border-radius: 32px;
+  }
+
+  .intro-step h2 {
+    margin-bottom: 22px;
+  }
+
+  .intro-step p {
+    font-size: 14px;
+  }
+
+  .intro-meli {
+    bottom: 44px;
+
+    height: clamp(135px, 22vh, 205px);
+  }
+
+  .intro-skip {
+    right: 16px;
+    bottom: 15px;
+
+    min-width: auto;
+
+    padding: 10px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .intro-dialogue-panel {
+    top: 45%;
+
+    min-height: 350px;
+  }
+
+  .intro-step h2 {
+    font-size: 28px;
+  }
+
+  .player-name-input {
+    width: 92%;
+  }
+
+  .intro-meli {
+    height: 140px;
+  }
+}
+
+
+/* =========================================================
+   LOCATION PROMPTS
+========================================================= */
+
+.location-prompt {
+  position: fixed;
+
+  left: 50%;
+  bottom: 70px;
+
+  transform: translateX(-50%);
+
+  display: none;
+
+  padding: 13px 24px;
+
+  background: rgba(123, 45, 84, 0.92);
+
+  border: 3px solid #f6ba44;
+  border-radius: 18px;
+
+  color: white;
+
+  font-size: 16px;
+  font-weight: 800;
+
+  box-shadow:
+    0 5px 0
+    rgba(87, 34, 55, 0.45);
+
+  z-index: 700;
+
+  pointer-events: none;
+
+  white-space: nowrap;
+}
+
+.location-prompt .key {
+  display: inline-block;
+
+  min-width: 30px;
+
+  margin: 0 5px;
+
+  padding: 3px 8px;
+
+  border-radius: 7px;
+
+  background: white;
+
+  color: #7b2d54;
+}
+
+
+/* =========================================================
+   COLLAPSIBLE BOTTOM MENU WRAPPER
+========================================================= */
+
+#menu-wrapper {
+  position: fixed;
+
+  left: 50%;
+  bottom: 8px;
+
+  transform: translateX(-50%);
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  z-index: 650;
+}
+
+
+/* =========================================================
+   MENU TOGGLE
+========================================================= */
+
+#menu-toggle {
+  position: relative;
+
+  z-index: 5;
+
+  width: 52px;
+  height: 38px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 3px solid #f7b83c;
+
+  border-radius: 18px 18px 22px 22px;
+
+  background: #d83a8f;
+
+  color: white;
+
+  font-size: 20px;
+  font-weight: 900;
+
+  box-shadow:
+    0 4px 0 #98305e;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease;
+}
+
+#menu-toggle:hover {
+  transform: scale(1.06);
+}
+
+#menu-toggle:active {
+  transform: scale(0.94);
+}
+
+
+/* =========================================================
+   BOTTOM MENU
+========================================================= */
+
+#bottom-menu {
+  position: absolute;
+
+  left: 50%;
+  bottom: 44px;
+
+  transform:
+    translateX(-50%);
+
+  width: min(570px, 88vw);
+
+  min-height: 88px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 28px;
+
+  padding:
+    11px 32px;
+
+  background-image:
+    url("Menu/bottom_bar.png");
+
+  background-size:
+    100% 100%;
+
+  background-repeat:
+    no-repeat;
+
+  background-position:
+    center;
+
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease,
+    visibility 0.22s ease;
+}
+
+
+/* MENU CLOSED */
+
+#bottom-menu.menu-closed {
+  opacity: 0;
+
+  visibility: hidden;
+
+  pointer-events: none;
+
+  transform:
+    translateX(-50%)
+    translateY(20px)
+    scale(0.93);
+}
+
+
+/* MENU OPEN */
+
+#bottom-menu.menu-open {
+  opacity: 1;
+
+  visibility: visible;
+
+  pointer-events: auto;
+
+  transform:
+    translateX(-50%)
+    translateY(0)
+    scale(1);
+}
+
+
+/* =========================================================
+   MENU ICONS
+========================================================= */
+
+.menu-icon-button {
+  flex: 0 0 auto;
+
+  width: 78px;
+  height: 70px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease;
+}
+
+.menu-icon-button img {
+  display: block;
+
+  max-width: 100%;
+  max-height: 100%;
+
+  object-fit: contain;
+
+  pointer-events: none;
+}
+
+.menu-icon-button:hover {
+  transform:
+    translateY(-4px)
+    scale(1.06);
+}
+
+.menu-icon-button:active {
+  transform:
+    translateY(1px)
+    scale(0.94);
+}
+
+
+/* =========================================================
+   MOBILE ENTER BUTTONS
+========================================================= */
+
+.mobile-enter-button {
+  position: fixed;
+
+  right: 20px;
+  bottom: 25px;
+
+  display: none;
+
+  min-height: 50px;
+
+  padding: 0 20px;
+
+  border: 3px solid #f7b83c;
+
+  border-radius: 25px;
+
+  background: #d33b91;
+
+  color: white;
+
+  font-weight: 800;
+  font-size: 15px;
+
+  z-index: 720;
+
+  box-shadow:
+    0 5px 0 #8e275f;
+}
+
+
+/* =========================================================
+   MOBILE D-PAD
+========================================================= */
+
+#dpad {
+  display: none;
+
+  position: fixed;
+
+  bottom: 20px;
+  left: 25px;
+
+  width: 150px;
+  height: 150px;
+
+  opacity: 0.65;
+
+  z-index: 640;
+}
+
+#dpad .btn {
+  position: absolute;
+
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background:
+    rgba(255,255,255,0.88);
+
+  color: #333;
+
+  border:
+    2px solid
+    rgba(0,0,0,0.12);
+
+  border-radius: 13px;
+
+  font-size: 20px;
+
+  pointer-events: auto;
+}
+
+#dpad .btn.pressed {
+  transform: scale(0.88);
+
+  background: white;
+}
+
+#btn-up {
+  top: 0;
+  left: 52px;
+}
+
+#btn-down {
+  bottom: 0;
+  left: 52px;
+}
+
+#btn-left {
+  top: 52px;
+  left: 0;
+}
+
+#btn-right {
+  top: 52px;
+  right: 0;
+}
+
+
+
+/* =========================================================
+   PARK
+========================================================= */
+
+#park-screen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+  z-index: 1000;
+
+  background-image: url("park/park_bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+
+/* =========================================================
+   PARK CONTROLS
+========================================================= */
+
+.park-top-controls {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  z-index: 120;
+}
+
+.round-btn {
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 4px solid #f5b444;
+  border-radius: 50%;
+
+  background: #d83a8f;
+  color: white;
+
+  font-size: 28px;
+  font-weight: 900;
+
+  box-shadow: 0 4px 0 #98305e;
+}
+
+
+/* =========================================================
+   PARK SCENE
+========================================================= */
+
+#park-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+.park-object {
+  position: absolute;
+
+  border: 0;
+  padding: 0;
+  background: transparent;
+
+  cursor: pointer;
+
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease;
+}
+
+.park-object img {
+  display: block;
+  width: 100%;
+  height: auto;
+
+  pointer-events: none;
+
+  filter:
+    drop-shadow(0 7px 4px rgba(73, 70, 17, 0.18));
+}
+
+.park-object:hover {
+  transform:
+    translate(-50%, -50%)
+    scale(1.08);
+}
+
+.park-object:active {
+  transform:
+    translate(-50%, -50%)
+    scale(0.96);
+}
+
+/*
+  POSITIONS
+  Change only these values later if you want
+  to move an object around the Park.
+*/
+
+#park-recorder {
+  left: 31%;
+  top: 57%;
+  width: clamp(88px, 10vw, 155px);
+}
+
+#park-headphones {
+  left: 44%;
+  top: 66%;
+  width: clamp(100px, 11vw, 175px);
+}
+
+#park-binoculars {
+  left: 58%;
+  top: 66%;
+  width: clamp(105px, 12vw, 185px);
+}
+
+#park-fidget {
+  left: 70%;
+  top: 56%;
+  width: clamp(88px, 9vw, 145px);
+}
+
+
+/* =========================================================
+   PARK INTRO
+========================================================= */
+
+#park-intro-overlay {
+  position: absolute;
+  inset: 0;
+
+  z-index: 80;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  padding: 60px 24px 70px;
+
+  background: rgba(68, 76, 22, 0.40);
+}
+
+.park-intro-content {
+  width: min(850px, 90vw);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
+.park-description {
+  margin-bottom: 24px;
+
+  color: white;
+
+  font-size: clamp(17px, 1.8vw, 24px);
+  font-weight: 900;
+  line-height: 1.35;
+
+  text-shadow:
+    0 2px 5px rgba(70, 45, 25, 0.38);
+}
+
+.explore-btn {
+  min-width: 170px;
+
+  padding: 12px 34px;
+
+  border: 3px solid #f4b243;
+  border-radius: 30px;
+
+  background: #d63a90;
+  color: white;
+
+  box-shadow: 0 5px 0 #932b62;
+
+  font-size: 19px;
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   PARK CATEGORY PANEL
+========================================================= */
+
+#park-category-view {
+  position: absolute;
+  inset: 0;
+
+  z-index: 90;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 78px 24px 32px;
+
+  background: rgba(57, 65, 16, 0.28);
+}
+
+.park-category-panel {
+  width: min(760px, 90vw);
+  max-height: min(650px, 78vh);
+  overflow-y: auto;
+
+  padding: 34px;
+
+  border-radius: 34px;
+
+  background: rgba(247, 221, 84, 0.94);
+
+  color: #71334a;
+
+  box-shadow:
+    0 14px 35px rgba(69, 49, 15, 0.22);
+}
+
+.park-category-title {
+  margin-bottom: 8px;
+
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 900;
+}
+
+.park-category-subtitle {
+  margin-bottom: 24px;
+
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.park-activity-list {
+  display: grid;
+  gap: 14px;
+}
+
+.park-activity-item {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 18px 20px;
+
+  border: 0;
+  border-radius: 20px;
+
+  background: #b8d50d;
+  color: #66304a;
+
+  text-align: left;
+
+  box-shadow:
+    0 5px 0 rgba(100, 126, 0, 0.35);
+}
+
+.park-activity-item:hover {
+  transform: translateY(-2px);
+}
+
+.park-activity-item strong {
+  display: block;
+
+  margin-bottom: 5px;
+
+  font-size: 18px;
+}
+
+.park-activity-item span {
+  font-size: 13px;
+  opacity: 0.86;
+}
+
+.park-activity-arrow {
+  flex: 0 0 auto;
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 3px solid #f4b243;
+  border-radius: 50%;
+
+  background: #d63a90;
+  color: white;
+
+  font-size: 25px;
+  font-weight: 900;
+
+  box-shadow: 0 4px 0 #932b62;
+}
+
+
+/* =========================================================
+   PARK ACTIVITY DETAIL
+========================================================= */
+
+#park-activity-view {
+  position: absolute;
+  inset: 0;
+
+  z-index: 100;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 78px 24px 32px;
+
+  background: rgba(57, 65, 16, 0.28);
+}
+
+.park-activity-panel {
+  width: min(620px, 90vw);
+
+  padding: 32px;
+
+  border-radius: 32px;
+
+  background: #ffbd29;
+  color: #71334a;
+
+  box-shadow:
+    0 14px 35px rgba(69, 49, 15, 0.22);
+}
+
+.park-activity-panel h2 {
+  margin-bottom: 10px;
+
+  font-size: clamp(27px, 4vw, 42px);
+}
+
+.park-activity-panel p {
+  margin-bottom: 10px;
+
+  line-height: 1.45;
+}
+
+.park-duration {
+  display: block;
+
+  margin: 12px 0 20px;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   AUDIO PLAYER
+========================================================= */
+
+#audio-player {
+  display: none;
+
+  margin-top: 20px;
+}
+
+.audio-controls {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  margin-bottom: 14px;
+}
+
+#audio-play-button {
+  width: 58px;
+  height: 58px;
+
+  flex: 0 0 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 3px solid #f4b243;
+  border-radius: 50%;
+
+  background: #d63a90;
+  color: white;
+
+  font-size: 23px;
+  font-weight: 900;
+
+  box-shadow: 0 4px 0 #932b62;
+}
+
+.audio-time {
+  min-width: 92px;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#audio-progress {
+  width: 100%;
+
+  accent-color: #d63a90;
+}
+
+.audio-label {
+  margin-top: 10px;
+
+  font-size: 13px;
+
+  opacity: 0.75;
+}
+
+.back-btn {
+  margin-top: 22px;
+
+  padding: 10px 24px;
+
+  border: 0;
+  border-radius: 22px;
+
+  background: #d63a90;
+  color: white;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   PARK RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .park-top-controls {
+    top: 14px;
+    right: 14px;
+  }
+
+  .round-btn {
+    width: 45px;
+    height: 45px;
+
+    border-width: 3px;
+
+    font-size: 24px;
+  }
+
+  #park-recorder {
+    left: 29%;
+    top: 58%;
+    width: clamp(70px, 16vw, 112px);
+  }
+
+  #park-headphones {
+    left: 43%;
+    top: 68%;
+    width: clamp(76px, 17vw, 120px);
+  }
+
+  #park-binoculars {
+    left: 59%;
+    top: 68%;
+    width: clamp(78px, 18vw, 128px);
+  }
+
+  #park-fidget {
+    left: 72%;
+    top: 58%;
+    width: clamp(68px, 15vw, 105px);
+  }
+
+  #park-intro-overlay {
+    padding:
+      70px 18px 45px;
+  }
+
+  .park-category-panel,
+  .park-activity-panel {
+    padding: 24px;
+    border-radius: 26px;
+  }
+
+}
+
+
+@media (max-width: 480px) {
+
+  #park-screen {
+    background-position: center;
+  }
+
+  #park-recorder {
+    left: 24%;
+    top: 59%;
+  }
+
+  #park-headphones {
+    left: 42%;
+    top: 69%;
+  }
+
+  #park-binoculars {
+    left: 61%;
+    top: 69%;
+  }
+
+  #park-fidget {
+    left: 79%;
+    top: 59%;
+  }
+
+  .park-description {
+    font-size: 16px;
+  }
+
+  .park-activity-item {
+    padding: 15px;
+  }
+
+}
+
+/* =========================================================
+   TABLET + MOBILE
+========================================================= */
+
+@media
+(pointer: coarse),
+(max-width: 768px) {
+
+  #menu-wrapper {
+    bottom: 7px;
+  }
+
+  #menu-toggle {
+    width: 48px;
+    height: 36px;
+
+    font-size: 18px;
+  }
+
+  #bottom-menu {
+    bottom: 42px;
+
+    width:
+      min(
+        94vw,
+        450px
+      );
+
+    min-height: 78px;
+
+    gap: 10px;
+
+    padding:
+      10px 15px;
+  }
+
+  .menu-icon-button {
+    width:
+      min(
+        19vw,
+        70px
+      );
+
+    height: 62px;
+  }
+
+  #dpad {
+    display: block;
+
+    bottom: 18px;
+  }
+
+  .location-prompt {
+    display:
+      none !important;
+  }
+
+  .mobile-enter-button {
+    bottom: 25px;
+  }
+
+  .park-view {
+    min-height: 100%;
+
+    padding:
+      75px 18px 30px;
+  }
+
+  .park-top-controls {
+    top: 15px;
+    right: 15px;
+
+    gap: 8px;
+  }
+
+  .round-btn {
+    width: 45px;
+    height: 45px;
+
+    font-size: 24px;
+
+    border-width: 3px;
+  }
+
+  .park-panel {
+    width: 100%;
+
+    min-height: auto;
+
+    padding:
+      55px 25px;
+
+    border-radius: 40px;
+  }
+
+  .park-logo {
+    width:
+      min(
+        240px,
+        70%
+      );
+
+    margin-bottom: 45px;
+  }
+
+  .park-description {
+    margin-bottom: 40px;
+
+    font-size: 16px;
+  }
+
+  .menu-panel {
+    width: 100%;
+
+    margin-top: 30px;
+
+    padding:
+      45px 18px 28px;
+
+    border-radius: 35px;
+  }
+
+  .menu-logo {
+    width:
+      min(
+        220px,
+        70%
+      );
+
+    margin:
+      -75px auto 25px;
+  }
+
+  .activity-grid {
+    grid-template-columns:
+      1fr;
+
+    gap: 13px;
+  }
+
+  .activity-card {
+    grid-template-columns:
+      105px 1fr;
+
+    min-height: 120px;
+
+    gap: 14px;
+
+    padding: 11px;
+  }
+
+  .activity-card img {
+    width: 105px;
+  }
+
+  .activity-detail-panel {
+    width: 100%;
+
+    grid-template-columns:
+      1fr;
+
+    padding: 25px;
+
+    border-radius: 30px;
+  }
+
+  .activity-detail-panel > img {
+    max-width: 300px;
+
+    margin: 0 auto;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+  #menu-toggle {
+    width: 44px;
+    height: 33px;
+
+    font-size: 17px;
+  }
+
+  #bottom-menu {
+    bottom: 39px;
+
+    width: 96vw;
+
+    min-height: 72px;
+
+    gap: 4px;
+
+    padding:
+      8px 8px;
+  }
+
+  .menu-icon-button {
+    width: 21vw;
+
+    max-width: 64px;
+
+    height: 56px;
+  }
+
+  #dpad {
+    left: 12px;
+    bottom: 14px;
+
+    transform:
+      scale(0.78);
+
+    transform-origin:
+      bottom left;
+  }
+
+  .mobile-enter-button {
+    right: 12px;
+    bottom: 18px;
+  }
+
+}
+
+
+
+/* The name field must behave like a normal text field. */
+.player-name-input {
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: manipulation;
+}
+
+
+
+/* =========================================================
+   INTRO TRANSITIONS + TYPEWRITER
+========================================================= */
+
+.intro-dialogue-panel {
+  opacity: 0;
+  transform: translate(-50%, -47%) scale(0.985);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease;
+}
+
+.intro-dialogue-panel.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.intro-meli {
+  opacity: 0;
+  transform:
+    translateX(-50%)
+    translateY(14px)
+    scale(0.985);
+
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+
+.intro-meli.show {
+  opacity: 1;
+  transform:
+    translateX(-50%)
+    translateY(0)
+    scale(1);
+}
+
+.intro-step {
+  opacity: 0;
+  transform: translateY(8px);
+
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.intro-step.active {
+  display: block;
+}
+
+.intro-step.step-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.intro-step .game-pink-button,
+.intro-step .player-name-input {
+  opacity: 0;
+  transform: translateY(6px);
+
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease;
+}
+
+.intro-step.controls-visible .game-pink-button,
+.intro-step.controls-visible .player-name-input {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.typewriter-line {
+  min-height: 1.2em;
+}
+
+.typewriter-cursor::after {
+  content: "▌";
+  display: inline-block;
+  margin-left: 2px;
+  animation: typewriterBlink 0.75s steps(1) infinite;
+}
+
+@keyframes typewriterBlink {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: 0; }
+}
+
+
+
+/* =========================================================
+   MAP EXIT BUTTON
+========================================================= */
+
+#map-exit-button {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+
+  z-index: 760;
+
+  width: 54px;
+  height: 54px;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  border: 4px solid #f5b444;
+  border-radius: 50%;
+
+  background: #d83a8f;
+  color: white;
+
+  font-size: 28px;
+  font-weight: 900;
+
+  box-shadow: 0 4px 0 #98305e;
+}
+
+#map-exit-button:hover {
+  transform: scale(1.05);
+}
+
+
+/* =========================================================
+   MODALS / COMING SOON
+========================================================= */
+
+.game-modal {
+  position: fixed;
+  inset: 0;
+
+  z-index: 12000;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(35, 26, 30, 0.42);
+
+  opacity: 0;
+
+  transition: opacity 0.25s ease;
+}
+
+.game-modal.visible {
+  display: flex;
+  opacity: 1;
+}
+
+.game-modal-card {
+  width: min(440px, 90vw);
+
+  padding: 30px 28px;
+
+  border-radius: 30px;
+
+  background: #f6a31b;
+  color: white;
+
+  text-align: center;
+
+  box-shadow: 0 14px 35px rgba(77, 47, 18, 0.25);
+
+  transform: translateY(10px) scale(0.98);
+
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.game-modal.visible .game-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.game-modal-card h3 {
+  margin-bottom: 12px;
+
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 900;
+}
+
+.game-modal-card p {
+  margin-bottom: 22px;
+
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+
+  flex-wrap: wrap;
+}
+
+.modal-secondary-button {
+  min-width: 120px;
+
+  padding: 11px 22px;
+
+  border: 3px solid rgba(255,255,255,0.72);
+  border-radius: 24px;
+
+  background: rgba(255,255,255,0.16);
+  color: white;
+
+  font-size: 16px;
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   SCREEN TRANSITION
+========================================================= */
+
+#screen-transition {
+  position: fixed;
+  inset: 0;
+
+  z-index: 11900;
+
+  pointer-events: none;
+
+  background: #f6a31b;
+
+  opacity: 0;
+
+  transition: opacity 0.32s ease;
+}
+
+#screen-transition.active {
+  opacity: 1;
+}
+
+
+/* =========================================================
+   PARK ENTRANCE TRANSITION
+========================================================= */
+
+#park-screen {
+  opacity: 0;
+
+  transition: opacity 0.42s ease;
+}
+
+#park-screen.park-visible {
+  opacity: 1;
+}
+
+#park-intro-overlay {
+  opacity: 0;
+
+  transition: opacity 0.35s ease;
+}
+
+#park-intro-overlay.visible {
+  opacity: 1;
+}
+
+.park-description.typewriter-cursor::after {
+  content: "▌";
+  display: inline-block;
+  margin-left: 2px;
+  animation: typewriterBlink 0.75s steps(1) infinite;
+}
+
+
+/* =========================================================
+   EXTRA LOCATION PROMPTS
+========================================================= */
+
+@media (max-width: 768px) {
+  #map-exit-button {
+    top: 14px;
+    right: 14px;
+
+    width: 45px;
+    height: 45px;
+
+    border-width: 3px;
+
+    font-size: 24px;
+  }
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- ======================================================
+     LOADING
+====================================================== -->
+
+<div id="loading">
+
+  <img
+    src="Intro/Logo_BOC.png"
+    class="loading-logo"
+    alt="Bites of Control">
+
+  <div class="loading-title">
+    LOADING...
+  </div>
+
+  <div
+    class="loading-dots"
+    aria-label="Loading">
+
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+
+  </div>
+
+</div>
+
+
+<!-- ======================================================
+     COVER
+====================================================== -->
+
+<section id="cover-screen">
+
+  <img
+    src="Intro/Logo_BOC.png"
+    class="cover-logo"
+    alt="Bites of Control">
+
+  <button
+    id="cover-settings"
+    type="button"
+    class="cover-settings"
+    aria-label="Settings">
+
+    ⚙
+
+  </button>
+
+  <div class="cover-actions">
+
+    <button
+      id="new-game-button"
+      type="button"
+      class="game-pink-button">
+
+      New Game
+
+    </button>
+
+    <button
+      id="resume-game-button"
+      type="button"
+      class="game-pink-button">
+
+      Resume
+
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ======================================================
+     MELI INTRO
+====================================================== -->
+
+<section id="intro-screen">
+
+  <img
+    src="Intro/Logo_BOC.png"
+    class="intro-logo"
+    alt="Bites of Control">
+
+  
+<div class="intro-dialogue-panel">
+
+    <!-- STEP 1 -->
+    <div
+      id="intro-step-1"
+      class="intro-step active">
+
+      <h2>
+        ¡Que alegría verte por aquí!
+      </h2>
+
+      <p>
+        Me llamo Meli, pero antes de empezar y
+        contarte sobre mi aventura...
+      </p>
+
+      <p>
+        Dime ¿Cómo te llamas?
+      </p>
+
+      <input
+        id="player-name-input"
+        class="player-name-input"
+        type="text"
+        maxlength="24"
+        autocomplete="off"
+        placeholder="Escribe tu nombre">
+
+      <button
+        id="intro-continue-button"
+        type="button"
+        class="game-pink-button">
+
+        Continuar
+
+      </button>
+
+    </div>
+
+
+    <!-- STEP 2 -->
+    <div
+      id="intro-step-2"
+      class="intro-step">
+
+      <h2 id="intro-greeting">
+        ¡Mucho gusto!
+      </h2>
+
+      <p>
+        ¿Sabes? Tengo un gran sueño:
+        <strong>abrir mi propia pastelería.</strong>
+      </p>
+
+      <p>
+        y al fin, encontré el lugar perfecto para hacerlo,
+        tengo muchas ideas y muchas ganas de lograrlo...
+        aunque a veces el camino puede sentirse un poquito complicado.
+      </p>
+
+      <button
+        id="intro-next-button"
+        type="button"
+        class="game-pink-button">
+
+        Siguiente
+
+      </button>
+
+    </div>
+
+
+    <!-- STEP 3 -->
+    <div
+      id="intro-step-3"
+      class="intro-step">
+
+      <h2>
+        Ahí es cuando aparece Anxi, te lo presento.. (IMAGEN DE ANXI)
+      </h2>
+
+      <p>
+       Siempre está conmigo y trata de protegerme cuando algo le parece incierto o peligroso.
+      </p>
+
+      <p>
+        <strong>Anxi no es malo</strong>,
+        solo que a veces se preocupa un poquito de más.
+      </p>
+
+      <button
+        id="intro-next-3-button"
+        type="button"
+        class="game-pink-button">
+
+        Siguiente
+
+      </button>
+
+    </div>
+
+
+    <!-- STEP 4 -->
+    <div
+      id="intro-step-4"
+      class="intro-step">
+
+  
+      <p>
+        Estoy aprediendo a escucharlo, a aceptar que me acompañe
+        <strong>sin dejar que decida todo por mí.</strong>
+      </p>
+
+      <p>
+        Poco a poco quiero aprender a reconocer qué cosas necesitan mi atención
+        y cuáles puedo dejar pasar para seguir avanzando hacia lo que realmente me importa.
+      </p>
+
+      <button
+        id="intro-next-4-button"
+        type="button"
+        class="game-pink-button">
+
+        Siguiente
+
+      </button>
+
+    </div>
+
+
+    <!-- STEP 5 -->
+    <div
+      id="intro-step-5"
+      class="intro-step">
+
+    
+
+      <p>
+        Y para poder cumplir mi sueño,
+        tendremos que recorrer este mundo,
+        conocer diferentes lugares y completar
+        <strong>misiones, retos y actividades.</strong>
+      </p>
+
+      <p>
+        Cada experiencia me ayudará a descubrir nuevas herramientas
+        y a acercarme un poquito más a mi pastelería.
+      </p>
+
+      <button
+        id="intro-next-5-button"
+        type="button"
+        class="game-pink-button">
+
+        Siguiente
+
+      </button>
+
+    </div>
+
+
+    <!-- STEP 6 -->
+    <div
+      id="intro-step-6"
+      class="intro-step">
+
+      <h2>
+        ¿Quieres acompañarme?
+      </h2>
+
+      <p>
+        ¡Tenemos mucho por descubrir!
+      </p>
+
+      <button
+        id="start-adventure-button"
+        type="button"
+        class="game-pink-button intro-final-button">
+
+        Iniciar aventura
+
+      </button>
+
+    </div>
+
+  </div>
+
+  <img
+    src="Intro/Meli_intro.png"
+    class="intro-meli"
+    alt="Meli">
+
+
+  <button
+    id="skip-intro-button"
+    type="button"
+    class="game-pink-button intro-skip">
+
+    Skip Intro
+
+  </button>
+
+</section>
+
+
+<!-- ======================================================
+     MAP
+====================================================== -->
+
+<canvas id="game-canvas"></canvas>
+
+
+<!-- ======================================================
+     MAP EXIT
+====================================================== -->
+
+<button
+  id="map-exit-button"
+  type="button"
+  aria-label="Exit game">
+
+  ×
+
+</button>
+
+
+<!-- ======================================================
+     SCREEN TRANSITION
+====================================================== -->
+
+<div id="screen-transition"></div>
+
+
+
+<!-- ======================================================
+     LOCATION PROMPTS
+====================================================== -->
+
+<div
+  id="park-prompt"
+  class="location-prompt">
+
+  Press
+
+  <span class="key">
+    E
+  </span>
+
+  to enter
+
+</div>
+
+
+<div
+  id="bakery-prompt"
+  class="location-prompt">
+
+  Press
+
+  <span class="key">
+    E
+  </span>
+
+  to enter
+
+</div>
+
+
+<div
+  id="library-prompt"
+  class="location-prompt">
+
+  Press
+
+  <span class="key">
+    E
+  </span>
+
+  to enter 
+
+</div>
+
+
+<!-- ======================================================
+     MOBILE LOCATION BUTTONS
+====================================================== -->
+
+<button
+  id="mobile-enter-park"
+  class="mobile-enter-button"
+  type="button">
+
+  Enter Park
+
+</button>
+
+
+<button
+  id="mobile-enter-bakery"
+  class="mobile-enter-button"
+  type="button">
+
+  Enter Bakery
+
+</button>
+
+
+<button
+  id="mobile-enter-library"
+  class="mobile-enter-button"
+  type="button">
+
+  Enter Library
+
+</button>
+
+
+<button
+  id="mobile-enter-clinic"
+  class="mobile-enter-button"
+  type="button">
+
+  Enter Clinic
+
+</button>
+
+
+<button
+  id="mobile-enter-workshop"
+  class="mobile-enter-button"
+  type="button">
+
+  Enter Workshop
+
+</button>
+
+
+<!-- ======================================================
+     D-PAD
+====================================================== -->
+
+<div id="dpad">
+
+  <div
+    class="btn"
+    id="btn-up">
+    ▲
+  </div>
+
+  <div
+    class="btn"
+    id="btn-down">
+    ▼
+  </div>
+
+  <div
+    class="btn"
+    id="btn-left">
+    ◀
+  </div>
+
+  <div
+    class="btn"
+    id="btn-right">
+    ▶
+  </div>
+
+</div>
+
+
+<div
+  id="clinic-prompt"
+  class="location-prompt">
+
+  Press
+
+  <span class="key">
+    E
+  </span>
+
+  to enter
+
+</div>
+
+
+<div
+  id="workshop-prompt"
+  class="location-prompt">
+
+  Press
+
+  <span class="key">
+    E
+  </span>
+
+  to enter
+
+</div>
+
+
+<!-- ======================================================
+     COLLAPSIBLE BOTTOM MENU
+====================================================== -->
+
+<div id="menu-wrapper">
+
+
+  <!-- MENU CONTENT -->
+
+  <nav
+    id="bottom-menu"
+    class="menu-closed"
+    aria-label="Game menu">
+
+
+    <!-- MAP -->
+
+    <button
+      id="menu-map"
+      class="menu-icon-button"
+      type="button"
+      aria-label="Map">
+
+      <img
+        src="Menu/icon_map.png"
+        alt="Map">
+
+    </button>
+
+
+    <!-- NOTIFICATIONS -->
+
+    <button
+      id="menu-notification"
+      class="menu-icon-button"
+      type="button"
+      aria-label="Notifications">
+
+      <img
+        src="Menu/icon_notification.png"
+        alt="Notifications">
+
+    </button>
+
+
+    <!-- CHARACTER -->
+
+    <button
+      id="menu-character"
+      class="menu-icon-button"
+      type="button"
+      aria-label="Character">
+
+      <img
+        src="Menu/icon_mask.png"
+        alt="Character">
+
+    </button>
+
+
+    <!-- TROPHY -->
+
+    <button
+      id="menu-trophy"
+      class="menu-icon-button"
+      type="button"
+      aria-label="Trophies">
+
+      <img
+        src="Menu/icon_trophy.png"
+        alt="Trophies">
+
+    </button>
+
+
+  </nav>
+
+
+  <!-- OPEN / CLOSE -->
+
+  <button
+    id="menu-toggle"
+    type="button"
+    aria-label="Open menu">
+
+    ▲
+
+  </button>
+
+
+</div>
+
+
+<!-- ======================================================
+     PARK
+====================================================== -->
+
+<section id="park-screen">
+
+
+  <!-- TOP CONTROLS -->
+
+  <div class="park-top-controls">
+
+    <button
+      id="exit-park"
+      type="button"
+      class="round-btn"
+      aria-label="Exit Park">
+
+      ×
+
+    </button>
+
+  </div>
+
+
+  <!-- ====================================================
+       MAIN PARK SCENE
+  ===================================================== -->
+
+  <div id="park-scene">
+
+
+    <button
+      id="park-recorder"
+      class="park-object"
+      type="button"
+      data-category="recordings"
+      aria-label="Open recordings">
+
+      <img
+        src="park/recorder.png"
+        alt="Recorder">
+
+    </button>
+
+
+    <button
+      id="park-headphones"
+      class="park-object"
+      type="button"
+      data-category="audio"
+      aria-label="Open audio activities">
+
+      <img
+        src="park/headphones.png"
+        alt="Headphones">
+
+    </button>
+
+
+    <button
+      id="park-binoculars"
+      class="park-object"
+      type="button"
+      data-category="observation"
+      aria-label="Open observation activities">
+
+      <img
+        src="park/binoculars.png"
+        alt="Binoculars">
+
+    </button>
+
+
+    <button
+      id="park-fidget"
+      class="park-object"
+      type="button"
+      data-category="fidget"
+      aria-label="Open fidget activities">
+
+      <img
+        src="park/fidget.png"
+        alt="Fidget">
+
+    </button>
+
+
+  </div>
+
+
+  <!-- ====================================================
+       INTRO
+  ===================================================== -->
+
+  <div id="park-intro-overlay">
+
+    <div class="park-intro-content">
+
+      <p class="park-description">
+
+        Explore simple activities designed to help you slow down, be present, and take a moment for yourself.
+Choose what feels right for you.
+
+        <br>
+
+        There’s no rush, just relax and enjoy the moment.
+
+      </p>
+
+
+      <button
+        id="explore-park"
+        type="button"
+        class="explore-btn">
+
+        Explore
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ====================================================
+       CATEGORY VIEW
+  ===================================================== -->
+
+  <div id="park-category-view">
+
+    <div class="park-category-panel">
+
+      <h2
+        id="park-category-title"
+        class="park-category-title">
+      </h2>
+
+      <p
+        id="park-category-subtitle"
+        class="park-category-subtitle">
+      </p>
+
+      <div
+        id="park-activity-list"
+        class="park-activity-list">
+      </div>
+
+      <button
+        id="back-to-park-scene"
+        type="button"
+        class="back-btn">
+
+        ← Back to Park
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ====================================================
+       ACTIVITY DETAIL
+  ===================================================== -->
+
+  <div id="park-activity-view">
+
+    <div class="park-activity-panel">
+
+      <h2 id="activity-heading"></h2>
+
+      <p id="activity-text"></p>
+
+      <span
+        id="activity-duration"
+        class="park-duration">
+      </span>
+
+
+      <!-- AUDIO PLAYER -->
+
+      <div id="audio-player">
+
+        <div class="audio-controls">
+
+          <button
+            id="audio-play-button"
+            type="button">
+
+            ▶
+
+          </button>
+
+          <span
+            id="audio-time"
+            class="audio-time">
+
+            0:00 / 0:00
+
+          </span>
+
+        </div>
+
+
+        <input
+          id="audio-progress"
+          type="range"
+          min="0"
+          max="100"
+          value="0"
+          step="0.1">
+
+
+        <div class="audio-label">
+
+          Take your time.
+          You can pause whenever you need.
+
+        </div>
+
+
+        <audio
+          id="park-audio"
+          preload="metadata">
+        </audio>
+
+      </div>
+
+
+      <button
+        id="back-to-category"
+        type="button"
+        class="back-btn">
+
+        ← Back
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+</section>
+
+
+
+
+<!-- ======================================================
+     EXIT CONFIRMATION
+====================================================== -->
+
+<div
+  id="exit-confirm-modal"
+  class="game-modal"
+  role="dialog"
+  aria-modal="true">
+
+  <div class="game-modal-card">
+
+    <h3>
+      ¿Deseas salir?
+    </h3>
+
+    <p>
+      Tu progreso quedará guardado y podrás continuar después.
+    </p>
+
+    <div class="modal-actions">
+
+      <button
+        id="cancel-exit-button"
+        type="button"
+        class="modal-secondary-button">
+
+        Cancelar
+
+      </button>
+
+      <button
+        id="confirm-exit-button"
+        type="button"
+        class="game-pink-button">
+
+        Sí, salir
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ======================================================
+     COMING SOON / IN PROGRESS
+====================================================== -->
+
+<div
+  id="status-modal"
+  class="game-modal"
+  role="dialog"
+  aria-modal="true">
+
+  <div class="game-modal-card">
+
+    <h3 id="status-modal-title">
+      Próximamente
+    </h3>
+
+    <p id="status-modal-text">
+      Esta función estará disponible muy pronto.
+    </p>
+
+    <button
+      id="status-modal-close"
+      type="button"
+      class="game-pink-button">
+
+      Entendido
+
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+
+(function () {
+
+
+/* =========================================================
+   INTRO / SAVE SYSTEM
+========================================================= */
+
+const loadingScreen =
+  document.getElementById(
+    "loading"
+  );
+
+const coverScreen =
+  document.getElementById(
+    "cover-screen"
+  );
+
+const introScreen =
+  document.getElementById(
+    "intro-screen"
+  );
+
+const newGameButton =
+  document.getElementById(
+    "new-game-button"
+  );
+
+const resumeGameButton =
+  document.getElementById(
+    "resume-game-button"
+  );
+
+const playerNameInput =
+  document.getElementById(
+    "player-name-input"
+  );
+
+const introGreeting =
+  document.getElementById(
+    "intro-greeting"
+  );
+
+const introStep1 =
+  document.getElementById(
+    "intro-step-1"
+  );
+
+const introStep2 =
+  document.getElementById(
+    "intro-step-2"
+  );
+
+const introStep3 =
+  document.getElementById(
+    "intro-step-3"
+  );
+
+const introStep4 =
+  document.getElementById(
+    "intro-step-4"
+  );
+
+const introStep5 =
+  document.getElementById(
+    "intro-step-5"
+  );
+
+const introStep6 =
+  document.getElementById(
+    "intro-step-6"
+  );
+
+
+const introDialoguePanel =
+  document.querySelector(
+    ".intro-dialogue-panel"
+  );
+
+const introMeliImage =
+  document.querySelector(
+    ".intro-meli"
+  );
+
+
+let activeTypingTimer =
+  null;
+
+let typewriterRunning =
+  false;
+
+let typewriterSkipRequested =
+  false;
+
+
+/* =========================================================
+   INTRO TYPEWRITER
+========================================================= */
+
+function clearTypewriterTimer() {
+
+  if (
+    activeTypingTimer
+  ) {
+
+    clearTimeout(
+      activeTypingTimer
+    );
+
+    activeTypingTimer =
+      null;
+
+  }
+
+}
+
+
+function wait(
+  milliseconds
+) {
+
+  return new Promise(
+    function (
+      resolve
+    ) {
+
+      activeTypingTimer =
+        setTimeout(
+          resolve,
+          milliseconds
+        );
+
+    }
+  );
+
+}
+
+
+async function typeIntoElement(
+  element,
+  text,
+  speed = 24
+) {
+
+  if (
+    !element
+  ) {
+
+    return;
+
+  }
+
+
+  element.textContent =
+    "";
+
+  element.classList.add(
+    "typewriter-line"
+  );
+
+  element.classList.add(
+    "typewriter-cursor"
+  );
+
+
+  for (
+    let index = 0;
+    index < text.length;
+    index++
+  ) {
+
+    if (
+      typewriterSkipRequested
+    ) {
+
+      element.textContent =
+        text;
+
+      break;
+
+    }
+
+
+    element.textContent +=
+      text.charAt(
+        index
+      );
+
+
+    await wait(
+      speed
+    );
+
+  }
+
+
+  element.classList.remove(
+    "typewriter-cursor"
+  );
+
+}
+
+
+function revealControls(
+  step
+) {
+
+  step.classList.add(
+    "controls-visible"
+  );
+
+}
+
+
+async function animateIntroStep(
+  step
+) {
+
+  clearTypewriterTimer();
+
+  typewriterRunning =
+    true;
+
+  typewriterSkipRequested =
+    false;
+
+
+  step.classList.remove(
+    "controls-visible"
+  );
+
+  step.classList.add(
+    "step-visible"
+  );
+
+
+  const title =
+    step.querySelector(
+      "h2"
+    );
+
+
+  const paragraphs =
+    Array.from(
+      step.querySelectorAll(
+        "p"
+      )
+    );
+
+
+  const titleText =
+    title
+    ?
+    title.dataset.fullText
+      ||
+      title.textContent.trim()
+    :
+    "";
+
+
+  if (
+    title
+  ) {
+
+    title.dataset.fullText =
+      titleText;
+
+  }
+
+
+  const paragraphTexts =
+    paragraphs.map(
+      function (
+        paragraph
+      ) {
+
+        const fullText =
+          paragraph.dataset.fullText
+          ||
+          paragraph.textContent
+            .replace(/\s+/g, " ")
+            .trim();
+
+
+        paragraph.dataset.fullText =
+          fullText;
+
+
+        return fullText;
+
+      }
+    );
+
+
+  if (
+    title
+  ) {
+
+    await typeIntoElement(
+      title,
+      titleText,
+      22
+    );
+
+    await wait(
+      100
+    );
+
+  }
+
+
+  for (
+    let index = 0;
+    index < paragraphs.length;
+    index++
+  ) {
+
+    await typeIntoElement(
+      paragraphs[index],
+      paragraphTexts[index],
+      16
+    );
+
+    await wait(
+      90
+    );
+
+  }
+
+
+  typewriterRunning =
+    false;
+
+
+  revealControls(
+    step
+  );
+
+}
+
+
+function completeCurrentTyping() {
+
+  if (
+    !typewriterRunning
+  ) {
+
+    return;
+
+  }
+
+
+  typewriterSkipRequested =
+    true;
+
+}
+
+
+introDialoguePanel.addEventListener(
+  "click",
+  function (
+    event
+  ) {
+
+    const clickedInteractiveElement =
+      event.target.closest(
+        "button, input"
+      );
+
+
+    if (
+      clickedInteractiveElement
+    ) {
+
+      return;
+
+    }
+
+
+    completeCurrentTyping();
+
+  }
+);
+
+const SAVE_KEYS = {
+
+  hasSave:
+    "boc_has_save",
+
+  playerName:
+    "boc_player_name",
+
+  meliX:
+    "boc_meli_x",
+
+  meliY:
+    "boc_meli_y"
+
+};
+
+
+const SESSION_KEYS = {
+
+  bootSeen:
+    "boc_boot_seen",
+
+  gameActive:
+    "boc_game_active"
+
+};
+
+let introFlowActive =
+  true;
+
+let gameStarted =
+  false;
+
+let restoreSavedPosition =
+  false;
+
+
+function setIntroStep(
+  stepNumber
+) {
+
+  clearTypewriterTimer();
+
+
+  [
+    introStep1,
+    introStep2,
+    introStep3,
+    introStep4,
+    introStep5,
+    introStep6
+  ].forEach(
+    function (
+      step
+    ) {
+
+      step.classList.remove(
+        "active"
+      );
+
+      step.classList.remove(
+        "step-visible"
+      );
+
+      step.classList.remove(
+        "controls-visible"
+      );
+
+    }
+  );
+
+
+  const steps = {
+    1: introStep1,
+    2: introStep2,
+    3: introStep3,
+    4: introStep4,
+    5: introStep5,
+    6: introStep6
+  };
+
+
+  const nextStep =
+    steps[
+      stepNumber
+    ];
+
+
+  if (
+    nextStep
+  ) {
+
+    nextStep.classList.add(
+      "active"
+    );
+
+
+    requestAnimationFrame(
+      function () {
+
+        setTimeout(
+          function () {
+
+            animateIntroStep(
+              nextStep
+            );
+
+          },
+          110
+        );
+
+      }
+    );
+
+  }
+
+}
+
+
+function hasSavedGame() {
+
+  return (
+    localStorage.getItem(
+      SAVE_KEYS.hasSave
+    )
+    ===
+    "true"
+  );
+
+}
+
+
+function refreshResumeButton() {
+
+  resumeGameButton.disabled =
+    !hasSavedGame();
+
+}
+
+
+function showCover() {
+
+  loadingScreen.style.display =
+    "none";
+
+  introScreen.style.display =
+    "none";
+
+  coverScreen.style.display =
+    "block";
+
+  introFlowActive =
+    true;
+
+  gameStarted =
+    false;
+
+  mapExitButton.style.display =
+    "none";
+
+
+  refreshResumeButton();
+
+}
+
+
+function showIntro() {
+
+  coverScreen.style.display =
+    "none";
+
+  loadingScreen.style.display =
+    "none";
+
+  introScreen.style.display =
+    "block";
+
+  introFlowActive =
+    true;
+
+  gameStarted =
+    false;
+
+  introDialoguePanel.classList.remove(
+    "show"
+  );
+
+  introMeliImage.classList.remove(
+    "show"
+  );
+
+
+  setTimeout(
+    function () {
+
+      introDialoguePanel.classList.add(
+        "show"
+      );
+
+    },
+    100
+  );
+
+
+  setTimeout(
+    function () {
+
+      introMeliImage.classList.add(
+        "show"
+      );
+
+    },
+    260
+  );
+
+
+  setIntroStep(
+    1
+  );
+
+  playerNameInput.value =
+    "";
+
+  setTimeout(
+    function () {
+
+      playerNameInput.focus();
+
+    },
+    1500
+  );
+
+}
+
+
+function saveCurrentGame() {
+
+  if (
+    !gameStarted
+  ) {
+
+    return;
+
+  }
+
+  localStorage.setItem(
+    SAVE_KEYS.hasSave,
+    "true"
+  );
+
+  localStorage.setItem(
+    SAVE_KEYS.meliX,
+    String(
+      meli.x
+    )
+  );
+
+  localStorage.setItem(
+    SAVE_KEYS.meliY,
+    String(
+      meli.y
+    )
+  );
+
+}
+
+
+function beginMapGame(
+  useSavedPosition
+) {
+
+  introFlowActive =
+    false;
+
+  gameStarted =
+    true;
+
+  restoreSavedPosition =
+    useSavedPosition;
+
+  loadingScreen.style.display =
+    "none";
+
+  coverScreen.style.display =
+    "none";
+
+  introScreen.style.display =
+    "none";
+
+  localStorage.setItem(
+    SAVE_KEYS.hasSave,
+    "true"
+  );
+
+
+  sessionStorage.setItem(
+    SESSION_KEYS.bootSeen,
+    "true"
+  );
+
+
+  sessionStorage.setItem(
+    SESSION_KEYS.gameActive,
+    "true"
+  );
+
+
+  if (
+    useSavedPosition
+  ) {
+
+    const savedX =
+      Number(
+        localStorage.getItem(
+          SAVE_KEYS.meliX
+        )
+      );
+
+    const savedY =
+      Number(
+        localStorage.getItem(
+          SAVE_KEYS.meliY
+        )
+      );
+
+
+    if (
+      Number.isFinite(
+        savedX
+      )
+      &&
+      Number.isFinite(
+        savedY
+      )
+      &&
+      savedX >
+      0
+      &&
+      savedY >
+      0
+    ) {
+
+      meli.x =
+        savedX;
+
+      meli.y =
+        savedY;
+
+      camera.x =
+        savedX;
+
+      camera.y =
+        savedY;
+
+    }
+
+  }
+
+  closeBottomMenu();
+
+
+  mapExitButton.style.display =
+    "flex";
+
+}
+
+
+function finishNewGameIntro() {
+
+  localStorage.setItem(
+    SAVE_KEYS.hasSave,
+    "true"
+  );
+
+  localStorage.setItem(
+    SAVE_KEYS.meliX,
+    String(
+      mapW *
+      0.50
+    )
+  );
+
+  localStorage.setItem(
+    SAVE_KEYS.meliY,
+    String(
+      mapH *
+      0.67
+    )
+  );
+
+  beginMapGame(
+    false
+  );
+
+}
+
+
+newGameButton.addEventListener(
+  "click",
+  function () {
+
+    showIntro();
+
+  }
+);
+
+
+resumeGameButton.addEventListener(
+  "click",
+  function () {
+
+    if (
+      !hasSavedGame()
+    ) {
+
+      return;
+
+    }
+
+    beginMapGame(
+      true
+    );
+
+  }
+);
+
+
+document
+  .getElementById(
+    "cover-settings"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      alert(
+        "Settings will be added later."
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "intro-continue-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      const playerName =
+        playerNameInput.value.trim();
+
+
+      if (
+        !playerName
+      ) {
+
+        playerNameInput.focus();
+
+        playerNameInput.placeholder =
+          "Escribe tu nombre para continuar";
+
+        return;
+
+      }
+
+
+      localStorage.setItem(
+        SAVE_KEYS.playerName,
+        playerName
+      );
+
+
+      introGreeting.textContent =
+        "¡Mucho gusto, "
+        +
+        playerName
+        +
+        "!";
+
+
+      setIntroStep(
+        2
+      );
+
+    }
+  );
+
+
+playerNameInput.addEventListener(
+  "keydown",
+  function (
+    event
+  ) {
+
+    event.stopPropagation();
+
+
+    if (
+      event.key ===
+      "Enter"
+    ) {
+
+      event.preventDefault();
+
+      document
+        .getElementById(
+          "intro-continue-button"
+        )
+        .click();
+
+    }
+
+  }
+);
+
+
+document
+  .getElementById(
+    "intro-next-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      setIntroStep(
+        3
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "intro-next-3-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      setIntroStep(
+        4
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "intro-next-4-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      setIntroStep(
+        5
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "intro-next-5-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      setIntroStep(
+        6
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "start-adventure-button"
+  )
+  .addEventListener(
+    "click",
+    finishNewGameIntro
+  );
+
+
+document
+  .getElementById(
+    "skip-intro-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      const currentName =
+        playerNameInput.value.trim();
+
+
+      if (
+        currentName
+      ) {
+
+        localStorage.setItem(
+          SAVE_KEYS.playerName,
+          currentName
+        );
+
+      }
+
+
+      finishNewGameIntro();
+
+    }
+  );
+
+
+window.addEventListener(
+  "beforeunload",
+  saveCurrentGame
+);
+
+
+
+
+/* =========================================================
+   GLOBAL UI REFERENCES
+========================================================= */
+
+const mapExitButton =
+  document.getElementById(
+    "map-exit-button"
+  );
+
+const exitConfirmModal =
+  document.getElementById(
+    "exit-confirm-modal"
+  );
+
+const statusModal =
+  document.getElementById(
+    "status-modal"
+  );
+
+const statusModalTitle =
+  document.getElementById(
+    "status-modal-title"
+  );
+
+const statusModalText =
+  document.getElementById(
+    "status-modal-text"
+  );
+
+const screenTransition =
+  document.getElementById(
+    "screen-transition"
+  );
+
+
+function showModal(
+  modal
+) {
+
+  modal.classList.add(
+    "visible"
+  );
+
+}
+
+
+function hideModal(
+  modal
+) {
+
+  modal.classList.remove(
+    "visible"
+  );
+
+}
+
+
+function showStatusModal(
+  title,
+  text
+) {
+
+  statusModalTitle.textContent =
+    title;
+
+  statusModalText.textContent =
+    text;
+
+  showModal(
+    statusModal
+  );
+
+}
+
+
+function navigateWithTransition(
+  url
+) {
+
+  screenTransition.classList.add(
+    "active"
+  );
+
+  setTimeout(
+    function () {
+
+      window.location.href =
+        url;
+
+    },
+    320
+  );
+
+}
+
+
+/* =========================================================
+   MAP EXIT
+========================================================= */
+
+mapExitButton.addEventListener(
+  "click",
+  function () {
+
+    saveCurrentGame();
+
+    showModal(
+      exitConfirmModal
+    );
+
+  }
+);
+
+
+document
+  .getElementById(
+    "cancel-exit-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      hideModal(
+        exitConfirmModal
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "confirm-exit-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      saveCurrentGame();
+
+      hideModal(
+        exitConfirmModal
+      );
+
+      sessionStorage.setItem(
+        SESSION_KEYS.gameActive,
+        "false"
+      );
+
+      mapExitButton.style.display =
+        "none";
+
+      showCover();
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "status-modal-close"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      hideModal(
+        statusModal
+      );
+
+    }
+  );
+
+
+exitConfirmModal.addEventListener(
+  "click",
+  function (
+    event
+  ) {
+
+    if (
+      event.target ===
+      exitConfirmModal
+    ) {
+
+      hideModal(
+        exitConfirmModal
+      );
+
+    }
+
+  }
+);
+
+
+statusModal.addEventListener(
+  "click",
+  function (
+    event
+  ) {
+
+    if (
+      event.target ===
+      statusModal
+    ) {
+
+      hideModal(
+        statusModal
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   CONFIG
+========================================================= */
+
+const MOVE_SPEED =
+  3.2;
+
+const ANIM_FPS =
+  9;
+
+const MELI_SCALE =
+  0.65;
+
+const CAMERA_LERP =
+  0.08;
+
+
+/* =========================================================
+   ASSETS
+========================================================= */
+
+const assetPaths = {
+
+  map:
+    "map.png",
+
+  idle_01:
+    "Idle_01.png",
+
+  down_01:
+    "down_01.png",
+
+  down_02:
+    "down_02.png",
+
+  down_03:
+    "down_03.png",
+
+  down_04:
+    "down_04.png",
+
+  up_01:
+    "up_01.png",
+
+  up_02:
+    "up_02.png",
+
+  up_03:
+    "up_03.png",
+
+  up_04:
+    "up_04.png",
+
+  right_01:
+    "right_01.png",
+
+  right_02:
+    "right_02.png",
+
+  right_03:
+    "right_03.png",
+
+  right_04:
+    "right_04.png"
+
+};
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+const canvas =
+  document.getElementById(
+    "game-canvas"
+  );
+
+
+const ctx =
+  canvas.getContext(
+    "2d"
+  );
+
+
+function resize() {
+
+  canvas.width =
+    window.innerWidth;
+
+
+  canvas.height =
+    window.innerHeight;
+
+}
+
+
+window.addEventListener(
+  "resize",
+  resize
+);
+
+
+resize();
+
+
+/* =========================================================
+   LOAD IMAGES
+========================================================= */
+
+const images = {};
+
+let loaded = 0;
+
+const total =
+  Object.keys(
+    assetPaths
+  ).length;
+
+
+function loadAssets(
+  callback
+) {
+
+  for (
+    const [key, path]
+    of Object.entries(
+      assetPaths
+    )
+  ) {
+
+    const img =
+      new Image();
+
+
+    img.onload =
+      function () {
+
+        loaded++;
+
+
+        if (
+          loaded === total
+        ) {
+
+          callback();
+
+        }
+
+      };
+
+
+    img.onerror =
+      function () {
+
+        console.error(
+          "Missing:",
+          path
+        );
+
+
+        loaded++;
+
+
+        if (
+          loaded === total
+        ) {
+
+          callback();
+
+        }
+
+      };
+
+
+    img.src =
+      path;
+
+
+    images[key] =
+      img;
+
+  }
+
+}
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let gameMode =
+  "map";
+
+
+let mapW =
+  0;
+
+
+let mapH =
+  0;
+
+
+const meli = {
+
+  x: 0,
+
+  y: 0,
+
+  width: 0,
+
+  height: 0,
+
+  direction:
+    "idle",
+
+  frame: 0,
+
+  animTimer: 0
+
+};
+
+
+const camera = {
+
+  x: 0,
+
+  y: 0
+
+};
+
+
+/* =========================================================
+   TRIGGERS
+========================================================= */
+
+const PARK_TRIGGER = {
+
+  x: 0.218,
+
+  y: 0.218,
+
+  radius: 0.045
+
+};
+
+
+const BAKERY_TRIGGER = {
+
+  x: 0.520,
+
+  y: 0.350,
+
+  radius: 0.045
+
+};
+
+
+const LIBRARY_TRIGGER = {
+
+  x: 0.185,
+
+  y: 0.480,
+
+  radius: 0.045
+
+};
+
+const CLINIC_TRIGGER = {
+
+  x: 0.864,
+
+  y: 0.145,
+
+  radius: 0.045
+
+};
+
+
+const WORKSHOP_TRIGGER = {
+
+  x: 0.742,
+
+  y: 0.300,
+
+  radius: 0.045
+
+};
+
+
+let nearPark =
+  false;
+
+
+let nearBakery =
+  false;
+
+
+let nearLibrary =
+  false;
+
+
+let nearClinic =
+  false;
+
+
+let nearWorkshop =
+  false;
+
+
+/* =========================================================
+   AUTO WALK
+========================================================= */
+
+const autoWalk = {
+
+  active:
+    false,
+
+  targetX:
+    0,
+
+  targetY:
+    0,
+
+  location:
+    null
+
+};
+
+
+function startAutoWalk(
+  trigger,
+  location
+) {
+
+  autoWalk.active =
+    true;
+
+
+  autoWalk.targetX =
+    trigger.x *
+    mapW;
+
+
+  autoWalk.targetY =
+    trigger.y *
+    mapH;
+
+
+  autoWalk.location =
+    location;
+
+
+  closeBottomMenu();
+
+}
+
+
+function cancelAutoWalk() {
+
+  autoWalk.active =
+    false;
+
+
+  autoWalk.location =
+    null;
+
+}
+
+
+function finishAutoWalk() {
+
+  const location =
+    autoWalk.location;
+
+
+  autoWalk.active =
+    false;
+
+
+  autoWalk.location =
+    null;
+
+
+  meli.direction =
+    "idle";
+
+
+  meli.frame =
+    0;
+
+
+  if (
+    location ===
+    "park"
+  ) {
+
+    enterPark();
+
+  }
+
+
+  else if (
+    location ===
+    "bakery"
+  ) {
+
+    enterBakery();
+
+  }
+
+
+  else if (
+    location ===
+    "library"
+  ) {
+
+    enterLibrary();
+
+  }
+
+
+  else if (
+    location ===
+    "clinic"
+  ) {
+
+    showStatusModal(
+      "En progreso",
+      "La Clínica estará disponible próximamente."
+    );
+
+  }
+
+
+  else if (
+    location ===
+    "workshop"
+  ) {
+
+    showStatusModal(
+      "En progreso",
+      "Creative Workshop estará disponible próximamente."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   HOUSE COLLISIONS
+========================================================= */
+
+const houseZones = [
+
+  {
+    x: 0.150,
+    y: 0.295,
+    w: 0.075,
+    h: 0.18
+  },
+
+  {
+    x: 0.445,
+    y: 0.105,
+    w: 0.13,
+    h: 0.225
+  },
+
+  {
+    x: 0.704,
+    y: 0.265,
+    w: 0.078,
+    h: 0.135
+  },
+
+  {
+    x: 0.815,
+    y: 0.05,
+    w: 0.085,
+    h: 0.185
+  }
+
+];
+
+
+function getHouseColliders() {
+
+  return houseZones.map(
+
+    zone => ({
+
+      x:
+        zone.x *
+        mapW,
+
+      y:
+        zone.y *
+        mapH,
+
+      w:
+        zone.w *
+        mapW,
+
+      h:
+        zone.h *
+        mapH
+
+    })
+
+  );
+
+}
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+const keys = {};
+
+
+window.addEventListener(
+  "keydown",
+  function (
+    event
+  ) {
+
+    const key =
+      event.key.toLowerCase();
+
+
+    /*
+      Do not control Meli while loading, cover, or intro is active.
+      This also prevents typing a name from moving the character.
+    */
+    if (
+      !gameStarted
+      ||
+      introFlowActive
+    ) {
+
+      return;
+
+    }
+
+
+    keys[key] =
+      true;
+
+
+    if (
+      autoWalk.active
+      &&
+      [
+        "arrowup",
+        "arrowdown",
+        "arrowleft",
+        "arrowright",
+        "w",
+        "a",
+        "s",
+        "d"
+      ].includes(
+        key
+      )
+    ) {
+
+      cancelAutoWalk();
+
+    }
+
+
+    if (
+      key === "e"
+      &&
+      gameMode ===
+      "map"
+    ) {
+
+      if (
+        nearPark
+      ) {
+
+        enterPark();
+
+      }
+
+
+      else if (
+        nearBakery
+      ) {
+
+        enterBakery();
+
+      }
+
+
+      else if (
+        nearLibrary
+      ) {
+
+        enterLibrary();
+
+      }
+
+
+      else if (
+        nearClinic
+      ) {
+
+        showStatusModal(
+          "En progreso",
+          "La Clínica estará disponible próximamente."
+        );
+
+      }
+
+
+      else if (
+        nearWorkshop
+      ) {
+
+        showStatusModal(
+          "En progreso",
+          "Creative Workshop estará disponible próximamente."
+        );
+
+      }
+
+    }
+
+
+    if (
+      [
+        "arrowup",
+        "arrowdown",
+        "arrowleft",
+        "arrowright",
+        "w",
+        "a",
+        "s",
+        "d",
+        "e"
+      ].includes(
+        key
+      )
+    ) {
+
+      event.preventDefault();
+
+    }
+
+  }
+);
+
+
+window.addEventListener(
+  "keyup",
+  function (
+    event
+  ) {
+
+    keys[
+      event.key.toLowerCase()
+    ] =
+      false;
+
+  }
+);
+
+
+/* =========================================================
+   TOUCH D-PAD
+========================================================= */
+
+const touch = {
+
+  up:
+    false,
+
+  down:
+    false,
+
+  left:
+    false,
+
+  right:
+    false
+
+};
+
+
+function setupDpad() {
+
+  const controls = {
+
+    "btn-up":
+      "up",
+
+    "btn-down":
+      "down",
+
+    "btn-left":
+      "left",
+
+    "btn-right":
+      "right"
+
+  };
+
+
+  for (
+    const [id, dir]
+    of Object.entries(
+      controls
+    )
+  ) {
+
+    const button =
+      document.getElementById(
+        id
+      );
+
+
+    function start(
+      event
+    ) {
+
+      event.preventDefault();
+
+
+      cancelAutoWalk();
+
+
+      closeBottomMenu();
+
+
+      touch[dir] =
+        true;
+
+
+      button.classList.add(
+        "pressed"
+      );
+
+    }
+
+
+    function end(
+      event
+    ) {
+
+      if (
+        event
+      ) {
+
+        event.preventDefault();
+
+      }
+
+
+      touch[dir] =
+        false;
+
+
+      button.classList.remove(
+        "pressed"
+      );
+
+    }
+
+
+    button.addEventListener(
+      "touchstart",
+      start,
+      {
+        passive: false
+      }
+    );
+
+
+    button.addEventListener(
+      "touchend",
+      end
+    );
+
+
+    button.addEventListener(
+      "touchcancel",
+      end
+    );
+
+
+    button.addEventListener(
+      "mousedown",
+      start
+    );
+
+
+    button.addEventListener(
+      "mouseup",
+      end
+    );
+
+
+    button.addEventListener(
+      "mouseleave",
+      end
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+const animations = {
+
+  idle: [
+    "idle_01"
+  ],
+
+  down: [
+    "down_01",
+    "down_02",
+    "down_03",
+    "down_04"
+  ],
+
+  up: [
+    "up_01",
+    "up_02",
+    "up_03",
+    "up_04"
+  ],
+
+  right: [
+    "right_01",
+    "right_02",
+    "right_03",
+    "right_04"
+  ],
+
+  left: [
+    "right_01",
+    "right_02",
+    "right_03",
+    "right_04"
+  ]
+
+};
+
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function getMeliHitbox(
+  x,
+  y
+) {
+
+  const width =
+    meli.width *
+    0.32;
+
+
+  const height =
+    meli.height *
+    0.18;
+
+
+  return {
+
+    x:
+      x -
+      width /
+      2,
+
+    y:
+      y +
+      meli.height *
+      0.25,
+
+    w:
+      width,
+
+    h:
+      height
+
+  };
+
+}
+
+
+function rectanglesOverlap(
+  a,
+  b
+) {
+
+  return (
+
+    a.x <
+    b.x + b.w
+
+    &&
+
+    a.x + a.w >
+    b.x
+
+    &&
+
+    a.y <
+    b.y + b.h
+
+    &&
+
+    a.y + a.h >
+    b.y
+
+  );
+
+}
+
+
+function collidesWithHouse(
+  x,
+  y
+) {
+
+  const player =
+    getMeliHitbox(
+      x,
+      y
+    );
+
+
+  for (
+    const house
+    of getHouseColliders()
+  ) {
+
+    if (
+      rectanglesOverlap(
+        player,
+        house
+      )
+    ) {
+
+      return true;
+
+    }
+
+  }
+
+
+  return false;
+
+}
+
+
+/* =========================================================
+   LOCATION TRIGGERS
+========================================================= */
+
+function getDistanceToTrigger(
+  trigger
+) {
+
+  const triggerX =
+    trigger.x *
+    mapW;
+
+
+  const triggerY =
+    trigger.y *
+    mapH;
+
+
+  const dx =
+    meli.x -
+    triggerX;
+
+
+  const dy =
+    meli.y -
+    triggerY;
+
+
+  return Math.sqrt(
+    dx * dx +
+    dy * dy
+  );
+
+}
+
+
+function isNearTrigger(
+  trigger
+) {
+
+  const radius =
+    trigger.radius *
+    Math.min(
+      mapW,
+      mapH
+    );
+
+
+  return (
+    getDistanceToTrigger(
+      trigger
+    )
+    <
+    radius
+  );
+
+}
+
+
+function isMobileDevice() {
+
+  return (
+
+    window.innerWidth <=
+    768
+
+    ||
+
+    window.matchMedia(
+      "(pointer: coarse)"
+    ).matches
+
+  );
+
+}
+
+
+function updateLocationTriggers() {
+
+  nearPark =
+    isNearTrigger(
+      PARK_TRIGGER
+    );
+
+
+  nearBakery =
+    isNearTrigger(
+      BAKERY_TRIGGER
+    );
+
+
+  nearLibrary =
+    isNearTrigger(
+      LIBRARY_TRIGGER
+    );
+
+
+  nearClinic =
+    isNearTrigger(
+      CLINIC_TRIGGER
+    );
+
+
+  nearWorkshop =
+    isNearTrigger(
+      WORKSHOP_TRIGGER
+    );
+
+
+  const parkPrompt =
+    document.getElementById(
+      "park-prompt"
+    );
+
+
+  const bakeryPrompt =
+    document.getElementById(
+      "bakery-prompt"
+    );
+
+
+  const libraryPrompt =
+    document.getElementById(
+      "library-prompt"
+    );
+
+
+  const mobilePark =
+    document.getElementById(
+      "mobile-enter-park"
+    );
+
+
+  const mobileBakery =
+    document.getElementById(
+      "mobile-enter-bakery"
+    );
+
+
+  const mobileLibrary =
+    document.getElementById(
+      "mobile-enter-library"
+    );
+
+
+  const clinicPrompt =
+    document.getElementById(
+      "clinic-prompt"
+    );
+
+
+  const workshopPrompt =
+    document.getElementById(
+      "workshop-prompt"
+    );
+
+
+  const mobileClinic =
+    document.getElementById(
+      "mobile-enter-clinic"
+    );
+
+
+  const mobileWorkshop =
+    document.getElementById(
+      "mobile-enter-workshop"
+    );
+
+
+  parkPrompt.style.display =
+    "none";
+
+
+  bakeryPrompt.style.display =
+    "none";
+
+
+  libraryPrompt.style.display =
+    "none";
+
+
+  clinicPrompt.style.display =
+    "none";
+
+
+  workshopPrompt.style.display =
+    "none";
+
+
+  mobileClinic.style.display =
+    "none";
+
+
+  mobileWorkshop.style.display =
+    "none";
+
+
+  mobilePark.style.display =
+    "none";
+
+
+  mobileBakery.style.display =
+    "none";
+
+
+  mobileLibrary.style.display =
+    "none";
+
+
+  if (
+    gameMode !==
+    "map"
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    nearPark
+  ) {
+
+    if (
+      isMobileDevice()
+    ) {
+
+      mobilePark.style.display =
+        "block";
+
+    }
+
+    else {
+
+      parkPrompt.style.display =
+        "block";
+
+    }
+
+  }
+
+
+  else if (
+    nearBakery
+  ) {
+
+    if (
+      isMobileDevice()
+    ) {
+
+      mobileBakery.style.display =
+        "block";
+
+    }
+
+    else {
+
+      bakeryPrompt.style.display =
+        "block";
+
+    }
+
+  }
+
+
+  else if (
+    nearLibrary
+  ) {
+
+    if (
+      isMobileDevice()
+    ) {
+
+      mobileLibrary.style.display =
+        "block";
+
+    }
+
+    else {
+
+      libraryPrompt.style.display =
+        "block";
+
+    }
+
+  }
+
+
+
+  else if (
+    nearClinic
+  ) {
+
+    if (
+      isMobileDevice()
+    ) {
+
+      mobileClinic.style.display =
+        "block";
+
+    }
+
+    else {
+
+      clinicPrompt.style.display =
+        "block";
+
+    }
+
+  }
+
+
+  else if (
+    nearWorkshop
+  ) {
+
+    if (
+      isMobileDevice()
+    ) {
+
+      mobileWorkshop.style.display =
+        "block";
+
+    }
+
+    else {
+
+      workshopPrompt.style.display =
+        "block";
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   BAKERY / LIBRARY
+========================================================= */
+
+function enterBakery() {
+
+  saveCurrentGame();
+
+  navigateWithTransition(
+    "Bakery/index.html"
+  );
+
+
+document
+  .getElementById(
+    "mobile-enter-clinic"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      showStatusModal(
+        "En progreso",
+        "La Clínica estará disponible próximamente."
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "mobile-enter-workshop"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      showStatusModal(
+        "En progreso",
+        "Creative Workshop estará disponible próximamente."
+      );
+
+    }
+  );
+
+}
+
+
+function enterLibrary() {
+
+  saveCurrentGame();
+
+  navigateWithTransition(
+    "Library/index.html"
+  );
+
+}
+
+
+/* =========================================================
+   COLLAPSIBLE MENU
+========================================================= */
+
+const menuWrapper =
+  document.getElementById(
+    "menu-wrapper"
+  );
+
+
+const bottomMenu =
+  document.getElementById(
+    "bottom-menu"
+  );
+
+
+const menuToggle =
+  document.getElementById(
+    "menu-toggle"
+  );
+
+
+let menuOpen =
+  false;
+
+
+function openBottomMenu() {
+
+  menuOpen =
+    true;
+
+
+  bottomMenu.classList.remove(
+    "menu-closed"
+  );
+
+
+  bottomMenu.classList.add(
+    "menu-open"
+  );
+
+
+  menuToggle.textContent =
+    "▼";
+
+
+  menuToggle.setAttribute(
+    "aria-label",
+    "Close menu"
+  );
+
+}
+
+
+function closeBottomMenu() {
+
+  menuOpen =
+    false;
+
+
+  bottomMenu.classList.remove(
+    "menu-open"
+  );
+
+
+  bottomMenu.classList.add(
+    "menu-closed"
+  );
+
+
+  menuToggle.textContent =
+    "▲";
+
+
+  menuToggle.setAttribute(
+    "aria-label",
+    "Open menu"
+  );
+
+}
+
+
+menuToggle.addEventListener(
+  "click",
+  function () {
+
+    if (
+      menuOpen
+    ) {
+
+      closeBottomMenu();
+
+    }
+
+    else {
+
+      openBottomMenu();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   MENU ICONS
+========================================================= */
+
+document
+  .getElementById(
+    "menu-map"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      closeBottomMenu();
+
+      showStatusModal(
+        "Próximamente",
+        "La vista de mapa estará disponible muy pronto."
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "menu-notification"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      showStatusModal(
+        "Próximamente",
+        "Las notificaciones estarán disponibles muy pronto."
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "menu-character"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      saveCurrentGame();
+
+      navigateWithTransition(
+        "Character/index.html"
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "menu-trophy"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      showStatusModal(
+        "Próximamente",
+        "Los trofeos estarán disponibles muy pronto."
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   PARK
+========================================================= */
+
+const parkScreen =
+  document.getElementById(
+    "park-screen"
+  );
+
+
+const parkIntroOverlay =
+  document.getElementById(
+    "park-intro-overlay"
+  );
+
+
+const parkScene =
+  document.getElementById(
+    "park-scene"
+  );
+
+
+const parkCategoryView =
+  document.getElementById(
+    "park-category-view"
+  );
+
+
+const parkActivityView =
+  document.getElementById(
+    "park-activity-view"
+  );
+
+
+const parkCategoryTitle =
+  document.getElementById(
+    "park-category-title"
+  );
+
+
+const parkCategorySubtitle =
+  document.getElementById(
+    "park-category-subtitle"
+  );
+
+
+const parkActivityList =
+  document.getElementById(
+    "park-activity-list"
+  );
+
+
+const activityHeading =
+  document.getElementById(
+    "activity-heading"
+  );
+
+
+const activityText =
+  document.getElementById(
+    "activity-text"
+  );
+
+
+const activityDuration =
+  document.getElementById(
+    "activity-duration"
+  );
+
+
+let activeParkCategory =
+  null;
+
+
+/* =========================================================
+   PARK DATA
+========================================================= */
+
+/*
+  THIS IS THE PART YOU WILL CHANGE LATER
+  when you add more activities.
+
+  Each object has a category.
+  Each category can contain as many activities as you want.
+*/
+
+const parkCategories = {
+
+  recordings: {
+
+    title:
+      "Recordings",
+
+    subtitle:
+      "Choose a recording and take a quiet moment for yourself.",
+
+    activities: [
+
+      {
+        id:
+          "pause-choose",
+
+        title:
+          "Pause & Choose",
+
+        description:
+          "Slow down, notice what you’re feeling, and choose what feels right for you.",
+
+        duration:
+          "8 minutes",
+
+        type:
+          "audio",
+
+        audio: 
+        "park/Permitiryelegir_audio.mp3"
+      }
+
+    ]
+
+  },
+
+
+  audio: {
+
+    title:
+      "Listen & Unwind",
+
+    subtitle:
+      "Put on your headphones and choose something calming to listen to.",
+
+    activities: [
+
+      {
+        id:
+          "headphones-coming-soon",
+
+        title:
+          "New audio coming soon",
+
+        description:
+          "This space is ready for music, sounds, or another guided audio activity.",
+
+        duration:
+          "",
+
+        type:
+          "message"
+      }
+
+    ]
+
+  },
+
+
+  observation: {
+
+    title:
+      "Look Around",
+
+    subtitle:
+      "Slow down and notice the little things around you.",
+
+    activities: [
+
+      {
+        id:
+          "notice-five",
+
+        title:
+          "Notice Five Things",
+
+        description:
+          "Look around slowly and notice five things that catch your attention.",
+
+        duration:
+          "2–3 minutes",
+
+        type:
+          "message"
+      }
+
+    ]
+
+  },
+
+
+  fidget: {
+
+    title:
+      "Fidget Break",
+
+    subtitle:
+      "Give your hands something simple to do while your mind slows down.",
+
+    activities: [
+
+      {
+        id:
+          "fidget-break",
+
+        title:
+          "Take a Fidget Break",
+
+        description:
+          "Use this moment to pause, press, play, and let your attention settle.",
+
+        duration:
+          "2 minutes",
+
+        type:
+          "message"
+      }
+
+    ]
+
+  }
+
+};
+
+
+/* =========================================================
+   PARK AUDIO
+========================================================= */
+
+const parkAudio =
+  document.getElementById(
+    "park-audio"
+  );
+
+
+const audioPlayer =
+  document.getElementById(
+    "audio-player"
+  );
+
+
+const audioPlayButton =
+  document.getElementById(
+    "audio-play-button"
+  );
+
+
+const audioProgress =
+  document.getElementById(
+    "audio-progress"
+  );
+
+
+const audioTime =
+  document.getElementById(
+    "audio-time"
+  );
+
+
+function formatTime(
+  seconds
+) {
+
+  if (
+    !Number.isFinite(
+      seconds
+    )
+  ) {
+
+    return "0:00";
+
+  }
+
+
+  const minutes =
+    Math.floor(
+      seconds /
+      60
+    );
+
+
+  const remainingSeconds =
+    Math.floor(
+      seconds %
+      60
+    )
+    .toString()
+    .padStart(
+      2,
+      "0"
+    );
+
+
+  return (
+    minutes
+    +
+    ":"
+    +
+    remainingSeconds
+  );
+
+}
+
+
+function stopParkAudio() {
+
+  parkAudio.pause();
+
+
+  try {
+
+    parkAudio.currentTime =
+      0;
+
+  }
+
+  catch (
+    error
+  ) {
+
+    /*
+      Audio might not have loaded yet.
+    */
+
+  }
+
+
+  audioPlayButton.textContent =
+    "▶";
+
+
+  audioProgress.value =
+    0;
+
+}
+
+
+/* =========================================================
+   PARK VIEWS
+========================================================= */
+
+function showParkIntro() {
+
+  stopParkAudio();
+
+
+  parkIntroOverlay.style.display =
+    "flex";
+
+
+  parkIntroOverlay.classList.remove(
+    "visible"
+  );
+
+
+  parkCategoryView.style.display =
+    "none";
+
+
+  parkActivityView.style.display =
+    "none";
+
+
+  parkScene.style.display =
+    "block";
+
+
+  const parkDescription =
+    parkIntroOverlay.querySelector(
+      ".park-description"
+    );
+
+
+  const exploreButton =
+    document.getElementById(
+      "explore-park"
+    );
+
+
+  const fullText =
+    parkDescription.dataset.fullText
+    ||
+    parkDescription.textContent
+      .replace(/\s+/g, " ")
+      .trim();
+
+
+  parkDescription.dataset.fullText =
+    fullText;
+
+
+  parkDescription.textContent =
+    "";
+
+
+  exploreButton.style.opacity =
+    "0";
+
+
+  exploreButton.style.pointerEvents =
+    "none";
+
+
+  setTimeout(
+    function () {
+
+      parkIntroOverlay.classList.add(
+        "visible"
+      );
+
+    },
+    80
+  );
+
+
+  setTimeout(
+    async function () {
+
+      parkDescription.classList.add(
+        "typewriter-cursor"
+      );
+
+
+      for (
+        let index = 0;
+        index < fullText.length;
+        index++
+      ) {
+
+        parkDescription.textContent +=
+          fullText.charAt(
+            index
+          );
+
+
+        await new Promise(
+          function (
+            resolve
+          ) {
+
+            setTimeout(
+              resolve,
+              14
+            );
+
+          }
+        );
+
+      }
+
+
+      parkDescription.classList.remove(
+        "typewriter-cursor"
+      );
+
+
+      exploreButton.style.transition =
+        "opacity 0.28s ease";
+
+
+      exploreButton.style.opacity =
+        "1";
+
+
+      exploreButton.style.pointerEvents =
+        "auto";
+
+    },
+    260
+  );
+
+}
+
+
+function showParkScene() {
+
+  stopParkAudio();
+
+
+  parkIntroOverlay.style.display =
+    "none";
+
+
+  parkCategoryView.style.display =
+    "none";
+
+
+  parkActivityView.style.display =
+    "none";
+
+
+  parkScene.style.display =
+    "block";
+
+}
+
+
+function openParkCategory(
+  categoryKey
+) {
+
+  const category =
+    parkCategories[
+      categoryKey
+    ];
+
+
+  if (
+    !category
+  ) {
+
+    return;
+
+  }
+
+
+  activeParkCategory =
+    categoryKey;
+
+
+  stopParkAudio();
+
+
+  parkCategoryTitle.textContent =
+    category.title;
+
+
+  parkCategorySubtitle.textContent =
+    category.subtitle;
+
+
+  parkActivityList.innerHTML =
+    "";
+
+
+  category.activities.forEach(
+    function (
+      activity
+    ) {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+
+      button.type =
+        "button";
+
+
+      button.className =
+        "park-activity-item";
+
+
+      button.innerHTML =
+        `
+          <span>
+            <strong>${activity.title}</strong>
+            <span>${activity.description}</span>
+          </span>
+
+          <span class="park-activity-arrow">
+            ›
+          </span>
+        `;
+
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          openParkActivity(
+            activity
+          );
+
+        }
+      );
+
+
+      parkActivityList.appendChild(
+        button
+      );
+
+    }
+  );
+
+
+  parkIntroOverlay.style.display =
+    "none";
+
+
+  parkActivityView.style.display =
+    "none";
+
+
+  parkCategoryView.style.display =
+    "flex";
+
+}
+
+
+function openParkActivity(
+  activity
+) {
+
+  stopParkAudio();
+
+
+  activityHeading.textContent =
+    activity.title;
+
+
+  activityText.textContent =
+    activity.description;
+
+
+  activityDuration.textContent =
+    activity.duration || "";
+
+
+  if (
+    activity.type ===
+    "audio"
+    &&
+    activity.audio
+  ) {
+
+    audioPlayer.style.display =
+      "block";
+
+
+    parkAudio.src =
+      activity.audio;
+
+
+    parkAudio.load();
+
+  }
+
+  else {
+
+    audioPlayer.style.display =
+      "none";
+
+
+    parkAudio.removeAttribute(
+      "src"
+    );
+
+
+    parkAudio.load();
+
+  }
+
+
+  parkCategoryView.style.display =
+    "none";
+
+
+  parkActivityView.style.display =
+    "flex";
+
+}
+
+
+/* =========================================================
+   ENTER / EXIT PARK
+========================================================= */
+
+function enterPark() {
+
+  cancelAutoWalk();
+
+
+  closeBottomMenu();
+
+
+  gameMode =
+    "park";
+
+
+  touch.up =
+    false;
+
+
+  touch.down =
+    false;
+
+
+  touch.left =
+    false;
+
+
+  touch.right =
+    false;
+
+
+  document.getElementById(
+    "dpad"
+  ).style.display =
+    "none";
+
+
+  menuWrapper.style.display =
+    "none";
+
+
+  document.getElementById(
+    "park-prompt"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "bakery-prompt"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "library-prompt"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "mobile-enter-park"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "mobile-enter-bakery"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "mobile-enter-library"
+  ).style.display =
+    "none";
+
+
+  mapExitButton.style.display =
+    "none";
+
+
+  parkScreen.classList.remove(
+    "park-visible"
+  );
+
+
+  parkScreen.style.display =
+    "block";
+
+
+  requestAnimationFrame(
+    function () {
+
+      parkScreen.classList.add(
+        "park-visible"
+      );
+
+    }
+  );
+
+
+  showParkIntro();
+
+}
+
+
+function exitPark() {
+
+  stopParkAudio();
+
+
+  activeParkCategory =
+    null;
+
+
+  parkScreen.classList.remove(
+    "park-visible"
+  );
+
+
+  setTimeout(
+    function () {
+
+      gameMode =
+        "map";
+
+
+      parkScreen.style.display =
+        "none";
+
+
+      menuWrapper.style.display =
+        "flex";
+
+
+      closeBottomMenu();
+
+
+      if (
+        gameStarted
+      ) {
+
+        mapExitButton.style.display =
+          "flex";
+
+      }
+
+
+      if (
+        isMobileDevice()
+      ) {
+
+        document.getElementById(
+          "dpad"
+        ).style.display =
+          "block";
+
+      }
+
+    },
+    360
+  );
+
+}
+
+
+/* =========================================================
+   MOBILE LOCATION BUTTONS
+========================================================= */
+
+document
+  .getElementById(
+    "mobile-enter-park"
+  )
+  .addEventListener(
+    "click",
+    enterPark
+  );
+
+
+document
+  .getElementById(
+    "mobile-enter-bakery"
+  )
+  .addEventListener(
+    "click",
+    enterBakery
+  );
+
+
+document
+  .getElementById(
+    "mobile-enter-library"
+  )
+  .addEventListener(
+    "click",
+    enterLibrary
+  );
+
+
+/* =========================================================
+   PARK BUTTONS
+========================================================= */
+
+document
+  .getElementById(
+    "exit-park"
+  )
+  .addEventListener(
+    "click",
+    exitPark
+  );
+
+
+document
+  .getElementById(
+    "explore-park"
+  )
+  .addEventListener(
+    "click",
+    showParkScene
+  );
+
+
+document
+  .getElementById(
+    "back-to-park-scene"
+  )
+  .addEventListener(
+    "click",
+    showParkScene
+  );
+
+
+document
+  .getElementById(
+    "back-to-category"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      stopParkAudio();
+
+
+      if (
+        activeParkCategory
+      ) {
+
+        openParkCategory(
+          activeParkCategory
+        );
+
+      }
+
+      else {
+
+        showParkScene();
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   CLICKABLE PARK OBJECTS
+========================================================= */
+
+document
+  .querySelectorAll(
+    ".park-object"
+  )
+  .forEach(
+    function (
+      objectButton
+    ) {
+
+      objectButton.addEventListener(
+        "click",
+        function () {
+
+          openParkCategory(
+            objectButton.dataset.category
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   AUDIO PLAYER EVENTS
+========================================================= */
+
+audioPlayButton.addEventListener(
+  "click",
+  async function () {
+
+    if (
+      parkAudio.paused
+    ) {
+
+      try {
+
+        await parkAudio.play();
+
+
+        audioPlayButton.textContent =
+          "❚❚";
+
+      }
+
+      catch (
+        error
+      ) {
+
+        console.error(
+          "Audio could not play:",
+          error
+        );
+
+      }
+
+    }
+
+    else {
+
+      parkAudio.pause();
+
+
+      audioPlayButton.textContent =
+        "▶";
+
+    }
+
+  }
+);
+
+
+parkAudio.addEventListener(
+  "loadedmetadata",
+  function () {
+
+    audioTime.textContent =
+      "0:00 / "
+      +
+      formatTime(
+        parkAudio.duration
+      );
+
+  }
+);
+
+
+parkAudio.addEventListener(
+  "timeupdate",
+  function () {
+
+    if (
+      Number.isFinite(
+        parkAudio.duration
+      )
+      &&
+      parkAudio.duration >
+      0
+    ) {
+
+      const percentage =
+        (
+          parkAudio.currentTime
+          /
+          parkAudio.duration
+        )
+        *
+        100;
+
+
+      audioProgress.value =
+        percentage;
+
+
+      audioTime.textContent =
+        formatTime(
+          parkAudio.currentTime
+        )
+        +
+        " / "
+        +
+        formatTime(
+          parkAudio.duration
+        );
+
+    }
+
+  }
+);
+
+
+audioProgress.addEventListener(
+  "input",
+  function () {
+
+    if (
+      Number.isFinite(
+        parkAudio.duration
+      )
+    ) {
+
+      parkAudio.currentTime =
+        (
+          Number(
+            audioProgress.value
+          )
+          /
+          100
+        )
+        *
+        parkAudio.duration;
+
+    }
+
+  }
+);
+
+
+parkAudio.addEventListener(
+  "ended",
+  function () {
+
+    audioPlayButton.textContent =
+      "▶";
+
+
+    audioProgress.value =
+      0;
+
+  }
+);
+
+
+/* =========================================================
+   INIT
+========================================================= */
+
+let lastTime =
+  0;
+
+
+function init() {
+
+
+  mapW =
+    images.map.naturalWidth;
+
+
+  mapH =
+    images.map.naturalHeight;
+
+
+  meli.width =
+    images.idle_01
+      .naturalWidth
+    *
+    MELI_SCALE;
+
+
+  meli.height =
+    images.idle_01
+      .naturalHeight
+    *
+    MELI_SCALE;
+
+
+  meli.x =
+    mapW *
+    0.50;
+
+
+  meli.y =
+    mapH *
+    0.67;
+
+
+  camera.x =
+    meli.x;
+
+
+  camera.y =
+    meli.y;
+
+
+  setupDpad();
+
+
+  closeBottomMenu();
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+
+  /*
+    Loading is shown only on the first visit in this browser tab/session.
+
+    If the player returns from Bakery, Library, Character, etc.,
+    the game goes straight back to the map instead of showing
+    Loading and Cover again.
+  */
+
+  const alreadyBooted =
+    sessionStorage.getItem(
+      SESSION_KEYS.bootSeen
+    )
+    ===
+    "true";
+
+
+  const activeSession =
+    sessionStorage.getItem(
+      SESSION_KEYS.gameActive
+    )
+    ===
+    "true";
+
+
+  if (
+    alreadyBooted
+    &&
+    activeSession
+  ) {
+
+    loadingScreen.style.display =
+      "none";
+
+    coverScreen.style.display =
+      "none";
+
+    introScreen.style.display =
+      "none";
+
+    beginMapGame(
+      true
+    );
+
+  }
+
+  else {
+
+    sessionStorage.setItem(
+      SESSION_KEYS.bootSeen,
+      "true"
+    );
+
+
+    const minimumLoadingTime =
+      3500;
+
+
+    setTimeout(
+      showCover,
+      minimumLoadingTime
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   LOOP
+========================================================= */
+
+function gameLoop(
+  timestamp
+) {
+
+  const dt =
+    timestamp -
+    lastTime;
+
+
+  lastTime =
+    timestamp;
+
+
+  if (
+    dt >
+    0
+    &&
+    dt <
+    200
+  ) {
+
+    if (
+      gameMode ===
+      "map"
+      &&
+      gameStarted
+      &&
+      !introFlowActive
+    ) {
+
+      update(
+        dt
+      );
+
+    }
+
+
+    render();
+
+  }
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+}
+
+
+/* =========================================================
+   UPDATE
+========================================================= */
+
+function update(
+  dt
+) {
+
+  let dx =
+    0;
+
+
+  let dy =
+    0;
+
+
+  /* =====================================================
+     AUTO WALK
+  ===================================================== */
+
+  if (
+    autoWalk.active
+  ) {
+
+    const differenceX =
+      autoWalk.targetX -
+      meli.x;
+
+
+    const differenceY =
+      autoWalk.targetY -
+      meli.y;
+
+
+    const distance =
+      Math.sqrt(
+
+        differenceX *
+        differenceX
+
+        +
+
+        differenceY *
+        differenceY
+
+      );
+
+
+    if (
+      distance <
+      15
+    ) {
+
+      meli.x =
+        autoWalk.targetX;
+
+
+      meli.y =
+        autoWalk.targetY;
+
+
+      finishAutoWalk();
+
+
+      return;
+
+    }
+
+
+    dx =
+      differenceX /
+      distance;
+
+
+    dy =
+      differenceY /
+      distance;
+
+  }
+
+
+  /* =====================================================
+     MANUAL
+  ===================================================== */
+
+  else {
+
+    const up =
+      keys["w"]
+      ||
+      keys["arrowup"]
+      ||
+      touch.up;
+
+
+    const down =
+      keys["s"]
+      ||
+      keys["arrowdown"]
+      ||
+      touch.down;
+
+
+    const left =
+      keys["a"]
+      ||
+      keys["arrowleft"]
+      ||
+      touch.left;
+
+
+    const right =
+      keys["d"]
+      ||
+      keys["arrowright"]
+      ||
+      touch.right;
+
+
+    if (
+      up
+    ) {
+
+      dy -=
+        1;
+
+    }
+
+
+    if (
+      down
+    ) {
+
+      dy +=
+        1;
+
+    }
+
+
+    if (
+      left
+    ) {
+
+      dx -=
+        1;
+
+    }
+
+
+    if (
+      right
+    ) {
+
+      dx +=
+        1;
+
+    }
+
+  }
+
+
+  if (
+    dx !==
+    0
+    &&
+    dy !==
+    0
+    &&
+    !autoWalk.active
+  ) {
+
+    dx /=
+      Math.SQRT2;
+
+
+    dy /=
+      Math.SQRT2;
+
+  }
+
+
+  const speedFactor =
+    dt /
+    16.67;
+
+
+  const movementX =
+    dx *
+    MOVE_SPEED *
+    speedFactor;
+
+
+  const movementY =
+    dy *
+    MOVE_SPEED *
+    speedFactor;
+
+
+  /* MOVE X */
+
+  const nextX =
+    meli.x +
+    movementX;
+
+
+  if (
+    !collidesWithHouse(
+      nextX,
+      meli.y
+    )
+  ) {
+
+    meli.x =
+      nextX;
+
+  }
+
+
+  /* MOVE Y */
+
+  const nextY =
+    meli.y +
+    movementY;
+
+
+  if (
+    !collidesWithHouse(
+      meli.x,
+      nextY
+    )
+  ) {
+
+    meli.y =
+      nextY;
+
+  }
+
+
+  /* =====================================================
+     MAP LIMITS
+  ===================================================== */
+
+  meli.x =
+    Math.max(
+
+      meli.width /
+      2,
+
+      Math.min(
+
+        mapW -
+        meli.width /
+        2,
+
+        meli.x
+
+      )
+
+    );
+
+
+  meli.y =
+    Math.max(
+
+      meli.height /
+      2,
+
+      Math.min(
+
+        mapH -
+        meli.height /
+        2,
+
+        meli.y
+
+      )
+
+    );
+
+
+  /* =====================================================
+     DIRECTION
+  ===================================================== */
+
+  let direction =
+    "idle";
+
+
+  if (
+    dx ===
+    0
+    &&
+    dy ===
+    0
+  ) {
+
+    direction =
+      "idle";
+
+  }
+
+
+  else if (
+    Math.abs(
+      dx
+    )
+    >
+    Math.abs(
+      dy
+    )
+  ) {
+
+    direction =
+      dx >
+      0
+      ?
+      "right"
+      :
+      "left";
+
+  }
+
+
+  else {
+
+    direction =
+      dy >
+      0
+      ?
+      "down"
+      :
+      "up";
+
+  }
+
+
+  if (
+    direction !==
+    meli.direction
+  ) {
+
+    meli.direction =
+      direction;
+
+
+    meli.frame =
+      0;
+
+
+    meli.animTimer =
+      0;
+
+  }
+
+
+  /* =====================================================
+     ANIMATION
+  ===================================================== */
+
+  if (
+    meli.direction !==
+    "idle"
+  ) {
+
+    meli.animTimer +=
+      dt;
+
+
+    const interval =
+      1000 /
+      ANIM_FPS;
+
+
+    if (
+      meli.animTimer >=
+      interval
+    ) {
+
+      meli.animTimer -=
+        interval;
+
+
+      meli.frame =
+        (
+          meli.frame +
+          1
+        )
+        %
+        animations[
+          meli.direction
+        ].length;
+
+    }
+
+  }
+
+  else {
+
+    meli.frame =
+      0;
+
+
+    meli.animTimer =
+      0;
+
+  }
+
+
+  /* =====================================================
+     CAMERA
+  ===================================================== */
+
+  camera.x +=
+    (
+      meli.x -
+      camera.x
+    )
+    *
+    CAMERA_LERP;
+
+
+  camera.y +=
+    (
+      meli.y -
+      camera.y
+    )
+    *
+    CAMERA_LERP;
+
+
+  const halfW =
+    canvas.width /
+    2;
+
+
+  const halfH =
+    canvas.height /
+    2;
+
+
+  if (
+    canvas.width <
+    mapW
+  ) {
+
+    camera.x =
+      Math.max(
+
+        halfW,
+
+        Math.min(
+
+          mapW -
+          halfW,
+
+          camera.x
+
+        )
+
+      );
+
+  }
+
+  else {
+
+    camera.x =
+      mapW /
+      2;
+
+  }
+
+
+  if (
+    canvas.height <
+    mapH
+  ) {
+
+    camera.y =
+      Math.max(
+
+        halfH,
+
+        Math.min(
+
+          mapH -
+          halfH,
+
+          camera.y
+
+        )
+
+      );
+
+  }
+
+  else {
+
+    camera.y =
+      mapH /
+      2;
+
+  }
+
+
+  updateLocationTriggers();
+
+
+  /*
+    Light autosave while playing.
+  */
+
+  if (
+    gameStarted
+  ) {
+
+    const now =
+      performance.now();
+
+
+    if (
+      !update.lastSave
+      ||
+      now -
+      update.lastSave >
+      2500
+    ) {
+
+      update.lastSave =
+        now;
+
+      saveCurrentGame();
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render() {
+
+  ctx.fillStyle =
+    "#000";
+
+
+  ctx.fillRect(
+
+    0,
+
+    0,
+
+    canvas.width,
+
+    canvas.height
+
+  );
+
+
+  const offsetX =
+    canvas.width /
+    2
+    -
+    camera.x;
+
+
+  const offsetY =
+    canvas.height /
+    2
+    -
+    camera.y;
+
+
+  ctx.drawImage(
+
+    images.map,
+
+    offsetX,
+
+    offsetY,
+
+    mapW,
+
+    mapH
+
+  );
+
+
+  const spriteKey =
+    animations[
+      meli.direction
+    ][
+      meli.frame
+    ];
+
+
+  const sprite =
+    images[
+      spriteKey
+    ];
+
+
+  if (
+    !sprite
+  ) {
+
+    return;
+
+  }
+
+
+  const screenX =
+    meli.x +
+    offsetX;
+
+
+  const screenY =
+    meli.y +
+    offsetY;
+
+
+  ctx.save();
+
+
+  if (
+    meli.direction ===
+    "left"
+  ) {
+
+    ctx.translate(
+      screenX,
+      screenY
+    );
+
+
+    ctx.scale(
+      -1,
+      1
+    );
+
+
+    ctx.drawImage(
+
+      sprite,
+
+      -meli.width /
+      2,
+
+      -meli.height /
+      2,
+
+      meli.width,
+
+      meli.height
+
+    );
+
+  }
+
+  else {
+
+    ctx.drawImage(
+
+      sprite,
+
+      screenX -
+      meli.width /
+      2,
+
+      screenY -
+      meli.height /
+      2,
+
+      meli.width,
+
+      meli.height
+
+    );
+
+  }
+
+
+  ctx.restore();
+
+}
+
+
+/* =========================================================
+   CLICKABLE LOCATIONS
+========================================================= */
+
+function getClickedLocation(
+  event
+) {
+
+  if (
+    gameMode !==
+    "map"
+  ) {
+
+    return null;
+
+  }
+
+
+  const rect =
+    canvas.getBoundingClientRect();
+
+
+  const mouseX =
+    (
+      event.clientX -
+      rect.left
+    )
+    *
+    (
+      canvas.width /
+      rect.width
+    );
+
+
+  const mouseY =
+    (
+      event.clientY -
+      rect.top
+    )
+    *
+    (
+      canvas.height /
+      rect.height
+    );
+
+
+  const offsetX =
+    canvas.width /
+    2
+    -
+    camera.x;
+
+
+  const offsetY =
+    canvas.height /
+    2
+    -
+    camera.y;
+
+
+  const worldX =
+    mouseX -
+    offsetX;
+
+
+  const worldY =
+    mouseY -
+    offsetY;
+
+
+  const locations = [
+
+    {
+      name:
+        "park",
+
+      trigger:
+        PARK_TRIGGER
+    },
+
+    {
+      name:
+        "bakery",
+
+      trigger:
+        BAKERY_TRIGGER
+    },
+
+    {
+      name:
+        "library",
+
+      trigger:
+        LIBRARY_TRIGGER
+    },
+
+    {
+      name:
+        "clinic",
+
+      trigger:
+        CLINIC_TRIGGER
+    },
+
+    {
+      name:
+        "workshop",
+
+      trigger:
+        WORKSHOP_TRIGGER
+    }
+
+  ];
+
+
+  for (
+    const location
+    of locations
+  ) {
+
+    const triggerX =
+      location.trigger.x *
+      mapW;
+
+
+    const triggerY =
+      location.trigger.y *
+      mapH;
+
+
+    const radius =
+      location.trigger.radius
+      *
+      Math.min(
+        mapW,
+        mapH
+      )
+      *
+      1.6;
+
+
+    const dx =
+      worldX -
+      triggerX;
+
+
+    const dy =
+      worldY -
+      triggerY;
+
+
+    const distance =
+      Math.sqrt(
+        dx * dx +
+        dy * dy
+      );
+
+
+    if (
+      distance <=
+      radius
+    ) {
+
+      return location.name;
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+/* =========================================================
+   CLICK → MELI WALKS
+========================================================= */
+
+canvas.addEventListener(
+  "click",
+  function (
+    event
+  ) {
+
+    const location =
+      getClickedLocation(
+        event
+      );
+
+
+    if (
+      !location
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      location ===
+      "park"
+    ) {
+
+      startAutoWalk(
+        PARK_TRIGGER,
+        "park"
+      );
+
+    }
+
+
+    else if (
+      location ===
+      "bakery"
+    ) {
+
+      startAutoWalk(
+        BAKERY_TRIGGER,
+        "bakery"
+      );
+
+    }
+
+
+    else if (
+      location ===
+      "library"
+    ) {
+
+      startAutoWalk(
+        LIBRARY_TRIGGER,
+        "library"
+      );
+
+    }
+
+
+    else if (
+      location ===
+      "clinic"
+    ) {
+
+      startAutoWalk(
+        CLINIC_TRIGGER,
+        "clinic"
+      );
+
+    }
+
+
+    else if (
+      location ===
+      "workshop"
+    ) {
+
+      startAutoWalk(
+        WORKSHOP_TRIGGER,
+        "workshop"
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   POINTER
+========================================================= */
+
+canvas.addEventListener(
+  "mousemove",
+  function (
+    event
+  ) {
+
+    if (
+      gameMode !==
+      "map"
+    ) {
+
+      canvas.style.cursor =
+        "default";
+
+      return;
+
+    }
+
+
+    const location =
+      getClickedLocation(
+        event
+      );
+
+
+    canvas.style.cursor =
+      location
+      ?
+      "pointer"
+      :
+      "default";
+
+  }
+);
+
+
+/* =========================================================
+   START
+========================================================= */
+
+loadAssets(
+  init
+);
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
