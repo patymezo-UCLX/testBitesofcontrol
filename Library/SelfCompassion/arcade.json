@@ -1,0 +1,27 @@
+{
+	"name": "Library_Puzzle_v1",
+	"version": "1.0.0.0",
+	"description": "",
+	"id": "",
+	"unique-id": "sxfa5qbzxmd",
+	"viewport-width": 1080,
+	"viewport-height": 1920,
+	"author": "CGSpot",
+	"email": "paarigamer@gmail.com",
+	"website": "",
+	"orientations": "portrait",
+	"c2version": "244",
+	"c3version": "r476.2",
+	"ife": false,
+	"used-plugins": [
+		"Touch",
+		"Audio",
+		"Sprite",
+		"Arr",
+		"Text"
+	],
+	"used-behaviors": [
+		"Tween",
+		"Sin"
+	]
+}

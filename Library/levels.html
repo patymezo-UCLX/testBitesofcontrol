@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Library Activities - Bites of Control</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100vw;
+      min-height: 100vh;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 30px;
+
+      font-family: Arial, sans-serif;
+
+      background: #eee1cf;
+    }
+
+    .panel {
+      width: min(920px, 95%);
+
+      padding: 45px;
+
+      background: rgba(255, 255, 255, 0.9);
+
+      border-radius: 42px;
+
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 35px;
+
+      color: #74496b;
+
+      font-size: clamp(38px, 6vw, 68px);
+    }
+
+    .activities-grid {
+      display: grid;
+
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+
+      gap: 20px;
+    }
+
+    .activity-card {
+      min-height: 170px;
+
+      padding: 25px;
+
+      border: none;
+
+      border-radius: 26px;
+
+      background: #e5bbd1;
+
+      color: #68415f;
+
+      box-shadow: 0 6px 0 #bd8da7;
+
+      font-size: 20px;
+      font-weight: bold;
+
+      cursor: pointer;
+    }
+
+    .activity-card span {
+      display: block;
+
+      margin-top: 10px;
+
+      font-size: 14px;
+      font-weight: normal;
+    }
+
+    .locked {
+      opacity: 0.5;
+
+      cursor: not-allowed;
+
+      background: #ddd;
+
+      box-shadow: 0 6px 0 #aaa;
+    }
+
+    .back-button {
+      margin-top: 35px;
+
+      padding: 12px 28px;
+
+      border: none;
+
+      border-radius: 25px;
+
+      background: #74496b;
+
+      color: white;
+
+      font-size: 17px;
+      font-weight: bold;
+
+      cursor: pointer;
+    }
+
+    @media (max-width: 700px) {
+      .activities-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="panel">
+
+    <h1>Library Activities</h1>
+
+    <div class="activities-grid">
+
+      <button
+        class="activity-card"
+        onclick="openSelfCompassion()">
+
+        Self-Compassion
+
+        <span>
+          Practice responding to yourself with kindness
+        </span>
+
+      </button>
+
+
+      <button
+        class="activity-card locked"
+        disabled>
+
+        Thought Check
+
+        <span>Locked</span>
+
+      </button>
+
+
+      <button
+        class="activity-card locked"
+        disabled>
+
+        Write & Release
+
+        <span>Locked</span>
+
+      </button>
+
+
+      <button
+        class="activity-card locked"
+        disabled>
+
+        Mini Stories
+
+        <span>Locked</span>
+
+      </button>
+
+    </div>
+
+
+    <button
+      class="back-button"
+      onclick="goBack()">
+
+      ← Back
+
+    </button>
+
+  </div>
+
+
+  <script>
+
+    function openSelfCompassion() {
+      window.location.href = "SelfCompassion/index.html";
+    }
+
+    function goBack() {
+      window.location.href = "index.html";
+    }
+
+  </script>
+
+</body>
+</html>
