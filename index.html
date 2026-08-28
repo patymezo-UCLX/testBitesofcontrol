@@ -3151,7 +3151,7 @@ async function animateIntroStep(
     "controls-visible"
   );
 
-  step.classList.add(
+  step.classList.remove(
     "step-visible"
   );
 
@@ -3187,6 +3187,9 @@ async function animateIntroStep(
     title.dataset.fullText =
       titleText;
 
+    title.textContent =
+      "";
+
   }
 
 
@@ -3207,11 +3210,30 @@ async function animateIntroStep(
         paragraph.dataset.fullText =
           fullText;
 
+        paragraph.textContent =
+          "";
+
 
         return fullText;
 
       }
     );
+
+
+  requestAnimationFrame(
+    function () {
+
+      step.classList.add(
+        "step-visible"
+      );
+
+    }
+  );
+
+
+  await wait(
+    180
+  );
 
 
   if (
@@ -3259,7 +3281,6 @@ async function animateIntroStep(
   );
 
 }
-
 
 function completeCurrentTyping() {
 
