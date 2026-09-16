@@ -318,8 +318,8 @@ button {
   overflow: hidden;
 
   background-image:
-    linear-gradient(rgba(51, 61, 13, 0.27), rgba(51, 61, 13, 0.27)),
-    url("Intro/Cover_desktop_Bg.png");
+    linear-gradient(rgba(51, 61, 13, 0.18), rgba(51, 61, 13, 0.18)),
+    url("map.png");
 
   background-size: cover;
   background-position: center;
@@ -2028,6 +2028,17 @@ button {
 }
 
 #audio-settings-button:hover { transform: scale(1.05); }
+
+@media (max-width: 768px) {
+  #audio-settings-button {
+    top: 16px;
+    right: 76px;
+    width: 46px;
+    height: 46px;
+    border-width: 3px;
+    font-size: 22px;
+  }
+}
 
 #audio-settings-modal {
   position: fixed;
@@ -3894,11 +3905,7 @@ document
   .addEventListener(
     "click",
     function () {
-
-      alert(
-        "Settings will be added later."
-      );
-
+      document.getElementById("audio-settings-modal").classList.add("visible");
     }
   );
 
