@@ -1,0 +1,2327 @@
+/* ==========================================================================
+   BAKERY DELIVERY — STAGE 1 STYLES
+   Namespaced with "bd-" prefixes throughout so nothing here can collide
+   with existing Bites of Control CSS when this module is integrated later.
+   ========================================================================== */
+
+/* ---------- Design tokens -------------------------------------------- */
+/* Colors are sampled from the supplied artwork (Note.png, boxopen-1.png,
+   Name-BD.png, BCK-1.png) so temporary UI blends with the final assets. */
+:root{
+  --bd-pink:        #ff4f9a;
+  --bd-pink-dark:   #d92d78;
+  --bd-pink-light:  #ffc4de;
+  --bd-orange:      #ff9a3d;
+  --bd-yellow:      #ffcf4d;
+  --bd-cream:       #fff3df;
+  --bd-burgundy:    #6b2a1f;
+  --bd-burgundy-dark:#4a1a12;
+  --bd-brown-shadow:rgba(74, 26, 18, 0.45);
+
+  --bd-font-display: 'Baloo 2', 'Fredoka', system-ui, sans-serif;
+  --bd-font-body: 'Quicksand', system-ui, sans-serif;
+
+  --bd-ease-soft: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --bd-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ---- Delivery gameplay object sizes — centralized so BACKGROUND
+     scale (the camera/crop system) and GAME OBJECT scale (Meli, houses,
+     obstacles, the sun) can be tuned completely independently. Mobile
+     shows a NARROWER slice of the same world, never a miniaturized one
+     — these mins are what guarantee that on portrait viewports. ---- */
+  --bd-delivery-meli-size: clamp(130px, 15vw, 210px);
+  --bd-delivery-house-size: clamp(170px, 23vw, 320px);
+  --bd-delivery-sun-size: clamp(64px, 9vw, 104px);
+  --bd-delivery-obstacle-size: clamp(58px, 6.5vw, 92px);
+}
+
+/* ---------- Base / reset (scoped, does not touch <html>/<body> globally
+   beyond the required full-viewport rules from the brief) -------------- */
+html, body{
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #201013; /* only visible for a split second before bg paints */
+}
+
+#bd-root, .bd-root{
+  font-family: var(--bd-font-body);
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#bd-root *, #bd-root *::before, #bd-root *::after{
+  box-sizing: border-box;
+}
+
+#bd-root img{
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   EXIT BUTTON — TEMPORARY ASSET, REPLACE LATER
+   Persistent across both screens; sits above everything else.
+   ========================================================================== */
+.bd-exit-btn{
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 40;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #e14b4b;
+  color: #fff;
+  font-family: var(--bd-font-display);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow:
+    0 3px 0 rgba(0,0,0,0.25),
+    0 6px 10px rgba(74,26,18,0.35);
+  transition: transform 0.15s var(--bd-ease-out);
+}
+
+.bd-exit-btn:hover{ transform: scale(1.08); }
+.bd-exit-btn:active{ transform: scale(0.92); }
+.bd-exit-btn:focus-visible{ outline: 3px solid #fff; outline-offset: 2px; }
+
+/* ---- Sound toggle — same persistent-button pattern as the exit
+   button, positioned immediately to its left so both sit in the
+   upper-right HUD row without overlapping the order counter/timer
+   (which sit lower, at top:62px+/104px+). ---- */
+.bd-sound-btn{
+  position: absolute;
+  top: 14px;
+  right: 60px;
+  z-index: 40;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--bd-pink);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow:
+    0 3px 0 rgba(0,0,0,0.25),
+    0 6px 10px rgba(74,26,18,0.35);
+  transition: transform 0.15s var(--bd-ease-out), background 0.15s ease-out;
+}
+
+.bd-sound-btn:hover{ transform: scale(1.08); }
+.bd-sound-btn:active{ transform: scale(0.92); }
+.bd-sound-btn:focus-visible{ outline: 3px solid #fff; outline-offset: 2px; }
+
+.bd-sound-btn.bd-sound-btn-muted{
+  background: rgba(74, 26, 18, 0.55);
+}
+
+.bd-sound-icon{
+  width: 20px;
+  height: 20px;
+}
+
+.bd-sound-icon-off{ display: none; }
+.bd-sound-btn.bd-sound-btn-muted .bd-sound-icon-on{ display: none; }
+.bd-sound-btn.bd-sound-btn-muted .bd-sound-icon-off{ display: block; }
+
+@media (orientation: portrait){
+  .bd-sound-btn{
+    top: 12px;
+    right: 56px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+  .bd-sound-icon{ width: 18px; height: 18px; }
+}
+
+/* ==========================================================================
+   LOADING STATE — TEMPORARY ASSET, REPLACE LATER
+   ========================================================================== */
+.bd-loading{
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: linear-gradient(160deg, var(--bd-yellow), var(--bd-orange));
+}
+
+.bd-loading-dots{
+  display: flex;
+  gap: 10px;
+}
+
+.bd-loading-dots span{
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bd-pink);
+  box-shadow: 0 3px 0 var(--bd-pink-dark);
+  animation: bd-loading-bounce 0.9s ease-in-out infinite;
+}
+.bd-loading-dots span:nth-child(2){ animation-delay: 0.12s; }
+.bd-loading-dots span:nth-child(3){ animation-delay: 0.24s; }
+
+@keyframes bd-loading-bounce{
+  0%, 80%, 100%{ transform: translateY(0); }
+  40%{ transform: translateY(-10px); }
+}
+
+.bd-loading-text{
+  font-family: var(--bd-font-display);
+  font-weight: 700;
+  color: var(--bd-burgundy-dark);
+  font-size: clamp(14px, 2.4vw, 18px);
+  margin: 0;
+}
+
+.bd-loading.bd-hidden{
+  display: none;
+}
+
+/* ==========================================================================
+   SHARED SCREEN / BACKGROUND SYSTEM
+   ========================================================================== */
+.bd-screen{
+  position: absolute;
+  inset: 0;
+  display: none; /* toggled to flex/block by JS via .bd-active */
+  overflow: hidden;
+}
+
+.bd-screen.bd-active{
+  display: block;
+}
+
+/* Backgrounds are the supplied FINAL artwork. Cover-fit preserves aspect
+   ratio with no stretching; cropping is the standard, correct way to fill
+   a viewport with a fixed-aspect illustration without letterboxing. */
+.bd-bg{
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  z-index: 0;
+}
+
+.bd-bg-desktop{
+  background-image: url('../assets/BCK-1.png');
+  display: block;
+}
+
+.bd-bg-mobile{
+  background-image: url('../assets/BCK-mobile.png');
+  display: none;
+}
+
+/* Landscape/desktop uses BCK-1, portrait uses BCK-mobile. This matches the
+   two deliberately designed compositions requested in the brief. */
+@media (orientation: portrait){
+  .bd-bg-desktop{ display: none; }
+  .bd-bg-mobile{ display: block; }
+}
+
+/* ==========================================================================
+   SCREEN 1 — INTRO
+   ========================================================================== */
+.bd-screen-intro{
+  display: none;
+}
+.bd-screen-intro.bd-active{
+  display: flex;
+}
+
+.bd-intro-content{
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 3vh, 30px);
+  padding: 4vh 5vw;
+}
+
+/* ---- Logo --------------------------------------------------------------
+   Two-layer structure (wrapper + image) so the one-shot entrance animation
+   and the infinite idle float can each own their own element. Applying
+   two different `animation` values to the SAME element via class swapping
+   would make the browser drop the entrance's `forwards` end-state the
+   moment the idle class's animation-name takes over — so they're split. */
+.bd-logo{
+  width: min(46vw, 420px);
+  max-width: 90vw;
+  opacity: 0;
+  transform: scale(0.85);
+  will-change: transform, opacity;
+}
+
+.bd-logo-img{
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 10px 18px rgba(74,26,18,0.35));
+}
+
+/* Entrance: fade in, scale up with a slight overshoot, then settle. */
+.bd-logo.bd-anim-in{
+  animation: bd-logo-enter 0.7s var(--bd-ease-soft) forwards;
+}
+
+@keyframes bd-logo-enter{
+  0%{   opacity: 0; transform: scale(0.85); }
+  60%{  opacity: 1; transform: scale(1.05); }
+  100%{ opacity: 1; transform: scale(1); }
+}
+
+/* Very subtle idle float once settled — lives on the inner image so it
+   never disturbs the wrapper's already-settled opacity/scale. */
+.bd-logo-img.bd-anim-idle{
+  animation: bd-logo-idle 3.6s ease-in-out infinite;
+}
+
+@keyframes bd-logo-idle{
+  0%, 100%{ transform: translateY(0); }
+  50%{ transform: translateY(-3px); }
+}
+
+@media (orientation: portrait){
+  .bd-logo{ width: min(64vw, 320px); }
+}
+
+/* ---- Instructions panel ---------------------------------------------- */
+.bd-panel{
+  width: min(560px, 88vw);
+  max-height: 62vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, var(--bd-burgundy) 0%, var(--bd-burgundy-dark) 100%);
+  border: 4px solid var(--bd-orange);
+  border-radius: 26px;
+  box-shadow:
+    0 10px 0 rgba(0,0,0,0.18),
+    0 18px 30px rgba(74,26,18,0.4),
+    inset 0 0 0 3px rgba(255, 207, 77, 0.25);
+  padding: clamp(16px, 3vh, 26px) clamp(18px, 4vw, 30px);
+  color: var(--bd-cream);
+  text-align: center;
+
+  opacity: 0;
+  transform: translateY(15px) scale(0.98);
+}
+
+.bd-panel.bd-anim-in{
+  animation: bd-panel-enter 0.55s var(--bd-ease-out) forwards;
+  animation-delay: 0.25s; /* stagger after the logo */
+}
+
+@keyframes bd-panel-enter{
+  0%{   opacity: 0; transform: translateY(15px) scale(0.98); }
+  100%{ opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.bd-panel-eyebrow{
+  margin: 0 0 2px;
+  font-family: var(--bd-font-display);
+  font-weight: 600;
+  font-size: clamp(11px, 1.6vw, 13px);
+  letter-spacing: 0.04em;
+  color: var(--bd-yellow);
+}
+
+.bd-panel-heading{
+  margin: 0 0 12px;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(20px, 3.6vw, 28px);
+  color: #fff;
+  text-shadow: 0 3px 0 rgba(0,0,0,0.2);
+}
+
+.bd-panel-text{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bd-panel-text p{
+  margin: 0;
+  font-size: clamp(13.5px, 2vw, 15.5px);
+  line-height: 1.45;
+  color: var(--bd-cream);
+}
+
+.bd-panel-text-strong{
+  font-weight: 700;
+  color: var(--bd-yellow) !important;
+}
+
+/* ---- Small "how to play" visual diagram -------------------------------
+   Built entirely from supplied PNGs: Note.png, object-5.png, object-7.png,
+   boxopen-1.png. Check/cross marks are the only temporary CSS elements. */
+.bd-howto{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 1.6vw, 14px);
+  margin: 6px 0 18px;
+  padding: 10px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 16px;
+}
+
+.bd-howto-item{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.bd-howto-note{
+  width: clamp(34px, 5.5vw, 46px);
+  height: auto;
+}
+
+.bd-howto-box{
+  width: clamp(40px, 6.5vw, 54px);
+  height: auto;
+}
+
+.bd-howto-badge{
+  position: relative;
+  display: inline-flex;
+}
+
+.bd-howto-badge img{
+  width: clamp(30px, 5vw, 40px);
+  height: auto;
+}
+
+/* TEMPORARY ASSET — REPLACE LATER */
+.bd-howto-mark{
+  position: absolute;
+  bottom: -4px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  border: 2px solid var(--bd-burgundy-dark);
+  font-family: var(--bd-font-display);
+}
+.bd-howto-mark-good{ background: #3fbf6a; }
+.bd-howto-mark-bad{ background: #e14b4b; }
+
+.bd-howto-arrow{
+  color: var(--bd-yellow);
+  font-size: clamp(14px, 2.2vw, 18px);
+  font-weight: 700;
+}
+
+@media (orientation: portrait) and (max-height: 700px){
+  .bd-howto{ gap: 6px; padding: 8px; }
+  .bd-panel-text p{ font-size: 13px; }
+}
+
+/* ---- START button — TEMPORARY ASSET, REPLACE LATER --------------------- */
+.bd-start-btn{
+  appearance: none;
+  border: 3px solid var(--bd-yellow);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff6bad 0%, var(--bd-pink) 55%, var(--bd-pink-dark) 100%);
+  color: #fff;
+  font-family: var(--bd-font-display);
+  font-weight: 700;
+  font-size: clamp(16px, 2.6vw, 20px);
+  letter-spacing: 0.03em;
+  padding: clamp(12px, 1.8vh, 16px) clamp(38px, 8vw, 56px);
+  cursor: pointer;
+  box-shadow:
+    0 6px 0 var(--bd-pink-dark),
+    0 10px 16px rgba(74,26,18,0.35);
+  transform: translateY(0) scale(1);
+  transition: transform 0.15s var(--bd-ease-out), box-shadow 0.15s var(--bd-ease-out);
+  min-height: 48px; /* comfortable touch target */
+}
+
+.bd-start-btn:hover{
+  transform: translateY(-2px) scale(1.03);
+  box-shadow:
+    0 8px 0 var(--bd-pink-dark),
+    0 14px 20px rgba(74,26,18,0.4);
+}
+
+.bd-start-btn:active,
+.bd-start-btn.bd-pressed{
+  transform: translateY(2px) scale(0.97);
+  box-shadow:
+    0 2px 0 var(--bd-pink-dark),
+    0 4px 10px rgba(74,26,18,0.35);
+}
+
+.bd-start-btn:focus-visible{
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+/* Idle pulse once the button has settled in — subtle, never flashy. */
+.bd-start-btn.bd-anim-idle{
+  animation: bd-start-idle 2.6s ease-in-out infinite;
+}
+
+@keyframes bd-start-idle{
+  0%, 100%{ transform: scale(1); }
+  50%{ transform: scale(1.025); }
+}
+
+.bd-start-btn:hover.bd-anim-idle,
+.bd-start-btn:active.bd-anim-idle{
+  animation-play-state: paused;
+}
+
+/* ==========================================================================
+   SCREEN TRANSITION (generic — used for every screen-to-screen handoff:
+   intro → gameplay, packing → delivery intro, delivery intro → delivery)
+   ========================================================================== */
+.bd-screen.bd-leaving{
+  animation: bd-screen-fade-out 0.4s var(--bd-ease-out) forwards;
+}
+
+.bd-screen.bd-entering{
+  animation: bd-screen-fade-in 0.5s var(--bd-ease-out) forwards;
+}
+
+@keyframes bd-screen-fade-out{
+  0%{   opacity: 1; transform: scale(1); }
+  100%{ opacity: 0; transform: scale(0.98); }
+}
+
+@keyframes bd-screen-fade-in{
+  0%{   opacity: 0; transform: scale(1.02); }
+  100%{ opacity: 1; transform: scale(1); }
+}
+
+/* ==========================================================================
+   SCREEN 2 — GAMEPLAY (structure only)
+   ========================================================================== */
+.bd-screen-gameplay{
+  display: none;
+}
+.bd-screen-gameplay.bd-active{
+  display: block;
+}
+
+/* ---- Order note (TOP / SIDE) ------------------------------------------ */
+.bd-order-note{
+  position: absolute;
+  top: 4%;
+  left: 4%;
+  width: clamp(140px, 18vw, 230px);
+  z-index: 3;
+  opacity: 0;
+  transform: translate(-20px, -15px) rotate(-4deg) scale(0.92);
+}
+
+.bd-order-note.bd-anim-in{
+  animation: bd-note-enter 0.6s var(--bd-ease-soft) forwards;
+}
+
+@keyframes bd-note-enter{
+  0%{   opacity: 0; transform: translate(-20px, -15px) rotate(-4deg) scale(0.92); }
+  65%{  opacity: 1; transform: translate(0, 0) rotate(1deg) scale(1.03); }
+  100%{ opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
+.bd-note-img{
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Overlay positioned over the blank paper area of Note.png (432x520
+   source), used for dynamically inserted product thumbnails. Bottom
+   trimmed from 8%→22% to leave room for the PEDIDO label below it
+   without enlarging Note.png itself. */
+.bd-note-overlay{
+  position: absolute;
+  top: 19%;
+  left: 8%;
+  right: 8%;
+  bottom: 22%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 4% 5%;
+}
+
+/* Product images bigger than the original 38%, but pulled back from an
+   earlier pass that ran too large in real play (products spilling past
+   the note edges and crowding "PEDIDO"). A 3-item order gets a smaller
+   per-item width than a 2-item order so all three still fit the fixed
+   note area without overlapping. */
+.bd-note-thumb-wrap{
+  position: relative;
+  width: 44%; /* fallback for an unexpected item count */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bd-note-overlay[data-count="2"] .bd-note-thumb-wrap{
+  width: 44%;
+}
+
+.bd-note-overlay[data-count="3"] .bd-note-thumb-wrap{
+  width: 34%;
+}
+
+.bd-note-thumb{
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transform: scale(0);
+}
+
+.bd-note-thumb.bd-anim-pop{
+  animation: bd-thumb-pop 0.45s var(--bd-ease-soft) forwards;
+}
+
+@keyframes bd-thumb-pop{
+  0%{   opacity: 0; transform: scale(0); }
+  70%{  opacity: 1; transform: scale(1.15); }
+  100%{ opacity: 1; transform: scale(1); }
+}
+
+/* Collected-item mark — TEMPORARY ASSET, REPLACE LATER. Softens the
+   thumbnail slightly and adds a small check badge; the product image
+   itself is never removed, so the Note keeps showing the full order. */
+.bd-note-thumb-wrap.bd-collected .bd-note-thumb{
+  opacity: 0.55;
+}
+
+.bd-note-thumb-check{
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #3fbf6a;
+  color: #fff;
+  font-family: var(--bd-font-display);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+  opacity: 0;
+  transform: scale(0);
+  animation: bd-thumb-pop 0.35s var(--bd-ease-soft) forwards;
+}
+
+/* "PEDIDO" — small supporting label under the (now much larger)
+   product images. Sits in the blank space between the products and
+   Note.png's own bottom-left heart / bottom-right page-curl doodles,
+   so it never covers them. */
+.bd-note-label{
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 7%;
+  text-align: center;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(10px, 1.6vw, 13px);
+  letter-spacing: 0.06em;
+  color: var(--bd-burgundy);
+  pointer-events: none;
+}
+
+@media (orientation: portrait){
+  .bd-order-note{
+    top: 3%;
+    left: 3%;
+    width: clamp(100px, 26vw, 145px);
+  }
+  .bd-note-label{
+    font-size: 9px;
+    bottom: 6%;
+  }
+}
+
+/* ---- Order indicator — TEMPORARY ASSET, REPLACE LATER ------------------ */
+.bd-order-indicator{
+  position: absolute;
+  top: 62px;
+  right: 4%;
+  z-index: 3;
+  background: var(--bd-burgundy);
+  border: 2px solid var(--bd-yellow);
+  border-radius: 999px;
+  padding: 6px 16px;
+  color: var(--bd-cream);
+  font-family: var(--bd-font-display);
+  font-weight: 700;
+  font-size: clamp(11px, 1.6vw, 14px);
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+.bd-order-indicator.bd-anim-in{
+  animation: bd-pop-in 0.4s var(--bd-ease-soft) forwards;
+  animation-delay: 0.15s;
+}
+
+@keyframes bd-pop-in{
+  0%{   opacity: 0; transform: scale(0.6); }
+  70%{  opacity: 1; transform: scale(1.08); }
+  100%{ opacity: 1; transform: scale(1); }
+}
+
+/* ---- Timer — TEMPORARY ASSET, REPLACE LATER
+   Global 2:00 packing countdown — the ONLY thing that can end an attempt.
+   Stays visually calm even at low time: a subtle contrast/pulse change,
+   never flashing red or dominating the screen. Now a flex child of
+   .bd-timer-lives-row rather than independently positioned, so it and
+   the hearts always sit on the same horizontal line. --- */
+.bd-timer-lives-row{
+  position: absolute;
+  top: 104px;
+  right: 4%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bd-timer{
+  background: rgba(74, 26, 18, 0.55);
+  border-radius: 999px;
+  padding: 4px 14px;
+  color: var(--bd-cream);
+  font-family: var(--bd-font-body);
+  font-weight: 600;
+  font-size: clamp(11px, 1.5vw, 13px);
+  letter-spacing: 0.03em;
+  transition: background 0.3s ease-out, color 0.3s ease-out;
+
+  opacity: 0;
+}
+
+.bd-timer.bd-anim-in{
+  animation: bd-fade-in 0.5s var(--bd-ease-out) forwards;
+  animation-delay: 0.3s;
+}
+
+@keyframes bd-fade-in{
+  0%{ opacity: 0; }
+  100%{ opacity: 1; }
+}
+
+/* ≤30s: a slightly stronger, warmer contrast — not alarming. */
+.bd-timer.bd-timer-warn{
+  background: rgba(230, 126, 34, 0.75);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ≤10s: the same treatment, with a gentle pulse. Still no red, no flash. */
+.bd-timer.bd-timer-critical{
+  background: rgba(230, 126, 34, 0.9);
+  color: #fff;
+  font-weight: 700;
+  animation: bd-timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes bd-timer-pulse{
+  0%, 100%{ transform: scale(1); }
+  50%{ transform: scale(1.06); }
+}
+
+@media (orientation: portrait){
+  .bd-order-indicator{ top: 56px; right: 3%; }
+  .bd-timer-lives-row{ top: 94px; right: 3%; gap: 7px; }
+}
+
+/* ---- Lives (4 hearts) — TEMPORARY ASSET, REPLACE LATER. A flex child
+   of .bd-timer-lives-row, sitting directly beside the timer on the same
+   line — never stacked underneath it, never overlapping the bakery
+   background decorations. Bright red CSS hearts (no image asset, no
+   emoji-rendering inconsistency) built from a rotated square + two
+   circular lobes, with a burgundy drop-shadow for contrast against the
+   yellow background. ---- */
+.bd-lives{
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.bd-lives.bd-lives-hit{
+  animation: bd-lives-shake 0.35s ease-in-out;
+}
+
+@keyframes bd-lives-shake{
+  0%, 100%{ transform: translateX(0); }
+  25%{ transform: translateX(-4px); }
+  50%{ transform: translateX(4px); }
+  75%{ transform: translateX(-2px); }
+}
+
+.bd-life-heart{
+  position: relative;
+  width: 15px;
+  height: 15px;
+  transform: rotate(-45deg);
+  background: #ff2d4d;
+  border-radius: 3px 0 0 0;
+  filter: drop-shadow(0 2px 1px rgba(74, 26, 18, 0.55));
+  transition: background 0.2s ease-out, opacity 0.2s ease-out, transform 0.2s ease-out;
+  flex-shrink: 0;
+}
+
+.bd-life-heart::before,
+.bd-life-heart::after{
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background: #ff2d4d;
+  border-radius: 50%;
+  transition: background 0.2s ease-out;
+}
+
+.bd-life-heart::before{ left: -7.5px; top: 0; }
+.bd-life-heart::after{ left: 0; top: -7.5px; }
+
+.bd-life-heart.bd-life-lost{
+  background: rgba(74, 26, 18, 0.25);
+  filter: none;
+  transform: rotate(-45deg) scale(0.85);
+}
+
+.bd-life-heart.bd-life-lost::before,
+.bd-life-heart.bd-life-lost::after{
+  background: rgba(74, 26, 18, 0.25);
+}
+
+@media (orientation: portrait){
+  .bd-lives{ gap: 4px; }
+  .bd-life-heart,
+  .bd-life-heart::before,
+  .bd-life-heart::after{ width: 12px; height: 12px; }
+  .bd-life-heart::before{ left: -6px; }
+  .bd-life-heart::after{ top: -6px; }
+}
+
+/* ---- Central falling area (kept empty & clear for Stage 2) ------------ */
+.bd-falling-area{
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  right: 20%;
+  bottom: 22%;
+  z-index: 1;
+  /* Intentionally no visible chrome — this is empty gameplay space. */
+}
+
+@media (orientation: portrait){
+  .bd-falling-area{
+    top: 16%;
+    left: 8%;
+    right: 8%;
+    bottom: 24%;
+  }
+}
+
+/* ---- Box (BOTTOM) ------------------------------------------------------ */
+.bd-box{
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%) translateY(40px);
+  z-index: 3;
+  width: clamp(110px, 14vw, 170px);
+  opacity: 0;
+  touch-action: none;
+}
+
+.bd-box.bd-anim-in{
+  animation: bd-box-enter 0.55s var(--bd-ease-soft) forwards;
+  animation-delay: 0.2s;
+}
+
+@keyframes bd-box-enter{
+  0%{   opacity: 0; transform: translateX(-50%) translateY(40px); }
+  70%{  opacity: 1; transform: translateX(-50%) translateY(-6px); }
+  100%{ opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Subtle idle motion once settled — kept extremely small since Stage 2
+   makes the wrapper (.bd-box) player-controlled via JS transform; this
+   idle bob lives on the child image instead so the two never fight over
+   the same element's transform. */
+.bd-box-img.bd-anim-idle{
+  animation: bd-box-idle 3.2s ease-in-out infinite;
+}
+
+@keyframes bd-box-idle{
+  0%, 100%{ transform: translateY(0) scale(1); }
+  50%{ transform: translateY(-2px) scale(1.008); }
+}
+
+.bd-box-img{
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (orientation: portrait){
+  .bd-box{ bottom: 6%; width: clamp(96px, 24vw, 140px); }
+}
+
+/* ==========================================================================
+   FALLING OBJECTS (STAGE 2)
+   Position/rotation are driven entirely by fallingObjects.js each frame via
+   a single inline `transform`, so no CSS animation is defined for motion
+   here — only the catch/reject feedback transitions below.
+   ========================================================================== */
+.bd-falling-object{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(46px, 6.4vw, 88px);
+  height: auto;
+  pointer-events: none;
+  will-change: transform;
+  z-index: 2;
+}
+
+@media (orientation: portrait){
+  .bd-falling-object{
+    width: clamp(40px, 12vw, 64px);
+  }
+}
+
+/* Correct catch: shrink + fade into the box (transition applied via JS
+   alongside the final transform so it animates from its last fall frame). */
+.bd-falling-object.bd-object-caught{
+  opacity: 0;
+}
+
+/* Wrong catch: brief bounce-away + fade, never a hard fail state. */
+.bd-falling-object.bd-object-rejected{
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .bd-falling-object{
+    transition-duration: 0.001s !important;
+  }
+}
+
+/* ==========================================================================
+   "OOPS" TOAST — TEMPORARY ASSET, REPLACE LATER
+   Brief, light feedback for a wrong catch. Never a fail/warning treatment.
+   ========================================================================== */
+.bd-oops-toast{
+  position: absolute;
+  left: 50%;
+  bottom: 20%;
+  z-index: 25;
+  background: rgba(74, 26, 18, 0.85);
+  color: #fff;
+  font-family: var(--bd-font-display);
+  font-weight: 700;
+  font-size: clamp(13px, 1.8vw, 16px);
+  padding: 6px 18px;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px) scale(0.8);
+}
+
+.bd-oops-toast.bd-anim-pop-in{
+  animation: bd-oops-pop 0.7s var(--bd-ease-soft) forwards;
+}
+
+@keyframes bd-oops-pop{
+  0%{   opacity: 0; transform: translate(-50%, 8px) scale(0.8); }
+  20%{  opacity: 1; transform: translate(-50%, -4px) scale(1.05); }
+  70%{  opacity: 1; transform: translate(-50%, -4px) scale(1); }
+  100%{ opacity: 0; transform: translate(-50%, -12px) scale(0.9); }
+}
+
+/* ==========================================================================
+   ORDER-COMPLETE / PACKING-COMPLETE PANEL — TEMPORARY ASSET, REPLACE LATER
+   Reuses the Bakery Delivery panel + button language from the intro screen
+   instead of introducing a new visual style.
+   ========================================================================== */
+.bd-order-complete-panel{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 30;
+  width: min(400px, 86vw);
+  text-align: center;
+  background: linear-gradient(180deg, var(--bd-burgundy) 0%, var(--bd-burgundy-dark) 100%);
+  border: 4px solid var(--bd-yellow);
+  border-radius: 24px;
+  box-shadow:
+    0 10px 0 rgba(0,0,0,0.18),
+    0 18px 30px rgba(74,26,18,0.4);
+  padding: clamp(18px, 3vh, 28px) clamp(20px, 4vw, 30px);
+  color: var(--bd-cream);
+
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.9);
+  pointer-events: none;
+  transition: opacity 0.3s var(--bd-ease-out), transform 0.3s var(--bd-ease-soft);
+}
+
+.bd-order-complete-panel.bd-active{
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: auto;
+}
+
+.bd-order-complete-heading{
+  margin: 0 0 8px;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(18px, 2.8vw, 24px);
+  color: #fff;
+  text-shadow: 0 3px 0 rgba(0,0,0,0.2);
+}
+
+.bd-order-complete-subtext{
+  margin: 0 0 10px;
+  font-family: var(--bd-font-body);
+  font-weight: 600;
+  font-size: clamp(13px, 2vw, 15px);
+  color: var(--bd-cream);
+}
+
+.bd-order-complete-subtext p{
+  margin: 0 0 8px;
+}
+
+.bd-order-complete-subtext p:last-child{
+  margin-bottom: 0;
+}
+
+.bd-order-complete-subtext[hidden]{
+  display: none;
+}
+
+.bd-order-complete-actions{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.bd-order-complete-btn,
+.bd-next-order-btn{
+  font-size: clamp(13px, 2vw, 17px);
+  padding: clamp(10px, 1.6vh, 14px) clamp(20px, 5vw, 34px);
+}
+
+/* Secondary action (e.g. "REVISAR UNA VEZ") — same shape as the pink
+   primary button, a quieter cream fill so ENVIAR PEDIDO stays the clear
+   default choice without making review feel discouraged. */
+.bd-order-complete-btn-secondary{
+  background: linear-gradient(180deg, var(--bd-cream) 0%, #f4dfb8 100%);
+  color: var(--bd-burgundy-dark);
+  border-color: var(--bd-orange);
+  box-shadow:
+    0 6px 0 #c99a4f,
+    0 10px 16px rgba(74,26,18,0.3);
+}
+
+.bd-order-complete-btn-secondary:hover{
+  box-shadow:
+    0 8px 0 #c99a4f,
+    0 14px 20px rgba(74,26,18,0.35);
+}
+
+.bd-order-complete-btn-secondary:active,
+.bd-order-complete-btn-secondary.bd-pressed{
+  box-shadow:
+    0 2px 0 #c99a4f,
+    0 4px 10px rgba(74,26,18,0.3);
+}
+
+@media (max-width: 420px){
+  .bd-order-complete-actions{ flex-direction: column; width: 100%; }
+  .bd-order-complete-btn,
+  .bd-next-order-btn{ width: 100%; }
+}
+
+/* ==========================================================================
+   REVIEW SCREEN — TEMPORARY ASSET, REPLACE LATER
+   The one allowed look at the packed order. Keeps the Bakery Delivery
+   background visible behind a dim layer rather than swapping to an
+   unrelated screen.
+   ========================================================================== */
+.bd-review-screen{
+  position: absolute;
+  inset: 0;
+  z-index: 32;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4vh 5vw;
+
+  background: rgba(74, 26, 18, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--bd-ease-out);
+}
+
+.bd-review-screen.bd-active{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.bd-review-panel{
+  width: min(380px, 90vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  text-align: center;
+  background: linear-gradient(180deg, var(--bd-cream) 0%, #f4dfb8 100%);
+  border: 4px solid var(--bd-orange);
+  border-radius: 26px;
+  box-shadow:
+    0 10px 0 rgba(0,0,0,0.18),
+    0 20px 34px rgba(74,26,18,0.45);
+  padding: clamp(18px, 3vh, 28px) clamp(18px, 4vw, 28px);
+
+  opacity: 0;
+  transform: scale(0.92) translateY(10px);
+  transition: opacity 0.3s var(--bd-ease-soft), transform 0.3s var(--bd-ease-soft);
+}
+
+.bd-review-screen.bd-active .bd-review-panel{
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.bd-review-title{
+  margin: 0 0 16px;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(15px, 2.4vw, 19px);
+  letter-spacing: 0.03em;
+  color: var(--bd-burgundy-dark);
+}
+
+.bd-review-note-wrap{
+  position: relative;
+  width: min(220px, 60vw);
+  margin: 0 auto 18px;
+}
+
+.bd-review-note-img{
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 14px rgba(74,26,18,0.25));
+}
+
+.bd-review-note-overlay{
+  position: absolute;
+  top: 22%;
+  left: 10%;
+  right: 10%;
+  bottom: 8%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 10% 8%;
+}
+
+/* Review thumbnails are already-settled state, not another entrance
+   animation — they should just be visible immediately. */
+.bd-note-thumb-static{
+  opacity: 1 !important;
+  transform: scale(1) !important;
+}
+
+.bd-review-box-img{
+  width: min(110px, 30vw);
+  height: auto;
+  margin: 4px auto 20px;
+  display: block;
+  filter: drop-shadow(0 8px 12px rgba(74,26,18,0.3));
+}
+
+.bd-finish-review-btn{
+  font-size: clamp(13px, 2vw, 16px);
+  padding: clamp(10px, 1.6vh, 14px) clamp(22px, 5vw, 32px);
+}
+
+/* ==========================================================================
+   ANXI OVERLAY — TEMPORARY ASSET, REPLACE LATER
+   Gameplay stays visible (dimmed) behind Anxi; this is an interruption of
+   the task, not a replacement screen.
+   ========================================================================== */
+.bd-anxi-overlay{
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  display: none;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: clamp(8px, 2vw, 20px);
+  padding: 4vh 6vw 6vh;
+  pointer-events: none;
+}
+
+.bd-anxi-overlay.bd-active{
+  display: flex;
+  pointer-events: auto;
+}
+
+.bd-anxi-dim{
+  position: absolute;
+  inset: 0;
+  background: rgba(74, 26, 18, 0.35);
+}
+
+.bd-anxi-character{
+  position: relative;
+  z-index: 2;
+  width: clamp(100px, 16vw, 170px);
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(60px) scale(0.95);
+}
+
+.bd-anxi-character.bd-anim-in{
+  animation: bd-anxi-enter 0.45s var(--bd-ease-soft) forwards;
+}
+
+.bd-anxi-character.bd-anim-out{
+  animation: bd-anxi-exit 0.3s var(--bd-ease-out) forwards;
+}
+
+@keyframes bd-anxi-enter{
+  0%{   opacity: 0; transform: translateX(60px) scale(0.95); }
+  70%{  opacity: 1; transform: translateX(-4px) scale(1.03); }
+  100%{ opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes bd-anxi-exit{
+  0%{   opacity: 1; transform: translateX(0) scale(1); }
+  100%{ opacity: 0; transform: translateX(40px) scale(0.96); }
+}
+
+.bd-anxi-img{
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 10px 16px rgba(74,26,18,0.4));
+}
+
+.bd-anxi-bubble{
+  position: relative;
+  z-index: 2;
+  width: min(300px, 62vw);
+  margin-bottom: clamp(10px, 3vh, 30px);
+  background: linear-gradient(180deg, var(--bd-burgundy) 0%, var(--bd-burgundy-dark) 100%);
+  border: 3px solid var(--bd-yellow);
+  border-radius: 20px;
+  padding: clamp(14px, 2.2vh, 20px) clamp(14px, 3vw, 20px);
+  box-shadow:
+    0 8px 0 rgba(0,0,0,0.18),
+    0 14px 24px rgba(74,26,18,0.4);
+
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+}
+
+.bd-anxi-bubble.bd-anim-in{
+  animation: bd-anxi-bubble-enter 0.4s var(--bd-ease-soft) forwards;
+  animation-delay: 0.08s;
+}
+
+.bd-anxi-bubble.bd-anim-out{
+  animation: bd-anxi-bubble-exit 0.28s var(--bd-ease-out) forwards;
+}
+
+@keyframes bd-anxi-bubble-enter{
+  0%{   opacity: 0; transform: translateY(12px) scale(0.96); }
+  100%{ opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes bd-anxi-bubble-exit{
+  0%{   opacity: 1; transform: translateY(0) scale(1); }
+  100%{ opacity: 0; transform: translateY(8px) scale(0.97); }
+}
+
+.bd-anxi-text{
+  margin: 0 0 14px;
+  font-family: var(--bd-font-display);
+  font-weight: 700;
+  font-size: clamp(13.5px, 2vw, 16px);
+  line-height: 1.4;
+  color: var(--bd-cream);
+}
+
+.bd-anxi-options{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bd-anxi-option-btn{
+  appearance: none;
+  border: 2px solid var(--bd-yellow);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff6bad 0%, var(--bd-pink) 55%, var(--bd-pink-dark) 100%);
+  color: #fff;
+  font-family: var(--bd-font-body);
+  font-weight: 700;
+  font-size: clamp(12.5px, 1.9vw, 14.5px);
+  padding: 9px 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--bd-pink-dark);
+  transition: transform 0.15s var(--bd-ease-out), box-shadow 0.15s var(--bd-ease-out);
+  min-height: 40px;
+}
+
+.bd-anxi-option-btn:hover{
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 5px 0 var(--bd-pink-dark);
+}
+
+.bd-anxi-option-btn:active,
+.bd-anxi-option-btn.bd-pressed{
+  transform: translateY(2px) scale(0.97);
+  box-shadow: 0 1px 0 var(--bd-pink-dark);
+}
+
+.bd-anxi-option-btn:focus-visible{
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+.bd-anxi-option-btn-solo{
+  align-self: center;
+  min-width: 55%;
+}
+
+@media (orientation: portrait){
+  .bd-anxi-overlay{
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 6vh;
+  }
+  .bd-anxi-character{
+    width: clamp(84px, 26vw, 120px);
+  }
+  .bd-anxi-bubble{
+    width: min(320px, 84vw);
+    margin-bottom: 0;
+  }
+}
+
+/* ==========================================================================
+   DELIVERY INTRO / INSTRUCTIONS (Delivery Stage 0)
+   Same visual language as the rest of Bakery Delivery — not a new game.
+   ========================================================================== */
+
+.bd-bg-delivery{
+  position: absolute;
+  inset: 0;
+  background-image: url('../assets/fondo-parallax.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  z-index: 0;
+}
+
+.bd-screen-delivery-intro,
+.bd-screen-delivery{
+  display: none;
+}
+.bd-screen-delivery-intro.bd-active,
+.bd-screen-delivery.bd-active{
+  display: block;
+}
+
+.bd-delivery-intro-content{
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vh, 18px);
+  padding: 3vh 5vw;
+}
+
+.bd-delivery-heading{
+  margin: 0;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 4vw, 34px);
+  color: #fff;
+  text-shadow: 0 3px 0 rgba(74,26,18,0.35), 0 6px 14px rgba(74,26,18,0.3);
+  text-align: center;
+
+  opacity: 0;
+  transform: translateY(-12px) scale(0.96);
+}
+
+.bd-delivery-heading.bd-anim-in{
+  animation: bd-panel-enter 0.55s var(--bd-ease-out) forwards;
+}
+
+.bd-delivery-subtext{
+  margin: -6px 0 0;
+  font-family: var(--bd-font-body);
+  font-weight: 700;
+  font-size: clamp(13px, 2vw, 16px);
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(74,26,18,0.4);
+  text-align: center;
+  max-width: 520px;
+}
+
+/* ---- Instructions panel — same card language as the intro instructions ---- */
+.bd-delivery-instructions-panel{
+  width: min(640px, 92vw);
+  max-height: 68vh;
+  overflow-y: auto;
+}
+
+.bd-delivery-instruction-row{
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 3vw, 20px);
+  padding: 10px 4px;
+  text-align: left;
+}
+
+.bd-delivery-instruction-row + .bd-delivery-instruction-row{
+  border-top: 1px solid rgba(255, 207, 77, 0.2);
+}
+
+.bd-instruction-text{
+  flex: 1;
+  min-width: 0;
+}
+
+.bd-instruction-title{
+  margin: 0 0 4px;
+  font-family: var(--bd-font-display);
+  font-weight: 700;
+  font-size: clamp(13px, 2vw, 15.5px);
+  color: var(--bd-yellow);
+  letter-spacing: 0.01em;
+}
+
+.bd-instruction-body{
+  margin: 0;
+  font-family: var(--bd-font-body);
+  font-weight: 600;
+  font-size: clamp(12.5px, 1.8vw, 14.5px);
+  line-height: 1.4;
+  color: var(--bd-cream);
+}
+
+/* Desktop shows keyboard-arrow copy; touch devices show swipe copy —
+   decided purely by input capability, not viewport size. */
+.bd-instr-mobile-only{ display: none; }
+@media (hover: none), (pointer: coarse){
+  .bd-instr-desktop-only{ display: none; }
+  .bd-instr-mobile-only{ display: block; }
+}
+
+/* ---- Lane-change demo — TEMPORARY ASSET, REPLACE LATER
+   Meli bobs between two lane lines on a loop. Visual only; no physics. --- */
+.bd-lane-demo{
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bd-lane-demo-track{
+  position: relative;
+  width: clamp(70px, 9vw, 96px);
+  height: clamp(64px, 8vh, 84px);
+  background: rgba(0,0,0,0.15);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.bd-lane-line{
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--bd-yellow) 0 6px,
+    transparent 6px 12px
+  );
+  opacity: 0.7;
+}
+.bd-lane-line-top{ top: 26%; }
+.bd-lane-line-bottom{ top: 72%; }
+
+.bd-lane-demo-meli{
+  position: absolute;
+  left: 50%;
+  top: 26%;
+  width: 58%;
+  height: auto;
+  transform: translate(-50%, -50%);
+  animation: bd-lane-demo-bob 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 3px 4px rgba(0,0,0,0.3));
+}
+
+@keyframes bd-lane-demo-bob{
+  0%, 20%{   top: 26%; }
+  40%, 60%{  top: 72%; }
+  80%, 100%{ top: 26%; }
+}
+
+.bd-lane-arrows{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* TEMPORARY ASSET — REPLACE LATER */
+.bd-lane-arrow{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bd-pink);
+  border: 2px solid var(--bd-yellow);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 2px 0 var(--bd-pink-dark);
+}
+
+/* ---- Obstacle preview ---- */
+.bd-obstacle-preview{
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.bd-obstacle-preview img{
+  width: clamp(40px, 6vw, 54px);
+  height: auto;
+  filter: drop-shadow(0 3px 4px rgba(0,0,0,0.25));
+}
+
+/* ---- Delivery box icon (third instruction) ---- */
+.bd-delivery-box-icon{
+  width: clamp(46px, 6.5vw, 60px);
+  height: auto;
+  flex-shrink: 0;
+  filter: drop-shadow(0 3px 4px rgba(0,0,0,0.25));
+}
+
+@media (orientation: portrait){
+  .bd-delivery-instruction-row{
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  .bd-instruction-text{ text-align: center; }
+}
+
+@media (max-height: 700px) and (orientation: portrait){
+  .bd-delivery-instructions-panel{ max-height: 74vh; }
+  .bd-delivery-instruction-row{ padding: 6px 4px; }
+  .bd-delivery-subtext{ display: none; }
+}
+
+/* ==========================================================================
+   DELIVERY GAMEPLAY (Stage 1: driving feel)
+   Layered structure: background (scrolling) → sun (near-fixed) → world
+   (future obstacles/houses) → Meli → debug → UI. Each layer is a full-
+   bleed absolutely positioned div so future stages can add to
+   .bd-delivery-world-layer / .bd-delivery-ui-layer without touching
+   this structure.
+   ========================================================================== */
+
+.bd-delivery-game{
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #6ec3e8; /* sky fallback color, invisible once art loads */
+  touch-action: none; /* swipe-to-change-lane must never scroll the page */
+}
+
+.bd-delivery-background-layer{
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Sized by HEIGHT (not width) so the road's vertical position stays a
+   consistent fraction of the viewport at every breakpoint — that's what
+   lets deliveryWorld.js compute lane Y as a simple fraction. Width is
+   set explicitly via JS (a div has no intrinsic size from its <img>
+   content the way the <img> itself would). JS chains two of these
+   end-to-end and recycles whichever has scrolled fully off-screen.
+
+   fondo-parallax.png's own left/right edges don't match pixel-for-pixel
+   (it's a single wide scene, not a designed repeating tile), so an
+   edge-to-edge join would show a hard content jump. This mask fades
+   each tile's own trailing 120px to transparent; combined with a
+   matching overlap in deliveryWorld.js, the next tile's fully-opaque
+   start is already in place underneath, turning the jump into a soft
+   cross-fade instead. TEMPORARY ASSET — REPLACE LATER (a true tiling
+   background from the artist would remove the need for this). */
+.bd-delivery-bg-tile{
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  pointer-events: none;
+  will-change: transform;
+  -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 120px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 120px), transparent 100%);
+}
+
+.bd-delivery-bg-img{
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Covers the background art's own baked-in sun with a flat sky-blue
+   patch (matching the surrounding gradient) so only Sol.png reads as
+   "the sun" — see the Stage 1 report. Bounds were measured directly
+   from the source PNG. TEMPORARY ASSET — REPLACE LATER */
+.bd-delivery-bg-sun-mask{
+  position: absolute;
+  left: 78.5%;
+  top: 5.5%;
+  width: 14%;
+  height: 27.5%;
+  background: linear-gradient(to bottom, #42cbfd 0%, #64d5fd 100%);
+  pointer-events: none;
+}
+
+.bd-delivery-sun-layer{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Near-fixed distant element — see deliverySystem's Stage-1 report for
+   why this sits alongside (not replacing) the background's own art. */
+.bd-delivery-sun{
+  position: absolute;
+  top: 6%;
+  right: 9%;
+  width: var(--bd-delivery-sun-size);
+  height: auto;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.12));
+}
+
+.bd-delivery-world-layer{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  /* Stage 2: obstacles (below). Later: houses, delivery markers, decorations. */
+}
+
+/* Fixed canvas per obstacle type would need per-image aspect handling;
+   all three supplied obstacles share the same 210×192 source canvas, so
+   one fixed aspect-ratio here keeps sizing simple and jump-free, same
+   approach as Meli's own container. */
+.bd-delivery-obstacle{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--bd-delivery-obstacle-size);
+  aspect-ratio: 210 / 192;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+}
+
+/* ---- Anxi obstacle encounter — TEMPORARY ANXI HIT TEST, REPLACE WITH
+   DIALOGUE NEXT STAGE. Deliberately NOT the physical crash treatment:
+   no wobble/jerk/tilt on Meli, just a brief visual emphasis on Anxi
+   herself plus a short label, per spec. ---- */
+.bd-delivery-obstacle-anxi.bd-delivery-anxi-emphasis{
+  filter: drop-shadow(0 0 10px rgba(255, 79, 154, 0.75)) drop-shadow(0 0 4px rgba(255,255,255,0.6));
+}
+
+.bd-delivery-anxi-label{
+  position: absolute;
+  transform: translate(-50%, -130%);
+  z-index: 9;
+  background: var(--bd-pink);
+  color: #fff;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 8px rgba(74,26,18,0.35);
+  pointer-events: none;
+  animation: bd-delivery-anxi-label-pop 0.7s ease-out forwards;
+  white-space: nowrap;
+}
+
+@keyframes bd-delivery-anxi-label-pop{
+  0%{   opacity: 0; transform: translate(-50%, -110%) scale(0.7); }
+  20%{  opacity: 1; transform: translate(-50%, -140%) scale(1.08); }
+  75%{  opacity: 1; transform: translate(-50%, -140%) scale(1); }
+  100%{ opacity: 0; transform: translate(-50%, -155%) scale(1); }
+}
+
+.bd-delivery-meli-layer{
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Fixed canvas size (matches the supplied 450×300 sprites exactly) so
+   swapping frames can never cause a jump/resize. OUTER: pure lane
+   position + depth scale, entirely transform-driven by deliveryMeli.js
+   every frame; `left` is set once (and on resize) to Meli's horizontal
+   anchor, with translateX(-50%) in the transform centering her on it. */
+.bd-delivery-meli{
+  position: absolute;
+  top: 0;
+  left: 18%;
+  width: var(--bd-delivery-meli-size);
+  aspect-ratio: 450 / 300;
+  will-change: transform;
+}
+
+/* INNER: purely cosmetic (lean, idle bounce, collision jerk/wobble) —
+   deliberately a separate element from the outer lane-position wrapper
+   so the two transforms never overwrite each other. transform-origin
+   sits near the wheels so rotation pivots realistically, not from the
+   sprite's center. */
+.bd-delivery-meli-impact{
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 90%;
+  will-change: transform;
+}
+
+.bd-delivery-meli-img{
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---- Impact puff — TEMPORARY IMPACT EFFECT — CAN BE REPLACED WITH ART
+   LATER. A small, brief, non-explosive cartoon puff at the contact
+   point on collision. ---- */
+.bd-delivery-fx-layer{
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.bd-delivery-impact-puff{
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  margin-left: -17px;
+  margin-top: -17px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff8ec 0%, rgba(255,248,236,0.7) 55%, rgba(255,248,236,0) 78%);
+  opacity: 0;
+  transform: scale(0.4);
+  animation: bd-impact-puff 0.32s ease-out forwards;
+}
+
+@keyframes bd-impact-puff{
+  0%{   opacity: 0;   transform: scale(0.4); }
+  30%{  opacity: 0.9; transform: scale(1.05); }
+  100%{ opacity: 0;   transform: scale(1.35); }
+}
+
+.bd-delivery-ui-layer{
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  /* Stage 2+: progress indicator, Delivery timer. */
+}
+
+/* ---- Mobile lane buttons — TEMPORARY GAME CONTROL, CAN BE REPLACED
+   WITH FINAL ART LATER. Touch-only secondary control alongside swipe
+   and tap-the-road; all three call the same deliveryMeli.setLane(). ---- */
+.bd-delivery-lane-controls{
+  display: none; /* shown only on touch devices, see media query below */
+  position: absolute;
+  right: 4%;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: column;
+  gap: 14px;
+  pointer-events: none; /* the buttons themselves opt back in */
+  z-index: 7;
+}
+
+@media (hover: none), (pointer: coarse){
+  .bd-delivery-lane-controls{ display: flex; }
+}
+
+.bd-delivery-lane-btn{
+  pointer-events: auto;
+  appearance: none;
+  width: clamp(56px, 13vw, 68px);
+  height: clamp(56px, 13vw, 68px);
+  border-radius: 50%;
+  border: 3px solid var(--bd-yellow);
+  background: linear-gradient(180deg, #ff6bad 0%, var(--bd-pink) 55%, var(--bd-pink-dark) 100%);
+  color: #fff;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(20px, 5vw, 26px);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--bd-pink-dark), 0 8px 14px rgba(74,26,18,0.3);
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+.bd-delivery-lane-btn:active{
+  transform: scale(0.92);
+  box-shadow: 0 2px 0 var(--bd-pink-dark), 0 4px 8px rgba(74,26,18,0.3);
+}
+
+.bd-delivery-lane-btn:focus-visible{
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+@media (orientation: portrait){
+  .bd-delivery-lane-controls{
+    /* Explicit safe-area-aware inset rather than a bare percentage —
+       guarantees both buttons stay fully inside the viewport (never
+       clipped at the right edge) even on devices with rounded corners
+       or a notch. */
+    right: max(16px, env(safe-area-inset-right, 0px));
+    top: auto;
+    bottom: 14%;
+    transform: none;
+  }
+}
+
+.bd-delivery-lane-controls-disabled{
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   DESTINATION HOUSE (Stage 3)
+   A separate layer/system from obstacles — never collidable. Position is
+   entirely transform-driven by deliveryDestination.js every frame while
+   arriving/transitioning, fixed once settled.
+   ========================================================================== */
+.bd-delivery-destination-layer{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: none;
+}
+
+.bd-delivery-destination-layer.bd-active{
+  display: block;
+}
+
+/* All five casa PNGs share one canvas/aspect ratio; object-fit: contain
+   plus a normalized max box keeps this safe even if a future house
+   doesn't match, without distorting any of them. */
+.bd-delivery-house-img{
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: var(--bd-delivery-house-size);
+  max-height: 42vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 8px 10px rgba(74,26,18,0.25));
+}
+
+/* ---- Delivery marker — TEMPORARY DELIVERY MARKER — REPLACE WITH FINAL
+   ASSET LATER. A small rounded pin with a bakery package glyph, built
+   from HTML/CSS since no final art has been supplied yet. ---- */
+.bd-delivery-marker{
+  position: absolute;
+  transform: translate(-50%, -100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-out;
+}
+
+.bd-delivery-marker.bd-active{
+  opacity: 1;
+  animation: bd-delivery-marker-bob 1.2s ease-in-out infinite;
+}
+
+.bd-delivery-marker-pin{
+  width: 40px;
+  height: 40px;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  background: linear-gradient(135deg, #ff6bad 0%, var(--bd-pink) 60%, var(--bd-pink-dark) 100%);
+  border: 3px solid #fff;
+  box-shadow: 0 4px 10px rgba(74,26,18,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bd-delivery-marker-icon{
+  transform: rotate(45deg);
+  width: 16px;
+  height: 13px;
+  background: var(--bd-cream);
+  border-radius: 2px;
+  position: relative;
+  box-shadow: 0 0 0 1.5px var(--bd-pink-dark) inset;
+}
+
+.bd-delivery-marker-icon::after{
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--bd-pink);
+  border-radius: 1px;
+}
+
+@keyframes bd-delivery-marker-bob{
+  0%, 100%{ transform: translate(-50%, -100%) translateY(0); }
+  50%{      transform: translate(-50%, -100%) translateY(-5px); }
+}
+
+/* ---- Delivery CTA — reuses the approved bd-start-btn look ---- */
+.bd-delivery-cta-btn{
+  position: absolute;
+  transform: translate(-50%, 0) scale(0.9);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+  white-space: nowrap;
+  padding: 12px 28px;
+  font-size: clamp(13px, 1.8vw, 16px);
+}
+
+.bd-delivery-cta-btn.bd-active{
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+  pointer-events: auto;
+}
+
+/* ---- Delivery confirmation banner ---- */
+.bd-delivery-confirm-banner{
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 8;
+  transform: translate(-50%, -50%) scale(0.9);
+  opacity: 0;
+  background: rgba(74, 26, 18, 0.92);
+  color: #fff;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(15px, 2.4vw, 20px);
+  padding: 14px 26px;
+  border-radius: 999px;
+  border: 3px solid var(--bd-yellow);
+  box-shadow: 0 8px 18px rgba(74,26,18,0.35);
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  white-space: nowrap;
+}
+
+.bd-delivery-confirm-banner.bd-active{
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.bd-delivery-confirm-check{
+  color: #6fd66f;
+  margin-right: 6px;
+}
+
+/* ---- Delivery HUD (TIEMPO + PEDIDOS) ---- */
+.bd-delivery-hud{
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.bd-delivery-timer{
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  background: rgba(74, 26, 18, 0.55);
+  border-radius: 999px;
+  padding: 6px 14px;
+  transition: background 0.3s ease-out;
+}
+
+.bd-delivery-timer-label{
+  font-family: var(--bd-font-body);
+  font-weight: 700;
+  font-size: clamp(9px, 1.3vw, 11px);
+  letter-spacing: 0.06em;
+  color: var(--bd-yellow);
+}
+
+.bd-delivery-timer-text{
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(13px, 1.9vw, 16px);
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* ≤20s: subtle warmer contrast — same calm philosophy as Packing's
+   timer, never a harsh flashing countdown. */
+.bd-delivery-timer.bd-delivery-timer-warn{
+  background: rgba(230, 126, 34, 0.75);
+}
+.bd-delivery-timer.bd-delivery-timer-warn .bd-delivery-timer-label{
+  color: #fff;
+}
+
+/* ≤8s: same treatment plus a gentle pulse. */
+.bd-delivery-timer.bd-delivery-timer-critical{
+  background: rgba(230, 126, 34, 0.9);
+  animation: bd-delivery-timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes bd-delivery-timer-pulse{
+  0%, 100%{ transform: scale(1); }
+  50%{ transform: scale(1.05); }
+}
+
+/* ---- Delivery progress (check1.png / uncheck1.png) ---- */
+.bd-delivery-progress{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(74, 26, 18, 0.55);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+.bd-delivery-progress-icon{
+  width: clamp(20px, 3vw, 28px);
+  height: auto;
+  display: block;
+}
+
+.bd-delivery-progress-text{
+  margin-left: 4px;
+  font-family: var(--bd-font-body);
+  font-weight: 700;
+  font-size: clamp(11px, 1.6vw, 14px);
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* ---- Delivery lives — same reusable .bd-lives/.bd-life-heart styling
+   as Packing, wrapped in a small pill matching the timer/progress
+   pills for legibility against the scrolling world. ---- */
+.bd-delivery-lives{
+  background: rgba(74, 26, 18, 0.55);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+@media (orientation: portrait){
+  .bd-delivery-lives{
+    padding: 5px 9px;
+    gap: 3px;
+  }
+}
+
+@media (orientation: portrait){
+  .bd-delivery-hud{
+    top: 10px;
+    gap: 5px;
+  }
+  .bd-delivery-timer{
+    gap: 4px;
+    padding: 5px 10px;
+  }
+  .bd-delivery-timer-label{
+    font-size: 8px;
+  }
+  .bd-delivery-timer-text{
+    font-size: 12px;
+  }
+  .bd-delivery-progress{
+    gap: 4px;
+    padding: 5px 9px;
+  }
+  .bd-delivery-progress-icon{
+    width: clamp(16px, 4.2vw, 22px);
+  }
+  .bd-delivery-progress-text{
+    font-size: 10px;
+  }
+}
+
+/* DEV-ONLY stopwatch */
+.bd-delivery-elapsed{
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  background: rgba(0,0,0,0.7);
+  color: #0f0;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* Temporary completion panel — no extra rules needed: it reuses
+   .bd-order-complete-panel (position/opacity/transition/.bd-active
+   toggle) directly, so it fades in exactly like Packing's success
+   panel. .bd-delivery-completion-panel is just an identifier hook. */
+
+/* ==========================================================================
+   DELIVERY DEBUG OVERLAY — TEMPORARY DEBUG, REMOVE/DISABLE FOR FINAL
+   Only ever populated when BakeryDelivery.deliveryConfig.DELIVERY_DEBUG
+   is true; empty (and effectively invisible) otherwise.
+   ========================================================================== */
+.bd-delivery-debug-layer{
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.bd-delivery-debug-lane-line{
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px dashed #00e5ff;
+}
+
+.bd-delivery-debug-hitbox{
+  position: absolute;
+  border: 2px solid #ff2d95;
+  background: rgba(255, 45, 149, 0.12);
+}
+
+.bd-delivery-debug-obstacle-layer{
+  position: absolute;
+  inset: 0;
+}
+
+.bd-delivery-debug-hitbox-obstacle{
+  border-color: #ffb300;
+  background: rgba(255, 179, 0, 0.15);
+}
+
+.bd-delivery-debug-obstacle-label{
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 2px;
+  background: rgba(0,0,0,0.75);
+  color: #ffb300;
+  font-family: monospace;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.bd-delivery-debug-readout{
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  background: rgba(0,0,0,0.7);
+  color: #0f0;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   DEV PANEL — TEMPORARY DEVELOPMENT TOOL, DISABLE FOR FINAL GAME
+   Deliberately minimal — this is a testing aid, not shipped UI.
+   ========================================================================== */
+.bd-dev-panel{
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  background: rgba(0,0,0,0.75);
+  border: 2px dashed #0f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-family: monospace;
+}
+
+.bd-dev-panel.bd-dev-panel-hidden{
+  display: none;
+}
+
+.bd-dev-panel-label{
+  margin: 0;
+  color: #0f0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.bd-dev-panel-btn{
+  appearance: none;
+  border: 1px solid #0f0;
+  background: #111;
+  color: #0f0;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bd-dev-panel-btn:hover{
+  background: #0f0;
+  color: #111;
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce){
+  #bd-root *{
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
+  .bd-logo-img.bd-anim-idle,
+  .bd-start-btn.bd-anim-idle,
+  .bd-box-img.bd-anim-idle{
+    animation: none !important;
+  }
+  /* NOTE: .bd-box is deliberately excluded here — its transform is
+     driven continuously by catcher.js for actual gameplay positioning,
+     not just decorative entrance motion. Forcing it to `transform: none`
+     would silently break box control for reduced-motion users. */
+  .bd-logo, .bd-panel, .bd-order-note, .bd-order-indicator,
+  .bd-timer, .bd-note-thumb-wrap,
+  .bd-anxi-character, .bd-anxi-bubble,
+  .bd-delivery-heading, .bd-delivery-instructions-panel{
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .bd-lane-demo-meli{
+    animation: none !important;
+    top: 26% !important;
+  }
+  .bd-review-panel{
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
