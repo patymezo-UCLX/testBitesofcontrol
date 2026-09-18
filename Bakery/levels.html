@@ -303,18 +303,18 @@
       </button>
 
 
-      <!-- LEVEL 3 -->
+      <!-- LEVEL 3 — BAKERY DELIVERY -->
 
       <button
-        class="level-card locked"
+        class="level-card"
         type="button"
-        disabled
+        onclick="openBakeryDelivery()"
       >
 
         Level 3
 
         <span>
-          Locked
+          Bakery Delivery
         </span>
 
       </button>
@@ -380,6 +380,18 @@
 
       window.location.href =
         "Labels/index.html";
+
+    }
+
+
+    /* =====================================================
+       LEVEL 3 — BAKERY DELIVERY
+    ===================================================== */
+
+    function openBakeryDelivery() {
+
+      window.location.href =
+        "Delivery/index.html";
 
     }
 
