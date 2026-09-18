@@ -70,7 +70,7 @@ BakeryDelivery.reviewText = {
   sentText: '¡PEDIDO ENVIADO!',
 
   finalTitle: '¡PEDIDOS PREPARADOS!',
-  finalCount: '5 / 5',
+  finalCount: '4 / 4',
   finalSubtext: '¡Listos para repartir!',
 
   timeoutTitle: 'SE ACABÓ EL TIEMPO',
@@ -78,5 +78,11 @@ BakeryDelivery.reviewText = {
     'Todavía quedan pedidos por preparar.',
     'Intenta seguir adelante aunque Anxi te pida revisar otra vez.'
   ],
+
+  noLivesTitle: 'TE QUEDASTE SIN VIDAS',
+  noLivesLines: [
+    '¡Cuidado con lo que pones en la caja!'
+  ],
+
   retryBtn: 'VOLVER A INTENTAR'
 };

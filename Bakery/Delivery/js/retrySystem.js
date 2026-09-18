@@ -56,6 +56,9 @@ BakeryDelivery.retrySystem = {
     s.isReviewOpen = false;
     s.hasTimedOut = false;
     s.packingComplete = false;
+    s.lives = BakeryDelivery.config.PACKING_LIVES_START;
+    s.failureReason = null;
+    BakeryDelivery.gameplay._updateLivesUI();
 
     BakeryDelivery.timerSystem.reset();
 

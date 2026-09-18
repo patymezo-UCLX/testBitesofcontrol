@@ -25,6 +25,7 @@ BakeryDelivery.exitControl = {
     // Integrated Bites of Control build: Bakery Delivery is Level 3
     // inside the Bakery, so X always returns to the Bakery level selector.
     try {
+      BakeryDelivery.audioSystem.stopAll();
       BakeryDelivery.timerSystem.reset();
       BakeryDelivery.fallingObjects.stop();
       BakeryDelivery.catcher.disable();

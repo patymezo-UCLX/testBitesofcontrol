@@ -22,6 +22,7 @@ BakeryDelivery.orderUI = {
    */
   renderOrder(itemIds) {
     this.els.noteOverlay.innerHTML = '';
+    this.els.noteOverlay.dataset.count = String(itemIds.length);
 
     itemIds.forEach((id, i) => {
       const wrap = document.createElement('div');

@@ -39,6 +39,23 @@
   </button>
 
   <!-- ============================================================
+       SOUND TOGGLE — persists across both screens, same pattern as
+       the exit button above. Controls the centralized audioSystem;
+       default state is sound ON.
+  ============================================================= -->
+  <button id="bd-sound-btn" class="bd-sound-btn" type="button" aria-label="Silenciar música" aria-pressed="false">
+    <svg class="bd-sound-icon bd-sound-icon-on" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/>
+      <path d="M16.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M19 6a9 9 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <svg class="bd-sound-icon bd-sound-icon-off" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/>
+      <path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+  <!-- ============================================================
        LOADING STATE (very simple, shown while assets preload)
        /* TEMPORARY ASSET — REPLACE LATER */
   ============================================================= -->
@@ -124,14 +141,25 @@
       <div id="bd-note-overlay" class="bd-note-overlay">
         <!-- Product thumbnails are injected here by orderUI.js (Stage 1 visual test) -->
       </div>
+      <span class="bd-note-label">PEDIDO</span>
     </div>
 
     <div id="bd-order-indicator" class="bd-order-indicator">
       <span id="bd-order-indicator-text">ORDER 1 / 3</span>
     </div>
 
-    <div id="bd-timer" class="bd-timer">
-      <span id="bd-timer-text">00:00</span>
+    <!-- Timer + lives share one horizontal row — hearts sit directly
+         beside the timer, never stacked underneath it. -->
+    <div id="bd-timer-lives-row" class="bd-timer-lives-row">
+      <div id="bd-timer" class="bd-timer">
+        <span id="bd-timer-text">00:00</span>
+      </div>
+      <div id="bd-lives" class="bd-lives" aria-hidden="true">
+        <span class="bd-life-heart"></span>
+        <span class="bd-life-heart"></span>
+        <span class="bd-life-heart"></span>
+        <span class="bd-life-heart"></span>
+      </div>
     </div>
 
     <!-- CENTER — "Objects will fall here." Kept intentionally empty for Stage 2. -->
@@ -204,7 +232,7 @@
     <div class="bd-delivery-intro-content">
 
       <h1 id="bd-delivery-heading" class="bd-delivery-heading">¡AHORA TOCA ENTREGARLOS!</h1>
-      <p class="bd-delivery-subtext">Lleva los 5 pedidos a sus destinos antes de que termine el tiempo.</p>
+      <p class="bd-delivery-subtext">Lleva los 4 pedidos a sus destinos antes de que termine el tiempo.</p>
 
       <div id="bd-delivery-instructions-panel" class="bd-panel bd-delivery-instructions-panel">
 
@@ -247,7 +275,7 @@
         <div class="bd-delivery-instruction-row">
           <img src="assets/boxclose-2.png" alt="" class="bd-delivery-box-icon" aria-hidden="true">
           <div class="bd-instruction-text">
-            <p class="bd-instruction-title">ENTREGA LOS 5 PEDIDOS</p>
+            <p class="bd-instruction-title">ENTREGA LOS 4 PEDIDOS</p>
             <p class="bd-instruction-body">Sigue avanzando hasta llegar a cada destino.</p>
           </div>
         </div>
@@ -349,8 +377,14 @@
             <img class="bd-delivery-progress-icon" src="assets/uncheck1.png" alt="">
             <img class="bd-delivery-progress-icon" src="assets/uncheck1.png" alt="">
             <img class="bd-delivery-progress-icon" src="assets/uncheck1.png" alt="">
-            <img class="bd-delivery-progress-icon" src="assets/uncheck1.png" alt="">
-            <span id="bd-delivery-progress-text" class="bd-delivery-progress-text">0 / 5</span>
+            <span id="bd-delivery-progress-text" class="bd-delivery-progress-text">0 / 4</span>
+          </div>
+          <!-- Delivery lives — same reusable heart styling as Packing. -->
+          <div id="bd-delivery-lives" class="bd-lives bd-delivery-lives" aria-hidden="true">
+            <span class="bd-life-heart"></span>
+            <span class="bd-life-heart"></span>
+            <span class="bd-life-heart"></span>
+            <span class="bd-life-heart"></span>
           </div>
         </div>
 
@@ -365,7 +399,7 @@
       <div id="bd-delivery-completion-panel" class="bd-order-complete-panel bd-delivery-completion-panel">
         <h2 class="bd-order-complete-heading">¡TODOS LOS PEDIDOS ENTREGADOS!</h2>
         <div class="bd-order-complete-subtext">
-          <p>5 / 5</p>
+          <p>4 / 4</p>
           <p>¡Terminaste el recorrido!</p>
         </div>
       </div>
@@ -373,8 +407,8 @@
       <!-- Delivery timeout — Delivery-only retry, never replays Packing.
            Reuses the same panel classes as Packing's timeout screen. -->
       <div id="bd-delivery-timeout-panel" class="bd-order-complete-panel bd-delivery-timeout-panel">
-        <h2 class="bd-order-complete-heading">SE ACABÓ EL TIEMPO</h2>
-        <div class="bd-order-complete-subtext">
+        <h2 id="bd-delivery-timeout-heading" class="bd-order-complete-heading">SE ACABÓ EL TIEMPO</h2>
+        <div id="bd-delivery-timeout-subtext" class="bd-order-complete-subtext">
           <p>Todavía quedan pedidos por entregar.</p>
         </div>
         <div class="bd-order-complete-actions">
@@ -391,6 +425,7 @@
      drops straight into the existing project later. Everything attaches to
      a single `window.BakeryDelivery` namespace — nothing else is touched. -->
 <script src="js/config.js"></script>
+<script src="js/audioSystem.js"></script>
 <script src="js/assets.js"></script>
 <script src="js/state.js"></script>
 <script src="js/orders.js"></script>
@@ -418,6 +453,7 @@
 <script src="js/retrySystem.js"></script>
 <script src="js/stage4-placeholders.js"></script>
 <script src="js/exitControl.js"></script>
+<script src="js/soundToggle.js"></script>
 <script src="js/main.js"></script>
 
 </body>

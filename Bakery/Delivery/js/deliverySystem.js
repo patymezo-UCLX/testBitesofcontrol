@@ -54,6 +54,7 @@ BakeryDelivery.deliverySystem = {
   /** Called by gameplay.js when the player presses CONTINUAR on the
    *  "¡Pedidos preparados!" success panel. */
   showDeliveryIntro() {
+    BakeryDelivery.audioSystem.stopPacking(); // Packing → Delivery: music never overlaps
     BakeryDelivery.state.phase = 'deliveryInstructions';
 
     BakeryDelivery.panelUI.close();

@@ -30,6 +30,8 @@ BakeryDelivery.gameplay = {
     this.els.box = document.getElementById('bd-box');
     this.els.boxImg = this.els.box.querySelector('.bd-box-img');
     this.els.oopsToast = document.getElementById('bd-oops-toast');
+    this.els.livesContainer = document.getElementById('bd-lives');
+    this.els.lifeHearts = Array.from(document.querySelectorAll('#bd-lives .bd-life-heart'));
 
     BakeryDelivery.catcher.init();
     BakeryDelivery.fallingObjects.init();
@@ -58,9 +60,63 @@ BakeryDelivery.gameplay = {
 
   /** Entry point for both a fresh attempt and a retry after timeout. */
   beginPacking() {
+    BakeryDelivery.audioSystem.playPacking();
     BakeryDelivery.state.completedOrders = 0;
+    BakeryDelivery.state.lives = BakeryDelivery.config.PACKING_LIVES_START;
+    BakeryDelivery.state.failureReason = null;
+    this._updateLivesUI();
     BakeryDelivery.timerSystem.start();
     this.startOrder(0);
+  },
+
+  // ------------------------------------------------------------------
+  // LIVES
+  // ------------------------------------------------------------------
+
+  _updateLivesUI() {
+    const lives = BakeryDelivery.state.lives;
+    this.els.lifeHearts.forEach((heart, i) => {
+      heart.classList.toggle('bd-life-lost', i >= lives);
+    });
+  },
+
+  /** A wrong catch costs exactly one life — never a miss, never time. */
+  loseLife() {
+    const s = BakeryDelivery.state;
+    if (s.hasTimedOut || s.packingComplete || s.lives <= 0) return;
+
+    s.lives -= 1;
+    this._updateLivesUI();
+
+    // Brief, clear feedback — a quick shake on the hearts row, nothing
+    // punishing or elaborate.
+    this.els.livesContainer.classList.remove('bd-lives-hit');
+    void this.els.livesContainer.offsetWidth; // restart the animation even in quick succession
+    this.els.livesContainer.classList.add('bd-lives-hit');
+
+    if (s.lives <= 0) {
+      this.handleNoLives();
+    }
+  },
+
+  /** Separate failure condition from the timer reaching 0 — reuses the
+   *  SAME hasTimedOut guard the rest of the codebase already checks
+   *  everywhere (completeOrder, sendOrder, proceedAfterSend, box-swap
+   *  callbacks) to halt cleanly, with failureReason deciding which
+   *  panel copy shows. */
+  handleNoLives() {
+    const s = BakeryDelivery.state;
+    if (s.hasTimedOut || s.packingComplete) return; // guards double-invocation
+    s.hasTimedOut = true;
+    s.failureReason = 'noLives';
+
+    BakeryDelivery.timerSystem.pause();
+    BakeryDelivery.fallingObjects.stop();
+    BakeryDelivery.catcher.disable();
+    BakeryDelivery.anxiSystem.forceCloseImmediately();
+    BakeryDelivery.reviewSystem.forceCloseImmediately();
+
+    this.showFailurePanel();
   },
 
   // ------------------------------------------------------------------
@@ -106,6 +162,7 @@ BakeryDelivery.gameplay = {
 
   onWrongCatch() {
     this.showOops();
+    this.loseLife();
   },
 
   showOops() {
@@ -210,6 +267,7 @@ BakeryDelivery.gameplay = {
     const s = BakeryDelivery.state;
     if (s.hasTimedOut || s.packingComplete) return; // guards double-invocation
     s.hasTimedOut = true;
+    s.failureReason = 'timeout';
 
     BakeryDelivery.timerSystem.pause();
     BakeryDelivery.fallingObjects.stop();
@@ -217,12 +275,15 @@ BakeryDelivery.gameplay = {
     BakeryDelivery.anxiSystem.forceCloseImmediately();
     BakeryDelivery.reviewSystem.forceCloseImmediately();
 
-    this.showTimeoutPanel();
+    this.showFailurePanel();
   },
 
-  showTimeoutPanel() {
-    BakeryDelivery.panelUI.setHeading(BakeryDelivery.reviewText.timeoutTitle);
-    BakeryDelivery.panelUI.setSubtext(BakeryDelivery.reviewText.timeoutLines);
+  /** Shared by both failure conditions (timer → 0, lives → 0) — same
+   *  panel, same retry button, only the heading/subtext copy differs. */
+  showFailurePanel() {
+    const isNoLives = BakeryDelivery.state.failureReason === 'noLives';
+    BakeryDelivery.panelUI.setHeading(isNoLives ? BakeryDelivery.reviewText.noLivesTitle : BakeryDelivery.reviewText.timeoutTitle);
+    BakeryDelivery.panelUI.setSubtext(isNoLives ? BakeryDelivery.reviewText.noLivesLines : BakeryDelivery.reviewText.timeoutLines);
     BakeryDelivery.panelUI.clearActions();
     BakeryDelivery.panelUI.addButton(BakeryDelivery.reviewText.retryBtn, () => {
       BakeryDelivery.retrySystem.retry();

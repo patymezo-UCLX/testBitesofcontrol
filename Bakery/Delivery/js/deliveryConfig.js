@@ -101,6 +101,13 @@ BakeryDelivery.deliveryConfig = {
   // impacts landing in the same frame/two from stacking animations.
   GLOBAL_COLLISION_COOLDOWN_MS: 400,
 
+  // Lives the player starts every Delivery attempt with. A physical
+  // obstacle collision costs exactly one (Anxi encounters never do —
+  // they're a different gameplay type entirely, see ANXI OBSTACLES
+  // below); reaching 0 ends the attempt, same visual language as
+  // Packing's life system but tracked completely separately.
+  DELIVERY_LIVES_START: 4,
+
   // ------------------------------------------------------------------
   // ANXI OBSTACLES (this pass)
   // Obs 2/3 — a different gameplay TYPE from the physical obstacles.
@@ -135,8 +142,7 @@ BakeryDelivery.deliveryConfig = {
     { house: 'assets/casa-1.png', distance: 2400 },
     { house: 'assets/casa-2.png', distance: 2800 },
     { house: 'assets/casa-3.png', distance: 2900 },
-    { house: 'assets/casa-4.png', distance: 3600 },
-    { house: 'assets/casa-5.png', distance: 4400 }
+    { house: 'assets/casa-4.png', distance: 3600 }
   ],
 
   // How far (world px) before the segment's total distance the house

@@ -24,6 +24,7 @@
     BD.deliveryGameplay.init();
     BD.completion.init(); // Stage 4+ placeholder, still a no-op
     BD.exitControl.init();
+    BD.soundToggle.init();
 
     const loadingEl = document.getElementById('bd-loading');
 

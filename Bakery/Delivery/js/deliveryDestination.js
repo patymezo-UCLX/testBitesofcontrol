@@ -279,7 +279,7 @@ BakeryDelivery.deliveryDestination = {
   },
 
   // ------------------------------------------------------------------
-  // PROGRESS UI (check1.png / uncheck1.png + N / 5)
+  // PROGRESS UI (check1.png / uncheck1.png + N / total)
   // ------------------------------------------------------------------
 
   _updateProgressUI() {
@@ -315,7 +315,9 @@ BakeryDelivery.deliveryDestination = {
 
   _showCompletion() {
     this.mode = 'complete';
+    BakeryDelivery.audioSystem.stopAll(); // level completely finished
     BakeryDelivery.deliveryTimer.stop(); // success takes priority — no timeout can fire after this
+    BakeryDelivery.deliveryGameplay.stopDelivery(); // and no stray collision can fire a lives failure after this either
     this.els.completionPanel.classList.add('bd-active');
     BakeryDelivery.deliveryMeli.setMoving(false);
   },

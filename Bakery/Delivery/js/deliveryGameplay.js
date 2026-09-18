@@ -21,6 +21,9 @@ BakeryDelivery.deliveryGameplay = {
   _pointer: null, // { startX, startY, active }
   _lastCollisionTime: 0,
 
+  lives: 4,
+  _failureReason: null, // 'timeout' | 'noLives'
+
   init() {
     this.els.screen = document.getElementById('bd-screen-delivery');
     this.els.game = document.getElementById('bd-delivery-game');
@@ -28,7 +31,11 @@ BakeryDelivery.deliveryGameplay = {
     this.els.btnUp = document.getElementById('bd-delivery-btn-up');
     this.els.btnDown = document.getElementById('bd-delivery-btn-down');
     this.els.timeoutPanel = document.getElementById('bd-delivery-timeout-panel');
+    this.els.timeoutHeading = document.getElementById('bd-delivery-timeout-heading');
+    this.els.timeoutSubtext = document.getElementById('bd-delivery-timeout-subtext');
     this.els.timeoutRetryBtn = document.getElementById('bd-delivery-timeout-retry-btn');
+    this.els.livesContainer = document.getElementById('bd-delivery-lives');
+    this.els.lifeHearts = Array.from(document.querySelectorAll('#bd-delivery-lives .bd-life-heart'));
     BakeryDelivery.deliveryDestination.init();
     BakeryDelivery.deliveryTimer.init();
 
@@ -43,6 +50,12 @@ BakeryDelivery.deliveryGameplay = {
     if (this.isRunning) return; // guards a duplicate loop
     this.isRunning = true;
     this.isPaused = false;
+
+    BakeryDelivery.audioSystem.playDelivery();
+
+    this.lives = BakeryDelivery.deliveryConfig.DELIVERY_LIVES_START;
+    this._failureReason = null;
+    this._updateLivesUI();
 
     BakeryDelivery.deliveryWorld.init();
     BakeryDelivery.deliveryMeli.init();
@@ -105,18 +118,46 @@ BakeryDelivery.deliveryGameplay = {
     BakeryDelivery.deliveryMeli.reset(BakeryDelivery.deliveryConfig.STARTING_LANE);
     BakeryDelivery.deliveryDestination.reset();
     BakeryDelivery.deliveryTimer.reset();
+    this.lives = BakeryDelivery.deliveryConfig.DELIVERY_LIVES_START;
+    this._failureReason = null;
+    this._updateLivesUI();
     this._hideTimeoutPanel();
     this._lastCollisionTime = 0;
   },
 
   /** Called by deliveryTimer.js the moment the global Delivery countdown
-   *  reaches 00:00 before all 5 houses are delivered. Stops driving
+   *  reaches 00:00 before all 4 houses are delivered. Stops driving
    *  cleanly and offers a Delivery-only retry — Packing is never
-   *  replayed. */
+   *  replayed. Delivery now has TWO failure conditions (timer and
+   *  lives) sharing this exact same panel/retry flow — see
+   *  handleNoLives() below and _showFailurePanel()'s copy branch. */
   handleDeliveryTimeout() {
     if (!this.isRunning) return;
+    this._failureReason = 'timeout';
     this.stopDelivery();
     BakeryDelivery.deliveryMeli.setMoving(false);
+    this._showFailurePanel();
+  },
+
+  /** Called by onObstacleCollision() below the moment lives reach 0.
+   *  Guarded the same way as handleDeliveryTimeout() so whichever
+   *  failure condition fires first "wins" cleanly — the other can never
+   *  also fire afterwards. */
+  handleNoLives() {
+    if (!this.isRunning) return;
+    this._failureReason = 'noLives';
+    this.stopDelivery();
+    BakeryDelivery.deliveryMeli.setMoving(false);
+    this._showFailurePanel();
+  },
+
+  _showFailurePanel() {
+    const isNoLives = this._failureReason === 'noLives';
+    this.els.timeoutHeading.textContent = isNoLives ? 'TE QUEDASTE SIN VIDAS' : 'SE ACABÓ EL TIEMPO';
+    this.els.timeoutSubtext.innerHTML = '';
+    const p = document.createElement('p');
+    p.textContent = isNoLives ? '¡Cuidado con los obstáculos!' : 'Todavía quedan pedidos por entregar.';
+    this.els.timeoutSubtext.appendChild(p);
     this._showTimeoutPanel();
   },
 
@@ -128,9 +169,10 @@ BakeryDelivery.deliveryGameplay = {
     this.els.timeoutPanel.classList.remove('bd-active');
   },
 
-  /** Restarts Delivery ONLY — timer/route/obstacles/Meli/world all reset
-   *  to their very start, but the player stays on the Delivery screen
-   *  and never has to replay Packing. */
+  /** Restarts Delivery ONLY — timer/route/obstacles/Meli/world/lives all
+   *  reset to their very start, but the player stays on the Delivery
+   *  screen and never has to replay Packing. Same retry path regardless
+   *  of which failure condition (timer or lives) triggered it. */
   _retryAfterTimeout() {
     this._hideTimeoutPanel();
     this.stopDelivery();
@@ -139,6 +181,36 @@ BakeryDelivery.deliveryGameplay = {
     BakeryDelivery.deliveryDestination.reset();
     BakeryDelivery.deliveryTimer.reset();
     this.startDelivery();
+  },
+
+  // ------------------------------------------------------------------
+  // LIVES
+  // ------------------------------------------------------------------
+
+  _updateLivesUI() {
+    this.els.lifeHearts.forEach((heart, i) => {
+      heart.classList.toggle('bd-life-lost', i >= this.lives);
+    });
+  },
+
+  /** A physical obstacle collision costs exactly one life — called only
+   *  from onObstacleCollision() below, which is itself only ever called
+   *  for PHYSICAL obstacles (deliveryObstacles.js routes Anxi hits to
+   *  triggerAnxiEncounter() instead, never here), so Anxi never touches
+   *  lives at all. */
+  loseLife() {
+    if (!this.isRunning || this.lives <= 0) return;
+
+    this.lives -= 1;
+    this._updateLivesUI();
+
+    this.els.livesContainer.classList.remove('bd-lives-hit');
+    void this.els.livesContainer.offsetWidth; // restart the animation even in quick succession
+    this.els.livesContainer.classList.add('bd-lives-hit');
+
+    if (this.lives <= 0) {
+      this.handleNoLives();
+    }
   },
 
   /** Called by deliveryObstacles.js the moment an obstacle first
@@ -157,6 +229,7 @@ BakeryDelivery.deliveryGameplay = {
     BakeryDelivery.deliveryMeli.triggerImpact();
     BakeryDelivery.deliveryWorld.triggerSlowdown();
     this._spawnImpactPuff();
+    this.loseLife();
   },
 
   /* TEMPORARY IMPACT EFFECT — CAN BE REPLACED WITH ART LATER */

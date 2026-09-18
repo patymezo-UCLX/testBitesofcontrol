@@ -89,7 +89,8 @@ BakeryDelivery.fallingObjects = {
 
   _scheduleNextSpawn() {
     if (!BakeryDelivery.state.isSpawning) return;
-    const delay = 900 + Math.random() * 400; // 900–1300ms, slightly randomized
+    const cfg = BakeryDelivery.config;
+    const delay = cfg.PACKING_SPAWN_MIN_MS + Math.random() * (cfg.PACKING_SPAWN_MAX_MS - cfg.PACKING_SPAWN_MIN_MS);
     this.spawnTimer = window.setTimeout(() => {
       this._spawnOne();
       this._scheduleNextSpawn();

@@ -100,6 +100,63 @@ html, body{
 .bd-exit-btn:active{ transform: scale(0.92); }
 .bd-exit-btn:focus-visible{ outline: 3px solid #fff; outline-offset: 2px; }
 
+/* ---- Sound toggle — same persistent-button pattern as the exit
+   button, positioned immediately to its left so both sit in the
+   upper-right HUD row without overlapping the order counter/timer
+   (which sit lower, at top:62px+/104px+). ---- */
+.bd-sound-btn{
+  position: absolute;
+  top: 14px;
+  right: 60px;
+  z-index: 40;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--bd-pink);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow:
+    0 3px 0 rgba(0,0,0,0.25),
+    0 6px 10px rgba(74,26,18,0.35);
+  transition: transform 0.15s var(--bd-ease-out), background 0.15s ease-out;
+}
+
+.bd-sound-btn:hover{ transform: scale(1.08); }
+.bd-sound-btn:active{ transform: scale(0.92); }
+.bd-sound-btn:focus-visible{ outline: 3px solid #fff; outline-offset: 2px; }
+
+.bd-sound-btn.bd-sound-btn-muted{
+  background: rgba(74, 26, 18, 0.55);
+}
+
+.bd-sound-icon{
+  width: 20px;
+  height: 20px;
+}
+
+.bd-sound-icon-off{ display: none; }
+.bd-sound-btn.bd-sound-btn-muted .bd-sound-icon-on{ display: none; }
+.bd-sound-btn.bd-sound-btn-muted .bd-sound-icon-off{ display: block; }
+
+@media (orientation: portrait){
+  .bd-sound-btn{
+    top: 12px;
+    right: 56px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+  .bd-sound-icon{ width: 18px; height: 18px; }
+}
+
 /* ==========================================================================
    LOADING STATE — TEMPORARY ASSET, REPLACE LATER
    ========================================================================== */
@@ -516,27 +573,42 @@ html, body{
 }
 
 /* Overlay positioned over the blank paper area of Note.png (432x520
-   source), used for dynamically inserted product thumbnails. */
+   source), used for dynamically inserted product thumbnails. Bottom
+   trimmed from 8%→22% to leave room for the PEDIDO label below it
+   without enlarging Note.png itself. */
 .bd-note-overlay{
   position: absolute;
-  top: 22%;
-  left: 10%;
-  right: 10%;
-  bottom: 8%;
+  top: 19%;
+  left: 8%;
+  right: 8%;
+  bottom: 22%;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   align-content: flex-start;
   justify-content: center;
-  gap: 10% 8%;
+  gap: 4% 5%;
 }
 
+/* Product images bigger than the original 38%, but pulled back from an
+   earlier pass that ran too large in real play (products spilling past
+   the note edges and crowding "PEDIDO"). A 3-item order gets a smaller
+   per-item width than a 2-item order so all three still fit the fixed
+   note area without overlapping. */
 .bd-note-thumb-wrap{
   position: relative;
-  width: 38%;
+  width: 44%; /* fallback for an unexpected item count */
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.bd-note-overlay[data-count="2"] .bd-note-thumb-wrap{
+  width: 44%;
+}
+
+.bd-note-overlay[data-count="3"] .bd-note-thumb-wrap{
+  width: 34%;
 }
 
 .bd-note-thumb{
@@ -567,13 +639,13 @@ html, body{
   position: absolute;
   bottom: -2px;
   right: -2px;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #3fbf6a;
   color: #fff;
   font-family: var(--bd-font-display);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -585,11 +657,33 @@ html, body{
   animation: bd-thumb-pop 0.35s var(--bd-ease-soft) forwards;
 }
 
+/* "PEDIDO" — small supporting label under the (now much larger)
+   product images. Sits in the blank space between the products and
+   Note.png's own bottom-left heart / bottom-right page-curl doodles,
+   so it never covers them. */
+.bd-note-label{
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 7%;
+  text-align: center;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(10px, 1.6vw, 13px);
+  letter-spacing: 0.06em;
+  color: var(--bd-burgundy);
+  pointer-events: none;
+}
+
 @media (orientation: portrait){
   .bd-order-note{
     top: 3%;
     left: 3%;
     width: clamp(100px, 26vw, 145px);
+  }
+  .bd-note-label{
+    font-size: 9px;
+    bottom: 6%;
   }
 }
 
@@ -628,12 +722,20 @@ html, body{
 /* ---- Timer — TEMPORARY ASSET, REPLACE LATER
    Global 2:00 packing countdown — the ONLY thing that can end an attempt.
    Stays visually calm even at low time: a subtle contrast/pulse change,
-   never flashing red or dominating the screen. --- */
-.bd-timer{
+   never flashing red or dominating the screen. Now a flex child of
+   .bd-timer-lives-row rather than independently positioned, so it and
+   the hearts always sit on the same horizontal line. --- */
+.bd-timer-lives-row{
   position: absolute;
   top: 104px;
   right: 4%;
   z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bd-timer{
   background: rgba(74, 26, 18, 0.55);
   border-radius: 999px;
   padding: 4px 14px;
@@ -679,7 +781,78 @@ html, body{
 
 @media (orientation: portrait){
   .bd-order-indicator{ top: 56px; right: 3%; }
-  .bd-timer{ top: 94px; right: 3%; }
+  .bd-timer-lives-row{ top: 94px; right: 3%; gap: 7px; }
+}
+
+/* ---- Lives (4 hearts) — TEMPORARY ASSET, REPLACE LATER. A flex child
+   of .bd-timer-lives-row, sitting directly beside the timer on the same
+   line — never stacked underneath it, never overlapping the bakery
+   background decorations. Bright red CSS hearts (no image asset, no
+   emoji-rendering inconsistency) built from a rotated square + two
+   circular lobes, with a burgundy drop-shadow for contrast against the
+   yellow background. ---- */
+.bd-lives{
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.bd-lives.bd-lives-hit{
+  animation: bd-lives-shake 0.35s ease-in-out;
+}
+
+@keyframes bd-lives-shake{
+  0%, 100%{ transform: translateX(0); }
+  25%{ transform: translateX(-4px); }
+  50%{ transform: translateX(4px); }
+  75%{ transform: translateX(-2px); }
+}
+
+.bd-life-heart{
+  position: relative;
+  width: 15px;
+  height: 15px;
+  transform: rotate(-45deg);
+  background: #ff2d4d;
+  border-radius: 3px 0 0 0;
+  filter: drop-shadow(0 2px 1px rgba(74, 26, 18, 0.55));
+  transition: background 0.2s ease-out, opacity 0.2s ease-out, transform 0.2s ease-out;
+  flex-shrink: 0;
+}
+
+.bd-life-heart::before,
+.bd-life-heart::after{
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background: #ff2d4d;
+  border-radius: 50%;
+  transition: background 0.2s ease-out;
+}
+
+.bd-life-heart::before{ left: -7.5px; top: 0; }
+.bd-life-heart::after{ left: 0; top: -7.5px; }
+
+.bd-life-heart.bd-life-lost{
+  background: rgba(74, 26, 18, 0.25);
+  filter: none;
+  transform: rotate(-45deg) scale(0.85);
+}
+
+.bd-life-heart.bd-life-lost::before,
+.bd-life-heart.bd-life-lost::after{
+  background: rgba(74, 26, 18, 0.25);
+}
+
+@media (orientation: portrait){
+  .bd-lives{ gap: 4px; }
+  .bd-life-heart,
+  .bd-life-heart::before,
+  .bd-life-heart::after{ width: 12px; height: 12px; }
+  .bd-life-heart::before{ left: -6px; }
+  .bd-life-heart::after{ top: -6px; }
 }
 
 /* ---- Central falling area (kept empty & clear for Stage 2) ------------ */
@@ -1940,6 +2113,22 @@ html, body{
   font-size: clamp(11px, 1.6vw, 14px);
   color: #fff;
   white-space: nowrap;
+}
+
+/* ---- Delivery lives — same reusable .bd-lives/.bd-life-heart styling
+   as Packing, wrapped in a small pill matching the timer/progress
+   pills for legibility against the scrolling world. ---- */
+.bd-delivery-lives{
+  background: rgba(74, 26, 18, 0.55);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+@media (orientation: portrait){
+  .bd-delivery-lives{
+    padding: 5px 9px;
+    gap: 3px;
+  }
 }
 
 @media (orientation: portrait){

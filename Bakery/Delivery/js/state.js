@@ -14,8 +14,11 @@ BakeryDelivery.state = {
   phase: 'packing',
 
   currentOrder: 0,          // 0-based index of the active order
-  totalOrders: 5,
+  totalOrders: 4,
   completedOrders: 0,
+
+  lives: 4,                 // reset from BakeryDelivery.config.PACKING_LIVES_START each attempt
+  failureReason: null,      // 'timeout' | 'noLives' — which panel copy to show
 
   requiredItems: [],        // [{ id, collected }] for the active order
   collectedItems: [],       // ids actually caught so far, in catch order
