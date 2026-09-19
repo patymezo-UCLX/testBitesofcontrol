@@ -130,6 +130,14 @@ BakeryDelivery.deliveryMeli = {
     return this.glideFromLane + (this.targetLane - this.glideFromLane) * eased;
   },
 
+  /** Public: Meli's actual rendered lane, rounded to the nearest lane
+   *  (0 or 1) — fair even mid-glide, since past the halfway point of a
+   *  lane change she already visually reads as being in the target
+   *  lane. Used by deliveryDestination.js's delivery-zone lane check. */
+  getVisualLaneRounded() {
+    return Math.round(this._currentVisualLane());
+  },
+
   _ease(t) {
     // Soft ease-out — matches the rest of Bakery Delivery's feel.
     return 1 - Math.pow(1 - t, 3);

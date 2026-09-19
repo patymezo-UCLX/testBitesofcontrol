@@ -151,12 +151,37 @@ BakeryDelivery.deliveryGameplay = {
     this._showFailurePanel();
   },
 
+  /** Called by deliveryDestination.js once all 4 destinations have been
+   *  passed (delivered or missed) but fewer than 4 were actually
+   *  delivered. Same shared panel/retry flow as the other two failures. */
+  handleRouteIncomplete(delivered, total) {
+    if (!this.isRunning) return;
+    this._failureReason = 'incomplete';
+    this._incompleteDelivered = delivered;
+    this._incompleteTotal = total;
+    this.stopDelivery();
+    BakeryDelivery.deliveryMeli.setMoving(false);
+    this._showFailurePanel();
+  },
+
   _showFailurePanel() {
-    const isNoLives = this._failureReason === 'noLives';
-    this.els.timeoutHeading.textContent = isNoLives ? 'TE QUEDASTE SIN VIDAS' : 'SE ACABÓ EL TIEMPO';
+    const reason = this._failureReason;
+    let heading;
+    let subtext;
+    if (reason === 'noLives') {
+      heading = 'TE QUEDASTE SIN VIDAS';
+      subtext = '¡Cuidado con los obstáculos!';
+    } else if (reason === 'incomplete') {
+      heading = 'QUEDARON PEDIDOS SIN ENTREGAR';
+      subtext = `Entregaste ${this._incompleteDelivered} de ${this._incompleteTotal} pedidos.`;
+    } else {
+      heading = 'SE ACABÓ EL TIEMPO';
+      subtext = 'Todavía quedan pedidos por entregar.';
+    }
+    this.els.timeoutHeading.textContent = heading;
     this.els.timeoutSubtext.innerHTML = '';
     const p = document.createElement('p');
-    p.textContent = isNoLives ? '¡Cuidado con los obstáculos!' : 'Todavía quedan pedidos por entregar.';
+    p.textContent = subtext;
     this.els.timeoutSubtext.appendChild(p);
     this._showTimeoutPanel();
   },
@@ -318,6 +343,7 @@ BakeryDelivery.deliveryGameplay = {
 
   _onKeyDown(e) {
     if (!this.isRunning || this.isPaused || !BakeryDelivery.deliveryDestination.controlsEnabled()) return;
+    if (BakeryDelivery.exitControl.isConfirmOpen()) return;
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
       BakeryDelivery.deliveryMeli.setLane(0);
     } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {

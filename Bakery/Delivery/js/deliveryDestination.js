@@ -26,8 +26,9 @@ BakeryDelivery.deliveryDestination = {
   mode: 'driving',
   currentIndex: 0,          // 0-based into DELIVERY_ROUTES
   segmentDistance: 0,
-  completedCount: 0,
+  completedCount: 0,        // successfully DELIVERED (correct lane)
   lastDeliveredDestination: 0, // 1-based — reserved for Stage 4's "return"
+  _laneDecision: null,      // null | 'correct' | 'wrong' — decided once per arrival
 
   house: null,               // { x, widthPx } while a house exists on screen
   _ctaHandled: false,
@@ -66,6 +67,7 @@ BakeryDelivery.deliveryDestination = {
     this.segmentDistance = 0;
     this.completedCount = 0;
     this.lastDeliveredDestination = 0;
+    this._laneDecision = null;
     this.deliveryElapsedMs = 0;
     this._ctaHandled = false;
     this._clearStateTimer();
@@ -74,6 +76,7 @@ BakeryDelivery.deliveryDestination = {
     this.els.completionPanel.classList.remove('bd-active');
     if (this.els.laneControls) this.els.laneControls.classList.remove('bd-delivery-lane-controls-disabled');
     BakeryDelivery.deliveryMeli.setMoving(true);
+    this._applySegmentSpeedMultiplier();
   },
 
   /** @param {number} dt seconds since last frame */
@@ -103,12 +106,35 @@ BakeryDelivery.deliveryDestination = {
       const world = BakeryDelivery.deliveryWorld;
       const targetStopX = this._computeTargetStopX();
 
-      if (!world.isTransitioning() && world.speedMultiplier > 0.02) {
-        if (this.house.x <= targetStopX + cfg.ARRIVAL_DECEL_LEAD_PX) {
+      // Decision point: checked ONCE per arrival, using Meli's ACTUAL
+      // rendered/visual lane (rounded — fair even mid-glide, since a
+      // glide past the halfway point already reads visually as "in"
+      // the target lane).
+      if (this._laneDecision === null && this.house.x <= targetStopX + cfg.ARRIVAL_DECEL_LEAD_PX) {
+        const route = cfg.DELIVERY_ROUTES[this.currentIndex];
+        const meliLane = BakeryDelivery.deliveryMeli.getVisualLaneRounded();
+        this._laneDecision = (meliLane === route.lane) ? 'correct' : 'wrong';
+
+        if (this._laneDecision === 'correct') {
           world.setSpeedTarget(0, cfg.ARRIVAL_DECEL_DURATION_MS);
+        } else {
+          this._showMissedFeedback();
+          // World keeps moving at the current segment speed — the house
+          // simply scrolls past like a missed opportunity, never
+          // stopping the game.
         }
-      } else if (world.speedMultiplier <= 0.01 && !world.isTransitioning()) {
-        this._settleAtDestination();
+      }
+
+      if (this._laneDecision === 'correct') {
+        if (world.speedMultiplier <= 0.01 && !world.isTransitioning()) {
+          this._settleAtDestination();
+        }
+      } else if (this._laneDecision === 'wrong') {
+        const width = this.house ? this.house.widthPx : 0;
+        if (this.house && this.house.x + width < -120) {
+          BakeryDelivery.deliveryObstacles.start(); // fresh queue for the next segment — safe here, nothing is still in flight from this one
+          this._beginNextSegment();
+        }
       }
     } else if (this.mode === 'transitioning') {
       this._updateHousePosition(dt);
@@ -127,6 +153,7 @@ BakeryDelivery.deliveryDestination = {
   // ------------------------------------------------------------------
 
   _spawnHouse(route) {
+    this._laneDecision = null;
     this.els.houseImg.src = route.house;
     this.els.layer.classList.add('bd-active');
 
@@ -224,11 +251,6 @@ BakeryDelivery.deliveryDestination = {
     this._hideConfirmationBanner();
     this._hideMarker();
 
-    if (this.completedCount >= BakeryDelivery.deliveryConfig.DELIVERY_ROUTES.length) {
-      this._showCompletion();
-      return;
-    }
-
     this.mode = 'transitioning';
     this._ctaHandled = false;
 
@@ -238,11 +260,57 @@ BakeryDelivery.deliveryDestination = {
     if (this.els.laneControls) this.els.laneControls.classList.remove('bd-delivery-lane-controls-disabled');
   },
 
+  /** Called once a house (delivered OR missed) has fully scrolled past.
+   *  The single place that decides whether another segment begins or
+   *  the whole route is finished — regardless of which path got here.
+   *  Does NOT touch obstacle spawning itself: the delivered path already
+   *  restarted it back in _startTransition() (restarting it again here
+   *  would wipe out anything that already spawned during that window);
+   *  the missed path restarts it explicitly just before calling this. */
   _beginNextSegment() {
     this.currentIndex += 1;
     this.segmentDistance = 0;
-    this.mode = 'driving';
+    this._laneDecision = null;
     this._hideHouse();
+
+    if (this.currentIndex >= BakeryDelivery.deliveryConfig.DELIVERY_ROUTES.length) {
+      this._finishRoute();
+      return;
+    }
+
+    this.mode = 'driving';
+    this._applySegmentSpeedMultiplier();
+    if (this.els.laneControls) this.els.laneControls.classList.remove('bd-delivery-lane-controls-disabled');
+  },
+
+  /** Progressive difficulty — one multiplier per segment, centralized in
+   *  deliveryConfig.DELIVERY_SPEED_MULTIPLIERS. Falls back to the last
+   *  configured value if the array is ever shorter than the route list. */
+  _applySegmentSpeedMultiplier() {
+    const mults = BakeryDelivery.deliveryConfig.DELIVERY_SPEED_MULTIPLIERS;
+    const m = mults[this.currentIndex] ?? mults[mults.length - 1] ?? 1;
+    BakeryDelivery.deliveryWorld.setSegmentMultiplier(m);
+  },
+
+  /** All 4 destinations have been passed (delivered or missed) — decide
+   *  success vs. the new "incomplete" failure, reusing the SAME shared
+   *  failure panel/retry flow as the timer/lives failures. */
+  _finishRoute() {
+    const total = BakeryDelivery.deliveryConfig.DELIVERY_ROUTES.length;
+    if (this.completedCount >= total) {
+      this._showCompletion();
+    } else {
+      BakeryDelivery.deliveryGameplay.handleRouteIncomplete(this.completedCount, total);
+    }
+  },
+
+  /* TEMPORARY MISSED-DELIVERY TOAST — small, non-blocking, auto-dismiss */
+  _showMissedFeedback() {
+    const toast = document.createElement('div');
+    toast.className = 'bd-delivery-missed-toast';
+    toast.textContent = '¡PEDIDO NO ENTREGADO!';
+    this.els.layer.parentNode.appendChild(toast);
+    window.setTimeout(() => { if (toast.parentNode) toast.remove(); }, 1800);
   },
 
   // ------------------------------------------------------------------
@@ -350,10 +418,12 @@ BakeryDelivery.deliveryDestination = {
     this._hideConfirmationBanner();
     this.currentIndex = idx;
     this.completedCount = idx;
+    this._laneDecision = null;
     this.segmentDistance = BakeryDelivery.deliveryConfig.DELIVERY_ROUTES[idx].distance
       - BakeryDelivery.deliveryConfig.HOUSE_SPAWN_LEAD_DISTANCE - 50;
     this.mode = 'driving';
     this._ctaHandled = false;
+    this._applySegmentSpeedMultiplier();
     BakeryDelivery.deliveryMeli.setMoving(true);
     BakeryDelivery.deliveryObstacles.pause();
     this._updateProgressUI();

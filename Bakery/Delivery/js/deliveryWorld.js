@@ -52,6 +52,7 @@ BakeryDelivery.deliveryWorld = {
   // so a collision slowdown affects them all in lockstep — nothing
   // should ever drift out of sync with the road itself.
   speedMultiplier: 1,
+  segmentSpeedMultiplier: 1, // progressive difficulty, set by deliveryDestination.js per segment
   _slowdownActive: false,
   _slowdownStartValue: 1,
   _slowdownStartTime: 0,
@@ -227,7 +228,14 @@ BakeryDelivery.deliveryWorld = {
    *  slowdown — this is what obstacles.js moves by too, so they never
    *  drift out of sync with the scrolling road. */
   getCurrentSpeed() {
-    return BakeryDelivery.deliveryConfig.DELIVERY_WORLD_SPEED * this.speedMultiplier;
+    return BakeryDelivery.deliveryConfig.DELIVERY_WORLD_SPEED * this.speedMultiplier * this.segmentSpeedMultiplier;
+  },
+
+  /** Progressive difficulty — applied on top of (never replacing) the
+   *  collision/arrival speedMultiplier above, so a collision slowdown
+   *  during a later, faster segment still works exactly the same way. */
+  setSegmentMultiplier(m) {
+    this.segmentSpeedMultiplier = m;
   },
 
   /** Called by deliveryGameplay.js on a collision. Never touches the
@@ -268,6 +276,7 @@ BakeryDelivery.deliveryWorld = {
     this.tiles[0].x = 0;
     this.tiles[1].x = this.tileWidth - this.TILE_OVERLAP_PX;
     this.speedMultiplier = 1;
+    this.segmentSpeedMultiplier = 1;
     this._slowdownActive = false;
     this._speedTransition = null;
     this._applyTransforms();

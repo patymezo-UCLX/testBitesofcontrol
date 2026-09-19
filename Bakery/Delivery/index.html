@@ -56,6 +56,24 @@
   </button>
 
   <!-- ============================================================
+       EXIT CONFIRMATION — reuses the same panel/button visual
+       language as the success/failure panels. Sits above everything
+       (including gameplay) and blocks input while open.
+  ============================================================= -->
+  <div id="bd-exit-confirm-backdrop" class="bd-exit-confirm-backdrop">
+    <div id="bd-exit-confirm-panel" class="bd-order-complete-panel bd-exit-confirm-panel">
+      <h2 class="bd-order-complete-heading">¿SEGURO QUE QUIERES SALIR?</h2>
+      <div class="bd-order-complete-subtext">
+        <p>Perderás el progreso de esta partida.</p>
+      </div>
+      <div class="bd-order-complete-actions bd-exit-confirm-actions">
+        <button type="button" id="bd-exit-confirm-stay-btn" class="bd-start-btn bd-order-complete-btn">SEGUIR JUGANDO</button>
+        <button type="button" id="bd-exit-confirm-leave-btn" class="bd-exit-confirm-leave-btn">SALIR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
        LOADING STATE (very simple, shown while assets preload)
        /* TEMPORARY ASSET — REPLACE LATER */
   ============================================================= -->

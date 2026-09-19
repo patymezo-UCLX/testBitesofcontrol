@@ -1026,6 +1026,63 @@ html, body{
   pointer-events: auto;
 }
 
+/* ---- Exit confirmation — a dimming backdrop above EVERYTHING
+   (including the exit/sound buttons and any open Delivery HUD), so it
+   both visually and functionally blocks all gameplay input while open.
+   The panel itself reuses .bd-order-complete-panel's exact look. ---- */
+.bd-exit-confirm-backdrop{
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: rgba(45, 16, 11, 0);
+  pointer-events: none;
+  transition: background 0.25s ease-out;
+}
+
+.bd-exit-confirm-backdrop.bd-active{
+  background: rgba(45, 16, 11, 0.6);
+  pointer-events: auto;
+}
+
+.bd-exit-confirm-panel{
+  z-index: 101;
+}
+
+/* The panel's visibility is driven entirely by the backdrop's own
+   .bd-active toggle — one class change opens both together. */
+.bd-exit-confirm-backdrop.bd-active .bd-exit-confirm-panel{
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: auto;
+}
+
+.bd-exit-confirm-actions{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.bd-exit-confirm-leave-btn{
+  background: transparent;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 999px;
+  padding: 10px 28px;
+  color: var(--bd-cream);
+  font-family: var(--bd-font-display);
+  font-weight: 700;
+  font-size: clamp(13px, 1.8vw, 15px);
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background 0.15s ease-out, border-color 0.15s ease-out;
+}
+
+.bd-exit-confirm-leave-btn:hover{
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.8);
+}
+
 .bd-order-complete-heading{
   margin: 0 0 8px;
   font-family: var(--bd-font-display);
@@ -2031,6 +2088,36 @@ html, body{
   margin-right: 6px;
 }
 
+/* ---- Missed-delivery toast — small, non-blocking, auto-dismissing.
+   Wrong lane at a delivery zone: never a modal, never stops gameplay. ---- */
+.bd-delivery-missed-toast{
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  z-index: 8;
+  transform: translate(-50%, -50%) scale(0.85);
+  background: rgba(74, 26, 18, 0.92);
+  color: #fff;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(13px, 2vw, 17px);
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 3px solid #ff9f43;
+  box-shadow: 0 8px 18px rgba(74,26,18,0.35);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: bd-delivery-missed-toast-pop 1.8s ease-out forwards;
+}
+
+@keyframes bd-delivery-missed-toast-pop{
+  0%{   opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  12%{  opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  20%{  opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  82%{  opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100%{ opacity: 0; transform: translate(-50%, -60%) scale(0.95); }
+}
+
 /* ---- Delivery HUD (TIEMPO + PEDIDOS) ---- */
 .bd-delivery-hud{
   position: absolute;
@@ -2247,8 +2334,8 @@ html, body{
    ========================================================================== */
 .bd-dev-panel{
   position: absolute;
-  top: 14px;
-  left: 14px;
+  bottom: 20px;
+  left: 20px;
   z-index: 50;
   display: flex;
   flex-direction: column;
@@ -2289,6 +2376,26 @@ html, body{
 .bd-dev-panel-btn:hover{
   background: #0f0;
   color: #111;
+}
+
+@media (orientation: portrait){
+  .bd-dev-panel{
+    bottom: 14px;
+    left: 14px;
+    gap: 4px;
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+
+  .bd-dev-panel-label{
+    font-size: 9px;
+  }
+
+  .bd-dev-panel-btn{
+    font-size: 10px;
+    padding: 5px 8px;
+    min-height: 30px;
+  }
 }
 
 /* ==========================================================================

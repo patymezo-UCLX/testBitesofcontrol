@@ -1,11 +1,17 @@
 /* ==========================================================================
    BAKERY DELIVERY — EXIT CONTROL
    A single persistent close/exit button shown on top of both screens.
-   Stage 1 has no host game to return to, so pressing it:
-     1) fires a "bakerydelivery:exit" DOM event other code can listen for
-        once this module is wired into Bites of Control's navigation, and
-     2) resets this module back to its own intro screen so it stays fully
-        testable as a standalone page in the meantime.
+   Pressing it no longer leaves immediately — it opens an in-game
+   confirmation modal (reusing the same panel/button visual language as
+   the success/failure panels) that pauses whichever phase is currently
+   active and blocks gameplay input while open.
+
+   SEGUIR JUGANDO: closes the modal and resumes exactly where the player
+   was — no reset, no state loss.
+
+   SALIR: performs the actual cleanup + navigation (unchanged from
+   before) — stop all audio, clean up active gameplay loops/listeners,
+   then a plain relative-path navigation back to the Bakery level menu.
    ========================================================================== */
 
 window.BakeryDelivery = window.BakeryDelivery || {};
@@ -13,17 +19,70 @@ window.BakeryDelivery = window.BakeryDelivery || {};
 BakeryDelivery.exitControl = {
 
   els: {},
+  _pausedPhase: null, // 'packing' | 'delivery' | null — whichever we paused, to resume correctly
 
   init() {
     this.els.btn = document.getElementById('bd-exit-btn');
-    this.els.btn.addEventListener('click', () => this.handleExit());
+    this.els.backdrop = document.getElementById('bd-exit-confirm-backdrop');
+    this.els.stayBtn = document.getElementById('bd-exit-confirm-stay-btn');
+    this.els.leaveBtn = document.getElementById('bd-exit-confirm-leave-btn');
+
+    this.els.btn.addEventListener('click', () => this.openConfirm());
+    this.els.stayBtn.addEventListener('click', () => this.closeConfirm());
+    this.els.leaveBtn.addEventListener('click', () => this._confirmLeave());
   },
 
-  handleExit() {
+  isConfirmOpen() {
+    return this.els.backdrop.classList.contains('bd-active');
+  },
+
+  openConfirm() {
+    if (this.isConfirmOpen()) return;
+
+    // Pause whichever phase is currently actually running — both calls
+    // are safe no-ops on the phase that isn't active.
+    try {
+      if (BakeryDelivery.deliveryGameplay.isRunning) {
+        this._pausedPhase = 'delivery';
+        BakeryDelivery.deliveryGameplay.pauseDelivery();
+      } else if (BakeryDelivery.state.isPlaying) {
+        this._pausedPhase = 'packing';
+        BakeryDelivery.timerSystem.pause();
+        BakeryDelivery.fallingObjects.pause();
+      } else {
+        this._pausedPhase = null;
+      }
+    } catch (e) {
+      this._pausedPhase = null;
+    }
+
+    this.els.backdrop.classList.add('bd-active');
+  },
+
+  closeConfirm() {
+    if (!this.isConfirmOpen()) return;
+    this.els.backdrop.classList.remove('bd-active');
+
+    try {
+      if (this._pausedPhase === 'delivery') {
+        BakeryDelivery.deliveryGameplay.resumeDelivery();
+      } else if (this._pausedPhase === 'packing') {
+        BakeryDelivery.timerSystem.start();
+        BakeryDelivery.fallingObjects.resume();
+      }
+    } catch (e) {
+      // Never let a resume failure trap the player with a stuck modal —
+      // the modal is already closed above regardless.
+    }
+    this._pausedPhase = null;
+  },
+
+  _confirmLeave() {
     window.dispatchEvent(new CustomEvent('bakerydelivery:exit'));
 
     // Integrated Bites of Control build: Bakery Delivery is Level 3
     // inside the Bakery, so X always returns to the Bakery level selector.
+    // Relative to Bakery/Delivery/index.html, that's ../levels.html.
     try {
       BakeryDelivery.audioSystem.stopAll();
       BakeryDelivery.timerSystem.reset();
@@ -45,16 +104,11 @@ BakeryDelivery.exitControl = {
     const deliveryIntroScreen = document.getElementById('bd-screen-delivery-intro');
     const deliveryScreen = document.getElementById('bd-screen-delivery');
 
-    // Every non-intro screen gets fully hidden, regardless of which one(s)
-    // happen to be active — exit must be safe to call from anywhere past
-    // the intro, including the Delivery transition screens, which don't
-    // track BakeryDelivery.state.screen themselves (only state.phase).
     [gameplayScreen, deliveryIntroScreen, deliveryScreen].forEach((el) => {
       el.classList.remove('bd-active', 'bd-entering', 'bd-leaving');
       el.setAttribute('aria-hidden', 'true');
     });
 
-    // Clear transient gameplay entrance state so it plays fresh next time.
     ['bd-order-note', 'bd-order-indicator', 'bd-timer', 'bd-box'].forEach((id) => {
       document.getElementById(id).classList.remove('bd-anim-in');
     });

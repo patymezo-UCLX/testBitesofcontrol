@@ -138,12 +138,22 @@ BakeryDelivery.deliveryConfig = {
   // cutoff below, so obstacles (and now Anxi) could never actually spawn
   // on it — a latent bug this pass's Anxi requirement ("Route 1 can have
   // 1 Anxi encounter") exposed. Still clearly the shortest route.
+  // Each destination's required lane (0 = upper, 1 = lower) — the
+  // player must be in this exact lane when passing the delivery zone.
+  // Deliberately varied, never all the same lane, so the route forces
+  // real lane-switching decisions.
   DELIVERY_ROUTES: [
-    { house: 'assets/casa-1.png', distance: 2400 },
-    { house: 'assets/casa-2.png', distance: 2800 },
-    { house: 'assets/casa-3.png', distance: 2900 },
-    { house: 'assets/casa-4.png', distance: 3600 }
+    { house: 'assets/casa-1.png', distance: 2400, lane: 1 },
+    { house: 'assets/casa-2.png', distance: 2800, lane: 0 },
+    { house: 'assets/casa-3.png', distance: 2900, lane: 1 },
+    { house: 'assets/casa-4.png', distance: 3600, lane: 0 }
   ],
+
+  // Progressive difficulty: a multiplier applied to DELIVERY_WORLD_SPEED
+  // for the segment being driven TOWARD each house (index 0 = the first
+  // segment, before casa 1). One centralized array — lengthen/shorten or
+  // retune here without touching any gameplay code.
+  DELIVERY_SPEED_MULTIPLIERS: [1.00, 1.10, 1.20, 1.30],
 
   // How far (world px) before the segment's total distance the house
   // starts entering from the right, still at full driving speed. Was
