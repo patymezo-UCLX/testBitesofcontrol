@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Bakery Delivery — Stage 1</title>
+
+<!-- Rounded, playful game-appropriate typefaces -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/bakery-delivery.css">
+</head>
+<body>
+
+<!--
+  BAKERY DELIVERY — INDEPENDENT MODULE (STAGE 1)
+  ================================================
+  This file is self-contained and does NOT touch any existing
+  "Bites of Control" screens, systems, or logic. Every id/class in
+  this module is prefixed with "bd-" and every global JS symbol lives
+  under the single `BakeryDelivery` namespace object to avoid collisions
+  when this is dropped into the main project later.
+-->
+
+<div id="bd-root" class="bd-root">
+
+  <!-- ============================================================
+       EXIT BUTTON — persists across both screens.
+       /* TEMPORARY ASSET — REPLACE LATER */
+       Stage 1 has no parent game to return to yet, so this resets the
+       module back to its own intro screen and fires a DOM event
+       ("bakerydelivery:exit") that the host page can listen for once
+       this module is integrated into Bites of Control's world map.
+  ============================================================= -->
+  <button id="bd-exit-btn" class="bd-exit-btn" type="button" aria-label="Salir de Bakery Delivery">
+    <span aria-hidden="true">✕</span>
+  </button>
+
+  <!-- ============================================================
+       SOUND TOGGLE — persists across both screens, same pattern as
+       the exit button above. Controls the centralized audioSystem;
+       default state is sound ON.
+  ============================================================= -->
+  <button id="bd-sound-btn" class="bd-sound-btn" type="button" aria-label="Silenciar música" aria-pressed="false">
+    <svg class="bd-sound-icon bd-sound-icon-on" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/>
+      <path d="M16.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M19 6a9 9 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <svg class="bd-sound-icon bd-sound-icon-off" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/>
+      <path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+  <!-- ============================================================
+       LOADING STATE (very simple, shown while assets preload)
+       /* TEMPORARY ASSET — REPLACE LATER */
+  ============================================================= -->
+  <div id="bd-loading" class="bd-loading">
+    <div class="bd-loading-dots" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+    <p class="bd-loading-text">Preparando la panadería…</p>
+  </div>
+
+  <!-- ============================================================
+       SCREEN 1 — INTRO
+  ============================================================= -->
+  <section id="bd-screen-intro" class="bd-screen bd-screen-intro" aria-hidden="true">
+
+    <div class="bd-bg bd-bg-desktop" role="presentation"></div>
+    <div class="bd-bg bd-bg-mobile" role="presentation"></div>
+
+    <div class="bd-intro-content">
+
+      <div id="bd-logo" class="bd-logo">
+        <img class="bd-logo-img" src="assets/Name-BD.png" alt="Bakery Delivery">
+      </div>
+
+      <div id="bd-instructions-panel" class="bd-panel">
+
+        <p class="bd-panel-eyebrow">Instructions</p>
+        <h1 class="bd-panel-heading">¡Prepara los pedidos! 🍰</h1>
+
+        <div class="bd-panel-text">
+          <p>Atrapa con la caja solo los productos que aparecen en la nota del pedido.</p>
+          <p>Ten cuidado: también caerán objetos que no pertenecen al pedido.</p>
+          <p>Anxi aparecerá con dudas durante el juego. Decide cómo responder y continúa preparando el pedido.</p>
+          <p>Cuando termines, puedes revisarlo antes de enviarlo, pero el tiempo sigue corriendo.</p>
+          <p class="bd-panel-text-strong">¡Completa los pedidos y prepáralos para entregar!</p>
+        </div>
+
+        <!-- Small visual explanation of the mechanic, built from REAL supplied assets -->
+        <div class="bd-howto" aria-hidden="true">
+          <div class="bd-howto-item">
+            <img src="assets/Note.png" alt="" class="bd-howto-note">
+          </div>
+
+          <span class="bd-howto-arrow">→</span>
+
+          <div class="bd-howto-item">
+            <div class="bd-howto-badge bd-howto-badge-good">
+              <img src="assets/object-5.png" alt="Producto válido">
+              <span class="bd-howto-mark bd-howto-mark-good">✓</span>
+            </div>
+            <div class="bd-howto-badge bd-howto-badge-bad">
+              <img src="assets/object-7.png" alt="Objeto incorrecto">
+              <span class="bd-howto-mark bd-howto-mark-bad">✕</span>
+            </div>
+          </div>
+
+          <span class="bd-howto-arrow">→</span>
+
+          <div class="bd-howto-item">
+            <img src="assets/boxopen-1.png" alt="" class="bd-howto-box">
+          </div>
+        </div>
+
+        <button id="bd-start-btn" class="bd-start-btn" type="button">
+          <span>START</span>
+        </button>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SCREEN 2 — GAMEPLAY (structure only, Stage 1)
+  ============================================================= -->
+  <section id="bd-screen-gameplay" class="bd-screen bd-screen-gameplay" aria-hidden="true">
+
+    <div class="bd-bg bd-bg-desktop" role="presentation"></div>
+    <div class="bd-bg bd-bg-mobile" role="presentation"></div>
+
+    <!-- TOP / SIDE — "What is my order?" -->
+    <div id="bd-order-note" class="bd-order-note">
+      <img src="assets/Note.png" alt="Nota del pedido" class="bd-note-img">
+      <div id="bd-note-overlay" class="bd-note-overlay">
+        <!-- Product thumbnails are injected here by orderUI.js (Stage 1 visual test) -->
+      </div>
+      <span class="bd-note-label">PEDIDO</span>
+    </div>
+
+    <div id="bd-order-indicator" class="bd-order-indicator">
+      <span id="bd-order-indicator-text">ORDER 1 / 3</span>
+    </div>
+
+    <!-- Timer + lives share one horizontal row — hearts sit directly
+         beside the timer, never stacked underneath it. -->
+    <div id="bd-timer-lives-row" class="bd-timer-lives-row">
+      <div id="bd-timer" class="bd-timer">
+        <span id="bd-timer-text">00:00</span>
+      </div>
+      <div id="bd-lives" class="bd-lives" aria-hidden="true">
+        <span class="bd-life-heart"></span>
+        <span class="bd-life-heart"></span>
+        <span class="bd-life-heart"></span>
+        <span class="bd-life-heart"></span>
+      </div>
+    </div>
+
+    <!-- CENTER — "Objects will fall here." Kept intentionally empty for Stage 2. -->
+    <div id="bd-falling-area" class="bd-falling-area" aria-hidden="true"></div>
+
+    <!-- BOTTOM — "This is my box." -->
+    <div id="bd-box" class="bd-box">
+      <img src="assets/boxopen-1.png" alt="Caja de entrega" class="bd-box-img">
+    </div>
+
+    <!-- Brief, light feedback for a wrong catch. TEMPORARY ASSET — REPLACE LATER -->
+    <div id="bd-oops-toast" class="bd-oops-toast" aria-hidden="true">¡Oops!</div>
+
+    <!-- Order-complete / review / packing-complete panel. Reused across
+         several Stage 3 states (ready-to-send, review-completed, sent,
+         final) so there's one consistent panel look instead of several.
+         TEMPORARY ASSET — REPLACE LATER -->
+    <div id="bd-order-complete-panel" class="bd-order-complete-panel" aria-hidden="true">
+      <p id="bd-order-complete-heading" class="bd-order-complete-heading">¡Pedido listo!</p>
+      <div id="bd-order-complete-subtext" class="bd-order-complete-subtext" hidden></div>
+      <div id="bd-order-complete-actions" class="bd-order-complete-actions">
+        <button id="bd-next-order-btn" class="bd-start-btn bd-next-order-btn" type="button">SIGUIENTE PEDIDO</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         REVIEW SCREEN — the ONE allowed look at the packed order.
+         Keeps the Bakery Delivery background visible behind it.
+         TEMPORARY ASSET — REPLACE LATER
+    ============================================================= -->
+    <div id="bd-review-screen" class="bd-review-screen" aria-hidden="true">
+      <div class="bd-review-panel">
+        <p id="bd-review-title" class="bd-review-title">REVISAR PEDIDO</p>
+        <div class="bd-review-note-wrap">
+          <img src="assets/Note.png" alt="Nota del pedido" class="bd-review-note-img">
+          <div id="bd-review-note-overlay" class="bd-review-note-overlay"></div>
+        </div>
+        <img src="assets/boxclose-2.png" alt="Caja cerrada" class="bd-review-box-img">
+        <button id="bd-finish-review-btn" class="bd-start-btn bd-finish-review-btn" type="button">TERMINAR REVISIÓN</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         ANXI OVERLAY — interruption dialogue. The paused gameplay stays
+         visible (dimmed) behind it, never a full unrelated screen.
+         TEMPORARY ASSET — REPLACE LATER
+    ============================================================= -->
+    <div id="bd-anxi-overlay" class="bd-anxi-overlay" aria-hidden="true">
+      <div class="bd-anxi-dim"></div>
+      <div id="bd-anxi-character" class="bd-anxi-character">
+        <img id="bd-anxi-img" src="" alt="Anxi" class="bd-anxi-img">
+      </div>
+      <div id="bd-anxi-bubble" class="bd-anxi-bubble">
+        <p id="bd-anxi-text" class="bd-anxi-text"></p>
+        <div id="bd-anxi-options" class="bd-anxi-options"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       SCREEN 3 — DELIVERY INTRODUCTION / INSTRUCTIONS
+       Shown after Packing's final "¡Pedidos preparados!" CONTINUAR.
+       Still visually Bakery Delivery — not a different game.
+  ============================================================= -->
+  <section id="bd-screen-delivery-intro" class="bd-screen bd-screen-delivery-intro" aria-hidden="true">
+
+    <div class="bd-bg-delivery" role="presentation"></div>
+
+    <div class="bd-delivery-intro-content">
+
+      <h1 id="bd-delivery-heading" class="bd-delivery-heading">¡AHORA TOCA ENTREGARLOS!</h1>
+      <p class="bd-delivery-subtext">Lleva los 4 pedidos a sus destinos antes de que termine el tiempo.</p>
+
+      <div id="bd-delivery-instructions-panel" class="bd-panel bd-delivery-instructions-panel">
+
+        <p class="bd-panel-eyebrow">Instrucciones</p>
+
+        <div class="bd-delivery-instruction-row">
+          <!-- Lane-change demo: Meli bobbing between two lane lines.
+               VISUAL ONLY — no gameplay physics here.
+               TEMPORARY ASSET — REPLACE LATER (arrow badges + lane lines) -->
+          <div class="bd-lane-demo" aria-hidden="true">
+            <div class="bd-lane-demo-track">
+              <div class="bd-lane-line bd-lane-line-top"></div>
+              <div class="bd-lane-line bd-lane-line-bottom"></div>
+              <img src="assets/meli-side-1.png" alt="" class="bd-lane-demo-meli">
+            </div>
+            <div class="bd-lane-arrows">
+              <span class="bd-lane-arrow">↑</span>
+              <span class="bd-lane-arrow">↓</span>
+            </div>
+          </div>
+          <div class="bd-instruction-text">
+            <p class="bd-instruction-title bd-instr-desktop-only">↑ ↓ CAMBIA DE CARRIL</p>
+            <p class="bd-instruction-body bd-instr-desktop-only">Usa las flechas ↑ y ↓ para cambiar entre los dos carriles.</p>
+            <p class="bd-instruction-title bd-instr-mobile-only">DESLIZA ↑ ↓ PARA CAMBIAR DE CARRIL</p>
+            <p class="bd-instruction-body bd-instr-mobile-only">Desliza hacia arriba o hacia abajo para mover a Meli entre los dos carriles.</p>
+          </div>
+        </div>
+
+        <div class="bd-delivery-instruction-row">
+          <div class="bd-obstacle-preview" aria-hidden="true">
+            <img src="assets/obs-1.png" alt="">
+            <img src="assets/obs-4.png" alt="">
+          </div>
+          <div class="bd-instruction-text">
+            <p class="bd-instruction-title">¡CUIDADO CON LOS OBSTÁCULOS!</p>
+            <p class="bd-instruction-body">Cambia de carril para esquivar lo que aparezca en el camino.</p>
+          </div>
+        </div>
+
+        <div class="bd-delivery-instruction-row">
+          <img src="assets/boxclose-2.png" alt="" class="bd-delivery-box-icon" aria-hidden="true">
+          <div class="bd-instruction-text">
+            <p class="bd-instruction-title">ENTREGA LOS 4 PEDIDOS</p>
+            <p class="bd-instruction-body">Sigue avanzando hasta llegar a cada destino.</p>
+          </div>
+        </div>
+
+        <button id="bd-start-delivery-btn" class="bd-start-btn" type="button">¡A REPARTIR!</button>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SCREEN 4 — DELIVERY (STAGE 1: driving feel only)
+       Modular layer structure — future obstacles/houses/decorations
+       will live in .bd-delivery-world-layer alongside Meli, without
+       needing this structure to change.
+  ============================================================= -->
+  <section id="bd-screen-delivery" class="bd-screen bd-screen-delivery" aria-hidden="true">
+    <div id="bd-delivery-game" class="bd-delivery-game">
+
+      <div id="bd-delivery-bg-layer" class="bd-delivery-background-layer">
+        <div id="bd-delivery-bg-a" class="bd-delivery-bg-tile">
+          <img src="assets/fondo-parallax.png" alt="" class="bd-delivery-bg-img">
+          <!-- Masks the background art's own baked-in sun so only Sol.png
+               (the actual parallax sun layer) is ever visible — see the
+               Stage 1 report for why. Non-destructive: the source PNG
+               is untouched, this is purely an added overlay.
+               TEMPORARY ASSET — REPLACE LATER -->
+          <div class="bd-delivery-bg-sun-mask"></div>
+        </div>
+        <div id="bd-delivery-bg-b" class="bd-delivery-bg-tile">
+          <img src="assets/fondo-parallax.png" alt="" class="bd-delivery-bg-img">
+          <div class="bd-delivery-bg-sun-mask"></div>
+        </div>
+      </div>
+
+      <div class="bd-delivery-sun-layer">
+        <img id="bd-delivery-sun" src="assets/sol.png" alt="" class="bd-delivery-sun">
+      </div>
+
+      <div id="bd-delivery-world-layer" class="bd-delivery-world-layer">
+        <!-- Stage 2: obstacles (appended dynamically by deliveryObstacles.js) -->
+      </div>
+
+      <!-- Destination house — deliberately a SEPARATE layer/system from
+           obstacles (never collidable, never part of the Stage 2
+           collision pool). Populated by deliveryDestination.js. -->
+      <div id="bd-delivery-destination-layer" class="bd-delivery-destination-layer">
+        <img id="bd-delivery-house-img" src="" alt="" class="bd-delivery-house-img">
+
+        <!-- TEMPORARY DELIVERY MARKER — REPLACE WITH FINAL ASSET LATER -->
+        <div id="bd-delivery-marker" class="bd-delivery-marker" aria-hidden="true">
+          <div class="bd-delivery-marker-pin">
+            <div class="bd-delivery-marker-icon"></div>
+          </div>
+        </div>
+
+        <button type="button" id="bd-delivery-cta-btn" class="bd-start-btn bd-delivery-cta-btn">ENTREGAR PEDIDO</button>
+      </div>
+
+      <div class="bd-delivery-meli-layer">
+        <!-- Two nested transforms: outer (bd-delivery-meli) is pure lane
+             position/depth-scale; inner (bd-delivery-meli-impact) is
+             purely cosmetic (lean, idle bounce, collision jerk/wobble).
+             Kept separate so they never fight over the same transform. -->
+        <div id="bd-delivery-meli" class="bd-delivery-meli">
+          <div id="bd-delivery-meli-impact" class="bd-delivery-meli-impact">
+            <img id="bd-delivery-meli-img" src="assets/meli-side-1.png" alt="Meli" class="bd-delivery-meli-img">
+          </div>
+        </div>
+      </div>
+
+      <!-- Impact puff effects spawn here — TEMPORARY IMPACT EFFECT — CAN
+           BE REPLACED WITH ART LATER -->
+      <div id="bd-delivery-fx-layer" class="bd-delivery-fx-layer"></div>
+
+      <!-- TEMPORARY DEBUG — REMOVE/DISABLE FOR FINAL. Only populated
+           when BakeryDelivery.deliveryConfig.DELIVERY_DEBUG is true. -->
+      <div id="bd-delivery-debug" class="bd-delivery-debug-layer" aria-hidden="true"></div>
+
+      <div class="bd-delivery-ui-layer">
+        <!-- Touch-only secondary controls — buttons/tap/swipe all call
+             the SAME deliveryMeli.setLane(). Hidden on desktop via CSS.
+             TEMPORARY GAME CONTROL — CAN BE REPLACED WITH FINAL ART LATER -->
+        <div class="bd-delivery-lane-controls" aria-hidden="true">
+          <button type="button" class="bd-delivery-lane-btn" id="bd-delivery-btn-up" aria-label="Carril superior">↑</button>
+          <button type="button" class="bd-delivery-lane-btn" id="bd-delivery-btn-down" aria-label="Carril inferior">↓</button>
+        </div>
+
+        <!-- Delivery HUD — TIEMPO (global countdown) + PEDIDOS (progress),
+             top-center, clear of Meli, obstacles, the destination house,
+             and the mobile lane buttons. -->
+        <div class="bd-delivery-hud">
+          <div id="bd-delivery-timer" class="bd-delivery-timer">
+            <span class="bd-delivery-timer-label">TIEMPO</span>
+            <span id="bd-delivery-timer-text" class="bd-delivery-timer-text">02:00</span>
+          </div>
+          <div id="bd-delivery-progress" class="bd-delivery-progress">
+            <img class="bd-delivery-progress-icon" src="assets/uncheck1.png" alt="">
+            <img class="bd-delivery-progress-icon" src="assets/uncheck1.png" alt="">
+            <img class="bd-delivery-progress-icon" src="assets/uncheck1.png" alt="">
+            <img class="bd-delivery-progress-icon" src="assets/uncheck1.png" alt="">
+            <span id="bd-delivery-progress-text" class="bd-delivery-progress-text">0 / 4</span>
+          </div>
+          <!-- Delivery lives — same reusable heart styling as Packing. -->
+          <div id="bd-delivery-lives" class="bd-lives bd-delivery-lives" aria-hidden="true">
+            <span class="bd-life-heart"></span>
+            <span class="bd-life-heart"></span>
+            <span class="bd-life-heart"></span>
+            <span class="bd-life-heart"></span>
+          </div>
+        </div>
+
+        <!-- DEV-ONLY stopwatch for balancing — separate from the real
+             timer above, never shown unless DELIVERY_DEBUG is true. -->
+        <div id="bd-delivery-elapsed" class="bd-delivery-elapsed" style="display:none;"></div>
+      </div>
+
+      <!-- TEMPORARY COMPLETION STATE — Stage 4 replaces this with the
+           real Anxi-doubt-aware ending. Reuses the same panel classes
+           as Packing's success screen for visual consistency. -->
+      <div id="bd-delivery-completion-panel" class="bd-order-complete-panel bd-delivery-completion-panel">
+        <h2 class="bd-order-complete-heading">¡TODOS LOS PEDIDOS ENTREGADOS!</h2>
+        <div class="bd-order-complete-subtext">
+          <p>4 / 4</p>
+          <p>¡Terminaste el recorrido!</p>
+        </div>
+      </div>
+
+      <!-- Delivery timeout — Delivery-only retry, never replays Packing.
+           Reuses the same panel classes as Packing's timeout screen. -->
+      <div id="bd-delivery-timeout-panel" class="bd-order-complete-panel bd-delivery-timeout-panel">
+        <h2 id="bd-delivery-timeout-heading" class="bd-order-complete-heading">SE ACABÓ EL TIEMPO</h2>
+        <div id="bd-delivery-timeout-subtext" class="bd-order-complete-subtext">
+          <p>Todavía quedan pedidos por entregar.</p>
+        </div>
+        <div class="bd-order-complete-actions">
+          <button type="button" id="bd-delivery-timeout-retry-btn" class="bd-start-btn bd-order-complete-btn">VOLVER A INTENTAR</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<!-- Plain scripts, loaded in dependency order. No bundler required so this
+     drops straight into the existing project later. Everything attaches to
+     a single `window.BakeryDelivery` namespace — nothing else is touched. -->
+<script src="js/config.js"></script>
+<script src="js/audioSystem.js"></script>
+<script src="js/assets.js"></script>
+<script src="js/state.js"></script>
+<script src="js/orders.js"></script>
+<script src="js/objectData.js"></script>
+<script src="js/textContent.js"></script>
+<script src="js/preloader.js"></script>
+<script src="js/intro.js"></script>
+<script src="js/orderUI.js"></script>
+<script src="js/catcher.js"></script>
+<script src="js/fallingObjects.js"></script>
+<script src="js/panelUI.js"></script>
+<script src="js/timerSystem.js"></script>
+<script src="js/anxiSystem.js"></script>
+<script src="js/reviewSystem.js"></script>
+<script src="js/gameplay.js"></script>
+<script src="js/deliveryConfig.js"></script>
+<script src="js/deliveryWorld.js"></script>
+<script src="js/deliveryMeli.js"></script>
+<script src="js/deliveryObstacles.js"></script>
+<script src="js/deliveryTimer.js"></script>
+<script src="js/deliveryDestination.js"></script>
+<script src="js/deliveryGameplay.js"></script>
+<script src="js/deliverySystem.js"></script>
+<script src="js/devMode.js"></script>
+<script src="js/retrySystem.js"></script>
+<script src="js/stage4-placeholders.js"></script>
+<script src="js/exitControl.js"></script>
+<script src="js/soundToggle.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
