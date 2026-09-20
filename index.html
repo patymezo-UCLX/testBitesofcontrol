@@ -459,6 +459,201 @@ button {
   margin-top: 55px;
 }
 
+.intro-nav-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+
+  margin-top: 8px;
+}
+
+.intro-nav-row .intro-final-button {
+  margin-top: 0;
+}
+
+.game-pink-button-secondary {
+  background: rgba(255, 255, 255, 0.16);
+  color: white;
+  border-color: rgba(246, 188, 69, 0.6);
+  box-shadow: 0 5px 0 rgba(143, 45, 96, 0.35);
+  min-width: 130px;
+}
+
+.intro-anxi-wrap {
+  position: absolute;
+  left: 44%;
+  bottom: clamp(50px, 7vh, 90px);
+  transform: translateX(clamp(78px, 11vw, 128px));
+
+  z-index: 4;
+  pointer-events: none;
+
+  display: none;
+}
+
+.intro-anxi-wrap.intro-anxi-visible {
+  display: block;
+}
+
+.intro-anxi {
+  display: block;
+
+  height: clamp(105px, 17.5vh, 190px);
+  width: auto;
+
+  filter: drop-shadow(0 8px 5px rgba(73, 70, 17, 0.16));
+
+  opacity: 0;
+  transform: translateX(140%) translateY(0) scale(1);
+}
+
+.intro-anxi.anxi-entrance-play {
+  animation: anxi-entrance 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes anxi-entrance {
+  0% {
+    opacity: 0;
+    transform: translateX(140%) translateY(0) scale(1);
+  }
+  12% {
+    opacity: 1;
+  }
+  38% {
+    transform: translateX(50%) translateY(-10px) scale(1);
+  }
+  62% {
+    transform: translateX(0%) translateY(6px) scale(0.94);
+  }
+  82% {
+    transform: translateX(0%) translateY(0) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0%) translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .intro-nav-row {
+    gap: 12px;
+  }
+
+ .game-pink-button-secondary,
+.intro-nav-row .game-pink-button {
+  min-width: 0;
+  flex: 1 1 0;
+  padding: 12px 14px;
+}
+
+.intro-anxi-wrap {
+  bottom: 44px;
+  transform: translateX(clamp(58px, 15vw, 95px));
+}
+
+.intro-anxi-wrap.intro-anxi-visible {
+  animation: anxiEntranceTablet 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.intro-anxi {
+  height: clamp(95px, 15.5vh, 145px);
+}
+
+@keyframes anxiEntranceTablet {
+  0% {
+    opacity: 0;
+    transform:
+      translateX(calc(clamp(58px, 15vw, 95px) + 90px))
+      translateY(20px)
+      scale(0.85);
+  }
+
+  65% {
+    opacity: 1;
+    transform:
+      translateX(calc(clamp(58px, 15vw, 95px) - 6px))
+      translateY(-4px)
+      scale(1.03);
+  }
+
+  82% {
+    transform:
+      translateX(calc(clamp(58px, 15vw, 95px) + 3px))
+      translateY(2px)
+      scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform:
+      translateX(clamp(58px, 15vw, 95px))
+      translateY(0)
+      scale(1);
+  }
+}
+
+}
+
+@media (max-width: 480px) {
+
+  .intro-nav-row {
+    gap: 10px;
+  }
+
+  .intro-nav-row .game-pink-button {
+    font-size: 15px;
+    padding: 11px 10px;
+  }
+
+  .intro-anxi-wrap {
+    transform: translateX(clamp(48px, 14vw, 75px));
+  }
+
+  .intro-anxi-wrap.intro-anxi-visible {
+    animation: anxiEntranceMobile 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .intro-anxi {
+    height: 98px;
+  }
+
+  @keyframes anxiEntranceMobile {
+    0% {
+      opacity: 0;
+      transform:
+        translateX(calc(clamp(48px, 14vw, 75px) + 70px))
+        translateY(18px)
+        scale(0.85);
+    }
+
+    65% {
+      opacity: 1;
+      transform:
+        translateX(calc(clamp(48px, 14vw, 75px) - 5px))
+        translateY(-4px)
+        scale(1.03);
+    }
+
+    82% {
+      transform:
+        translateX(calc(clamp(48px, 14vw, 75px) + 2px))
+        translateY(1px)
+        scale(0.98);
+    }
+
+    100% {
+      opacity: 1;
+      transform:
+        translateX(clamp(48px, 14vw, 75px))
+        translateY(0)
+        scale(1);
+    }
+  }
+
+}
 
 /* =========================================================
    INTRO RESPONSIVE
@@ -546,6 +741,11 @@ button {
     height: clamp(135px, 22vh, 205px);
   }
 
+  /* ANXI MOBILE — subir personaje */
+  .intro-anxi-wrap {
+    bottom: 58px;
+  }
+
   .intro-skip {
     right: 16px;
     bottom: 15px;
@@ -574,6 +774,11 @@ button {
 
   .intro-meli {
     height: 140px;
+  }
+
+  /* ANXI EN CELULARES PEQUEÑOS */
+  .intro-anxi-wrap {
+    bottom: 95px;
   }
 }
 
@@ -630,7 +835,6 @@ button {
 
   color: #7b2d54;
 }
-
 
 /* =========================================================
    COLLAPSIBLE BOTTOM MENU WRAPPER
@@ -2211,7 +2415,7 @@ button {
       class="intro-step active">
 
       <h2>
-        ¡Que alegría verte por aquí!
+        ¡Qué alegría verte por aquí!
       </h2>
 
       <p>
@@ -2220,7 +2424,7 @@ button {
       </p>
 
       <p>
-        Dime ¿Cómo te llamas?
+        Dime, ¿cómo te llamas?
       </p>
 
       <input
@@ -2229,14 +2433,14 @@ button {
         type="text"
         maxlength="24"
         autocomplete="off"
-        placeholder="Escribe tu nombre">
+        placeholder="Escribe tu nombre para continuar">
 
       <button
         id="intro-continue-button"
         type="button"
         class="game-pink-button">
 
-        Continuar
+        CONTINUAR
 
       </button>
 
@@ -2253,24 +2457,40 @@ button {
       </h2>
 
       <p>
-        ¿Sabes? Tengo un gran sueño:
-        <strong>abrir mi propia pastelería.</strong>
+        Tengo un gran sueño:
+        <strong>abrir mi propia pastelería.</strong> 🧁
       </p>
 
       <p>
-        y al fin, encontré el lugar perfecto para hacerlo,
-        tengo muchas ideas y muchas ganas de lograrlo...
-        aunque a veces el camino puede sentirse un poquito complicado.
+        Al fin encontré el lugar perfecto y tengo
+        muchísimas ganas de lograrlo...
       </p>
 
-      <button
-        id="intro-next-button"
-        type="button"
-        class="game-pink-button">
+      <p>
+        aunque a veces las dudas se interponen en el camino.
+      </p>
 
-        Siguiente
+      <div class="intro-nav-row">
 
-      </button>
+        <button
+          id="intro-back-2-button"
+          type="button"
+          class="game-pink-button game-pink-button-secondary">
+
+          ATRÁS
+
+        </button>
+
+        <button
+          id="intro-next-button"
+          type="button"
+          class="game-pink-button">
+
+          SIGUIENTE
+
+        </button>
+
+      </div>
 
     </div>
 
@@ -2281,26 +2501,38 @@ button {
       class="intro-step">
 
       <h2>
-        Ahí es cuando aparece Anxi, te lo presento.. (IMAGEN DE ANXI)
+        Y hablando de dudas... te presento a Anxi.
       </h2>
 
       <p>
-       Siempre está conmigo y trata de protegerme cuando algo le parece incierto o peligroso.
+       Siempre está conmigo y trata de protegerme cuando algo parece incierto o peligroso.
       </p>
 
       <p>
-        <strong>Anxi no es malo</strong>,
-        solo que a veces se preocupa un poquito de más.
+        No es malo, solo que a veces se preocupa un poquito de más.
       </p>
 
-      <button
-        id="intro-next-3-button"
-        type="button"
-        class="game-pink-button">
+      <div class="intro-nav-row">
 
-        Siguiente
+        <button
+          id="intro-back-3-button"
+          type="button"
+          class="game-pink-button game-pink-button-secondary">
 
-      </button>
+          ATRÁS
+
+        </button>
+
+        <button
+          id="intro-next-3-button"
+          type="button"
+          class="game-pink-button">
+
+          SIGUIENTE
+
+        </button>
+
+      </div>
 
     </div>
 
@@ -2310,81 +2542,41 @@ button {
       id="intro-step-4"
       class="intro-step">
 
-  
-      <p>
-        Estoy aprediendo a escucharlo, a aceptar que me acompañe
-        <strong>sin dejar que decida todo por mí.</strong>
-      </p>
-
-      <p>
-        Poco a poco quiero aprender a reconocer qué cosas necesitan mi atención
-        y cuáles puedo dejar pasar para seguir avanzando hacia lo que realmente me importa.
-      </p>
-
-      <button
-        id="intro-next-4-button"
-        type="button"
-        class="game-pink-button">
-
-        Siguiente
-
-      </button>
-
-    </div>
-
-
-    <!-- STEP 5 -->
-    <div
-      id="intro-step-5"
-      class="intro-step">
-
-    
-
-      <p>
-        Y para poder cumplir mi sueño,
-        tendremos que recorrer este mundo,
-        conocer diferentes lugares y completar
-        <strong>misiones, retos y actividades.</strong>
-      </p>
-
-      <p>
-        Cada experiencia me ayudará a descubrir nuevas herramientas
-        y a acercarme un poquito más a mi pastelería.
-      </p>
-
-      <button
-        id="intro-next-5-button"
-        type="button"
-        class="game-pink-button">
-
-        Siguiente
-
-      </button>
-
-    </div>
-
-
-    <!-- STEP 6 -->
-    <div
-      id="intro-step-6"
-      class="intro-step">
-
       <h2>
-        ¿Quieres acompañarme?
+        Estoy aprendiendo a escuchar a Anxi sin dejar que decida todo por mí.
       </h2>
 
       <p>
-        ¡Tenemos mucho por descubrir!
+        Para cumplir mi sueño, tendremos que explorar este mundo,
+        superar retos y aprender cuándo seguir adelante,
+        aunque no todo se sienta completamente seguro.
       </p>
 
-      <button
-        id="start-adventure-button"
-        type="button"
-        class="game-pink-button intro-final-button">
+      <p>
+        <strong>¿Quieres acompañarme?</strong>
+      </p>
 
-        Iniciar aventura
+      <div class="intro-nav-row">
 
-      </button>
+        <button
+          id="intro-back-4-button"
+          type="button"
+          class="game-pink-button game-pink-button-secondary">
+
+          ATRÁS
+
+        </button>
+
+        <button
+          id="start-adventure-button"
+          type="button"
+          class="game-pink-button intro-final-button">
+
+          INICIAR AVENTURA
+
+        </button>
+
+      </div>
 
     </div>
 
@@ -2394,6 +2586,18 @@ button {
     src="Intro/Meli_intro.png"
     class="intro-meli"
     alt="Meli">
+
+  <div
+    id="intro-anxi-wrap"
+    class="intro-anxi-wrap">
+
+    <img
+      id="intro-anxi-img"
+      class="intro-anxi"
+      src="Intro/Anxi-sprite 2-04.png"
+      alt="Anxi">
+
+  </div>
 
 
   <button
@@ -3116,16 +3320,6 @@ const introStep4 =
     "intro-step-4"
   );
 
-const introStep5 =
-  document.getElementById(
-    "intro-step-5"
-  );
-
-const introStep6 =
-  document.getElementById(
-    "intro-step-6"
-  );
-
 
 const introDialoguePanel =
   document.querySelector(
@@ -3495,6 +3689,65 @@ let restoreSavedPosition =
   false;
 
 
+const introAnxiImage =
+  document.getElementById(
+    "intro-anxi-img"
+  );
+
+const introAnxiWrap =
+  document.getElementById(
+    "intro-anxi-wrap"
+  );
+
+const ANXI_ENTRANCE_CLASS =
+  "anxi-entrance-play";
+
+const ANXI_VISIBLE_CLASS =
+  "intro-anxi-visible";
+
+function playAnxiIntroAnimation() {
+
+  if (
+    !introAnxiImage
+  ) {
+
+    return;
+
+  }
+
+
+  // The wrapper lives outside the dialogue panel (as a sibling of
+  // Meli, so both share the same bottom-of-screen coordinate space),
+  // so it stays hidden by default and is only shown while Screen 3 is
+  // actually active — see setIntroStep()'s else-branch below.
+  if (
+    introAnxiWrap
+  ) {
+
+    introAnxiWrap.classList.add(
+      ANXI_VISIBLE_CLASS
+    );
+
+  }
+
+
+  // Restart the CSS entrance animation from scratch every time this
+  // runs (fresh Screen 3 entry, or ATRÁS back into it): remove the
+  // triggering class, force a reflow so the browser forgets the
+  // animation ever played, then re-add it.
+  introAnxiImage.classList.remove(
+    ANXI_ENTRANCE_CLASS
+  );
+
+  void introAnxiImage.offsetWidth;
+
+  introAnxiImage.classList.add(
+    ANXI_ENTRANCE_CLASS
+  );
+
+}
+
+
 function setIntroStep(
   stepNumber
 ) {
@@ -3506,9 +3759,7 @@ function setIntroStep(
     introStep1,
     introStep2,
     introStep3,
-    introStep4,
-    introStep5,
-    introStep6
+    introStep4
   ].forEach(
     function (
       step
@@ -3534,9 +3785,7 @@ function setIntroStep(
     1: introStep1,
     2: introStep2,
     3: introStep3,
-    4: introStep4,
-    5: introStep5,
-    6: introStep6
+    4: introStep4
   };
 
 
@@ -3553,6 +3802,23 @@ function setIntroStep(
     nextStep.classList.add(
       "active"
     );
+
+
+    if (
+      stepNumber === 3
+    ) {
+
+      playAnxiIntroAnimation();
+
+    } else if (
+      introAnxiWrap
+    ) {
+
+      introAnxiWrap.classList.remove(
+        ANXI_VISIBLE_CLASS
+      );
+
+    }
 
 
     requestAnimationFrame(
@@ -4004,6 +4270,22 @@ document
 
 document
   .getElementById(
+    "intro-back-2-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      setIntroStep(
+        1
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
     "intro-next-3-button"
   )
   .addEventListener(
@@ -4020,14 +4302,14 @@ document
 
 document
   .getElementById(
-    "intro-next-4-button"
+    "intro-back-3-button"
   )
   .addEventListener(
     "click",
     function () {
 
       setIntroStep(
-        5
+        2
       );
 
     }
@@ -4036,14 +4318,14 @@ document
 
 document
   .getElementById(
-    "intro-next-5-button"
+    "intro-back-4-button"
   )
   .addEventListener(
     "click",
     function () {
 
       setIntroStep(
-        6
+        3
       );
 
     }
