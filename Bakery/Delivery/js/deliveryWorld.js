@@ -53,6 +53,7 @@ BakeryDelivery.deliveryWorld = {
   // should ever drift out of sync with the road itself.
   speedMultiplier: 1,
   segmentSpeedMultiplier: 1, // progressive difficulty, set by deliveryDestination.js per segment
+  reversed: false, // true during deliveryAnxi.js's temporary "checking" sequence
   _slowdownActive: false,
   _slowdownStartValue: 1,
   _slowdownStartTime: 0,
@@ -228,7 +229,18 @@ BakeryDelivery.deliveryWorld = {
    *  slowdown — this is what obstacles.js moves by too, so they never
    *  drift out of sync with the scrolling road. */
   getCurrentSpeed() {
-    return BakeryDelivery.deliveryConfig.DELIVERY_WORLD_SPEED * this.speedMultiplier * this.segmentSpeedMultiplier;
+    const speed = BakeryDelivery.deliveryConfig.DELIVERY_WORLD_SPEED * this.speedMultiplier * this.segmentSpeedMultiplier;
+    return this.reversed ? -speed : speed;
+  },
+
+  /** Used only by deliveryAnxi.js's temporary "checking" sequence
+   *  (Change 4). Every world-space mover (background tiles, obstacles,
+   *  the active house/marker if any) already reads its motion from
+   *  getCurrentSpeed(), so flipping the sign here is enough to make the
+   *  whole world visibly travel backward together — no other file needs
+   *  to change. */
+  setReversed(isReversed) {
+    this.reversed = isReversed;
   },
 
   /** Progressive difficulty — applied on top of (never replacing) the
@@ -277,6 +289,7 @@ BakeryDelivery.deliveryWorld = {
     this.tiles[1].x = this.tileWidth - this.TILE_OVERLAP_PX;
     this.speedMultiplier = 1;
     this.segmentSpeedMultiplier = 1;
+    this.reversed = false;
     this._slowdownActive = false;
     this._speedTransition = null;
     this._applyTransforms();

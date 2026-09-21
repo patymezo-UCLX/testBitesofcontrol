@@ -23,6 +23,15 @@ BakeryDelivery.deliveryGameplay = {
 
   lives: 4,
   _failureReason: null, // 'timeout' | 'noLives'
+  _anxiBlocking: false, // true while a Delivery Anxi decision (Change 4) or its checking sequence is active
+
+  /** Set by deliveryAnxi.js while its decision overlay or checking
+   *  sequence is active — blocks lane controls without touching
+   *  deliveryDestination or fully pausing (the checking sequence needs
+   *  the loop running so the world can visibly move backward). */
+  setAnxiBlocking(blocking) {
+    this._anxiBlocking = blocking;
+  },
 
   init() {
     this.els.screen = document.getElementById('bd-screen-delivery');
@@ -38,6 +47,7 @@ BakeryDelivery.deliveryGameplay = {
     this.els.lifeHearts = Array.from(document.querySelectorAll('#bd-delivery-lives .bd-life-heart'));
     BakeryDelivery.deliveryDestination.init();
     BakeryDelivery.deliveryTimer.init();
+    BakeryDelivery.deliveryAnxi.init();
 
     this.els.timeoutRetryBtn.addEventListener('click', () => this._retryAfterTimeout());
   },
@@ -55,6 +65,7 @@ BakeryDelivery.deliveryGameplay = {
 
     this.lives = BakeryDelivery.deliveryConfig.DELIVERY_LIVES_START;
     this._failureReason = null;
+    this._anxiBlocking = false;
     this._updateLivesUI();
 
     BakeryDelivery.deliveryWorld.init();
@@ -64,6 +75,7 @@ BakeryDelivery.deliveryGameplay = {
     BakeryDelivery.deliveryMeli.measureAndPosition();
     BakeryDelivery.deliveryMeli.reset(BakeryDelivery.deliveryConfig.STARTING_LANE);
     BakeryDelivery.deliveryDestination.reset();
+    BakeryDelivery.deliveryAnxi.reset();
     BakeryDelivery.deliveryObstacles.start();
 
     // The global Delivery countdown starts here — the moment active
@@ -118,8 +130,10 @@ BakeryDelivery.deliveryGameplay = {
     BakeryDelivery.deliveryMeli.reset(BakeryDelivery.deliveryConfig.STARTING_LANE);
     BakeryDelivery.deliveryDestination.reset();
     BakeryDelivery.deliveryTimer.reset();
+    BakeryDelivery.deliveryAnxi.reset();
     this.lives = BakeryDelivery.deliveryConfig.DELIVERY_LIVES_START;
     this._failureReason = null;
+    this._anxiBlocking = false;
     this._updateLivesUI();
     this._hideTimeoutPanel();
     this._lastCollisionTime = 0;
@@ -133,6 +147,7 @@ BakeryDelivery.deliveryGameplay = {
    *  handleNoLives() below and _showFailurePanel()'s copy branch. */
   handleDeliveryTimeout() {
     if (!this.isRunning) return;
+    BakeryDelivery.deliveryAnxi.forceCloseImmediately(); // timeout always takes priority over an open Anxi decision/checking sequence
     this._failureReason = 'timeout';
     this.stopDelivery();
     BakeryDelivery.deliveryMeli.setMoving(false);
@@ -145,6 +160,7 @@ BakeryDelivery.deliveryGameplay = {
    *  also fire afterwards. */
   handleNoLives() {
     if (!this.isRunning) return;
+    BakeryDelivery.deliveryAnxi.forceCloseImmediately();
     this._failureReason = 'noLives';
     this.stopDelivery();
     BakeryDelivery.deliveryMeli.setMoving(false);
@@ -156,6 +172,7 @@ BakeryDelivery.deliveryGameplay = {
    *  delivered. Same shared panel/retry flow as the other two failures. */
   handleRouteIncomplete(delivered, total) {
     if (!this.isRunning) return;
+    BakeryDelivery.deliveryAnxi.forceCloseImmediately();
     this._failureReason = 'incomplete';
     this._incompleteDelivered = delivered;
     this._incompleteTotal = total;
@@ -313,11 +330,11 @@ BakeryDelivery.deliveryGameplay = {
 
     // Mobile ↑/↓ buttons — same setLane() as keyboard/swipe/tap, per spec.
     this.els.btnUp.addEventListener('click', () => {
-      if (!this.isRunning || this.isPaused || !BakeryDelivery.deliveryDestination.controlsEnabled()) return;
+      if (!this.isRunning || this.isPaused || this._anxiBlocking || !BakeryDelivery.deliveryDestination.controlsEnabled()) return;
       BakeryDelivery.deliveryMeli.setLane(0);
     });
     this.els.btnDown.addEventListener('click', () => {
-      if (!this.isRunning || this.isPaused || !BakeryDelivery.deliveryDestination.controlsEnabled()) return;
+      if (!this.isRunning || this.isPaused || this._anxiBlocking || !BakeryDelivery.deliveryDestination.controlsEnabled()) return;
       BakeryDelivery.deliveryMeli.setLane(1);
     });
   },
@@ -342,7 +359,7 @@ BakeryDelivery.deliveryGameplay = {
   },
 
   _onKeyDown(e) {
-    if (!this.isRunning || this.isPaused || !BakeryDelivery.deliveryDestination.controlsEnabled()) return;
+    if (!this.isRunning || this.isPaused || this._anxiBlocking || !BakeryDelivery.deliveryDestination.controlsEnabled()) return;
     if (BakeryDelivery.exitControl.isConfirmOpen()) return;
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
       BakeryDelivery.deliveryMeli.setLane(0);
@@ -352,7 +369,7 @@ BakeryDelivery.deliveryGameplay = {
   },
 
   _onPointerDown(e) {
-    if (!this.isRunning || this.isPaused || !BakeryDelivery.deliveryDestination.controlsEnabled()) return;
+    if (!this.isRunning || this.isPaused || this._anxiBlocking || !BakeryDelivery.deliveryDestination.controlsEnabled()) return;
     // Taps on the dedicated ↑/↓ buttons are handled by their own click
     // listeners — don't also let the container's tap/swipe detection
     // treat that same gesture as a whole-road tap.

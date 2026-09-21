@@ -170,6 +170,22 @@ BakeryDelivery.deliveryConfig = {
   // Once the approaching house is within this many px of its target
   // stop position, deceleration begins (world.setSpeedTarget(0, …)).
   ARRIVAL_DECEL_LEAD_PX: 150,
+
+  // Change 2 — the delivery marker itself is now the actual trigger:
+  // Meli registers a delivery by passing through it (forgiving zone,
+  // not pixel-perfect), rather than needing to fully stop and tap a
+  // button. Half-width of that forgiving trigger zone, in px.
+  MARKER_TRIGGER_RADIUS_PX: 70,
+
+  // Change 3 — how close (horizontally, lane-independent) Meli needs to
+  // pass to Anxi to trigger the non-blocking "near" speech bubble, even
+  // when she never actually collides with him.
+  DELIVERY_ANXI_NEAR_RADIUS_PX: 150,
+
+  // Change 4 — duration of the temporary backward-travel "checking"
+  // sequence after choosing REVISAR on direct collision. The timer keeps
+  // running throughout, so this duration IS the cost of checking.
+  DELIVERY_ANXI_CHECKING_MS: 3000,
   ARRIVAL_DECEL_DURATION_MS: 1400,
 
   // Where the house "stands" — a grass/bush band above the road, never

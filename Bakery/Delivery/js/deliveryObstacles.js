@@ -231,7 +231,8 @@ BakeryDelivery.deliveryObstacles = {
       lane,
       el,
       x: spawnX,
-      alreadyHit: false
+      alreadyHit: false,
+      nearTriggered: false
     });
   },
 
@@ -249,7 +250,31 @@ BakeryDelivery.deliveryObstacles = {
       o.x -= dx;
       this._applyObstaclePosition(o);
 
+      if (o.meta.type === 'anxi') {
+        // Keeps the non-blocking speech bubble (if this obstacle is
+        // currently showing one) visually attached to him as he scrolls
+        // — a no-op for every other obstacle, and a no-op here too if
+        // he isn't the bubble's current owner.
+        BakeryDelivery.anxiDistraction.updateDeliveryNearPosition(o);
+      }
+
       if (!o.alreadyHit) {
+        // Change 3 — "passing near" Anxi (lane-independent, horizontal
+        // proximity only) is a completely separate, non-blocking signal
+        // from an actual collision below. Checked first so it can fire
+        // even when Meli is in the other lane and will never collide at
+        // all — exactly the "drove past without colliding" case.
+        if (o.meta.type === 'anxi' && !o.nearTriggered) {
+          const anxiHb = this._getObstacleHitboxRect(o);
+          const anxiCenterX = (anxiHb.left + anxiHb.right) / 2;
+          const meliCenterX = (meliHitbox.left + meliHitbox.right) / 2;
+          const nearRadius = BakeryDelivery.deliveryConfig.DELIVERY_ANXI_NEAR_RADIUS_PX;
+          if (Math.abs(anxiCenterX - meliCenterX) <= nearRadius) {
+            o.nearTriggered = true;
+            BakeryDelivery.deliveryAnxi.showNear(o);
+          }
+        }
+
         // Lane-authoritative collision: when Meli is settled in a lane,
         // an obstacle in the OTHER lane can never collide, full stop —
         // checked BEFORE any hitbox math, regardless of what the
@@ -264,6 +289,10 @@ BakeryDelivery.deliveryObstacles = {
           if (this._rectsOverlap(hb, meliHitbox)) {
             o.alreadyHit = true; // this specific obstacle can never hit again
             if (o.meta.type === 'anxi') {
+              // Edge case: if the non-blocking bubble was still showing
+              // for THIS exact obstacle, remove it immediately — the two
+              // must never be visible at the same time.
+              BakeryDelivery.anxiDistraction.hideDeliveryNear(o.uid);
               this.triggerAnxiEncounter(o);
             } else {
               BakeryDelivery.deliveryGameplay.onObstacleCollision(o);
@@ -274,6 +303,9 @@ BakeryDelivery.deliveryObstacles = {
 
       const elWidth = o.el.getBoundingClientRect().width || 0;
       if (o.x + elWidth < -40) {
+        if (o.meta.type === 'anxi') {
+          BakeryDelivery.anxiDistraction.hideDeliveryNear(o.uid); // never let the bubble outlive the Anxi it belongs to
+        }
         this._removeObstacle(o);
       }
     }
@@ -319,49 +351,20 @@ BakeryDelivery.deliveryObstacles = {
   },
 
   // ------------------------------------------------------------------
-  // ANXI ENCOUNTER
-  // /* TEMPORARY ANXI HIT TEST — REPLACE WITH DIALOGUE NEXT STAGE */
+  // ANXI ENCOUNTER (direct collision — Change 4)
   // Deliberately NOT the physical crash feedback (no triggerImpact(),
   // no wobble/jerk/tilt) — Anxi isn't a road object Meli crashes into.
-  // This is the ONE centralized hook; next stage swaps this function's
-  // body for the real doubt dialogue without touching the collision
-  // loop that calls it.
+  // Passing NEAR Anxi without colliding is handled separately, earlier
+  // in update()'s collision loop above, and never reaches this function
+  // at all.
   // ------------------------------------------------------------------
 
   triggerAnxiEncounter(o) {
-    const cfg = BakeryDelivery.deliveryConfig;
-    const world = BakeryDelivery.deliveryWorld;
-
-    // The ONLY place the Delivery timer is allowed to pause — and only
-    // for this brief, fully automatic effect. A future player-facing
-    // Anxi dialogue must keep the timer running instead.
-    BakeryDelivery.deliveryTimer.pauseForAutomaticEffect(cfg.ANXI_ENCOUNTER_PAUSE_MS);
-
-    world._speedTransition = null;
-    world.speedMultiplier = 0.1; // brief near-stop, not a physical crash
     o.el.classList.add('bd-delivery-anxi-emphasis');
-    this._showAnxiLabel(o);
-
     window.setTimeout(() => {
-      o.el.classList.remove('bd-delivery-anxi-emphasis');
-      world.setSpeedTarget(1, cfg.ANXI_ENCOUNTER_PAUSE_MS);
-    }, cfg.ANXI_ENCOUNTER_PAUSE_MS);
-  },
+      if (o.el) o.el.classList.remove('bd-delivery-anxi-emphasis');
+    }, 400);
 
-  _showAnxiLabel(o) {
-    const gameRect = document.getElementById('bd-delivery-game').getBoundingClientRect();
-    const oRect = o.el.getBoundingClientRect();
-
-    const label = document.createElement('div');
-    label.className = 'bd-delivery-anxi-label';
-    label.textContent = 'ANXI';
-    label.style.left = `${(oRect.left - gameRect.left) + oRect.width / 2}px`;
-    label.style.top = `${oRect.top - gameRect.top}px`;
-
-    const fxLayer = document.getElementById('bd-delivery-fx-layer');
-    fxLayer.appendChild(label);
-    window.setTimeout(() => {
-      if (label.parentNode) label.remove();
-    }, BakeryDelivery.deliveryConfig.ANXI_ENCOUNTER_LABEL_MS);
+    BakeryDelivery.deliveryAnxi.triggerCollision();
   }
 };

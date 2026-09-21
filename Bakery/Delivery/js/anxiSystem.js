@@ -76,7 +76,7 @@ BakeryDelivery.anxiSystem = {
   _canTriggerPackingDoubt() {
     const s = BakeryDelivery.state;
     if (s.hasTimedOut || s.packingComplete) return false;
-    if (s.isAnxiActive || s.isReviewOpen) return false;
+    if (s.isReviewOpen) return false;
     if (s.screen !== 'gameplay') return false;
     if (!s.isPlaying || s.isPaused) return false;
     if (s.anxiInterventionsThisOrder >= 2) return false;
@@ -84,38 +84,15 @@ BakeryDelivery.anxiSystem = {
     return true;
   },
 
+  /** Change 5 — DISTRACTS, never stops anything. No pause, no falling-
+   *  object freeze, no box freeze, no CONTINUAR button, no modal. Just a
+   *  short auto-dismissing speech bubble (anxiDistraction.js) while
+   *  gameplay continues completely normally around it. */
   triggerPackingDoubt() {
     if (!this._canTriggerPackingDoubt()) return;
 
-    BakeryDelivery.state.isAnxiActive = true;
     BakeryDelivery.state.anxiInterventionsThisOrder += 1;
-    BakeryDelivery.gameplay.pausePackingGame(); // falling + box only, NOT the clock
-
-    const dialogueIndex = BakeryDelivery.state.anxiInterventions % BakeryDelivery.anxiPackingDialogues.length;
-    BakeryDelivery.state.currentAnxiDialogue = dialogueIndex;
-    const dialogue = BakeryDelivery.anxiPackingDialogues[dialogueIndex];
-    const poseIndex = this._nextPose();
-
-    this._renderSolo(dialogue.text, poseIndex, () => this._handlePackingContinue());
-    this._show();
-  },
-
-  _handlePackingContinue() {
-    // Occasionally add one brief second doubt — never a decision tree,
-    // just one more short line before returning to the task.
-    if (Math.random() < 0.35) {
-      const poseIndex = this._nextPose();
-      this._renderSolo(BakeryDelivery.anxiPackingFollowUp, poseIndex, () => this._exitFromPacking());
-    } else {
-      this._exitFromPacking();
-    }
-  },
-
-  _exitFromPacking() {
-    this._hide(() => {
-      BakeryDelivery.state.isAnxiActive = false;
-      BakeryDelivery.gameplay.resumePackingGame();
-    });
+    BakeryDelivery.anxiDistraction.showPacking();
   },
 
   // ----------------------------------------------------------------------
@@ -123,19 +100,28 @@ BakeryDelivery.anxiSystem = {
   // ----------------------------------------------------------------------
 
   /** Called by gameplay.js right after the box finishes closing, and
-   *  again every time the player closes the review popup. */
+   *  again every time the player closes the review popup. Capped at
+   *  anxiEndOfOrderDoubts.length prompts (initial + 2 repeats) — once
+   *  the player has reviewed twice, the sequence concludes and the order
+   *  proceeds to send automatically rather than offering an unbounded
+   *  4th/5th/... prompt. */
   showEndOfOrderDoubt() {
     const s = BakeryDelivery.state;
     if (s.hasTimedOut || s.packingComplete) return;
     if (s.isAnxiActive) return; // reentrancy guard
 
+    const count = s.reviewCount;
+
+    if (count >= BakeryDelivery.anxiEndOfOrderDoubts.length) {
+      // Review sequence concluded — proceed straight to sending, no more
+      // doubt prompts offered.
+      BakeryDelivery.gameplay.sendOrder();
+      return;
+    }
+
     s.isAnxiActive = true;
 
-    const count = s.reviewCount;
-    const entry = count < BakeryDelivery.anxiEndOfOrderDoubts.length
-      ? BakeryDelivery.anxiEndOfOrderDoubts[count]
-      : BakeryDelivery.anxiRepeatedDoubtPool[(count - BakeryDelivery.anxiEndOfOrderDoubts.length) % BakeryDelivery.anxiRepeatedDoubtPool.length];
-
+    const entry = BakeryDelivery.anxiEndOfOrderDoubts[count];
     const reviewLabel = entry.reviewLabel || 'REVISAR OTRA VEZ';
     const poseIndex = this._nextPose();
 

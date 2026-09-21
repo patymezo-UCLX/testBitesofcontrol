@@ -361,7 +361,7 @@ html, body{
   margin: 0 0 12px;
   font-family: var(--bd-font-display);
   font-weight: 800;
-  font-size: clamp(20px, 3.6vw, 28px);
+  font-size: clamp(22px, 4.2vw, 30px);
   color: #fff;
   text-shadow: 0 3px 0 rgba(0,0,0,0.2);
 }
@@ -369,20 +369,67 @@ html, body{
 .bd-panel-text{
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
 .bd-panel-text p{
   margin: 0;
-  font-size: clamp(13.5px, 2vw, 15.5px);
-  line-height: 1.45;
+  font-size: clamp(15px, 2.4vw, 17px);
+  line-height: 1.5;
   color: var(--bd-cream);
 }
 
 .bd-panel-text-strong{
   font-weight: 700;
   color: var(--bd-yellow) !important;
+}
+
+/* ---- Two-screen Packing instructions ----------------------------------
+   Screen 1 (#bd-instructions-panel) is the default-visible panel, exactly
+   like the original single screen. Screen 2 is a sibling panel, hidden
+   until SIGUIENTE reveals it — see intro.js. Splitting the original text
+   across two panels (rather than shrinking type to fit one) is the whole
+   point of this change: each screen now has room for meaningfully larger,
+   more readable text on mobile. */
+#bd-instructions-panel-2{
+  display: none;
+}
+
+#bd-instructions-panel-2.bd-active{
+  display: block;
+}
+
+#bd-instructions-panel.bd-instructions-hidden{
+  display: none;
+}
+
+.bd-instructions-anxi-img{
+  display: block;
+  height: clamp(64px, 12vh, 100px);
+  width: auto;
+  margin: 4px auto 18px;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+}
+
+.bd-instructions-nav-row{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.bd-instructions-nav-row .bd-start-btn{
+  flex: 1 1 0;
+  min-width: 0;
+  padding-left: clamp(14px, 4vw, 28px);
+  padding-right: clamp(14px, 4vw, 28px);
+}
+
+.bd-start-btn-secondary{
+  background: rgba(255,255,255,0.12) !important;
+  border: 2px solid rgba(255, 207, 77, 0.5) !important;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.2) !important;
 }
 
 /* ---- Small "how to play" visual diagram -------------------------------
@@ -2118,6 +2165,147 @@ html, body{
   100%{ opacity: 0; transform: translate(-50%, -60%) scale(0.95); }
 }
 
+/* ---- Delivery collision "checking sequence" toast — reuses the
+   missed-toast's exact visual language and animation. ---- */
+.bd-delivery-anxi-toast{
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  z-index: 8;
+  transform: translate(-50%, -50%) scale(0.85);
+  background: rgba(74, 26, 18, 0.92);
+  color: #fff;
+  font-family: var(--bd-font-display);
+  font-weight: 800;
+  font-size: clamp(13px, 2vw, 17px);
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 3px solid var(--bd-yellow);
+  box-shadow: 0 8px 18px rgba(74,26,18,0.35);
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.bd-delivery-anxi-toast.bd-active{
+  animation: bd-delivery-missed-toast-pop 1.8s ease-out forwards;
+}
+
+/* ---- Anxi DISTRACTION bubble — shared by Packing (active gameplay) and
+   Delivery ("passing near"). Deliberately NEVER captures pointer events,
+   at any level, so it can never block gameplay input — this is the whole
+   point of the non-blocking distinction from the decision overlay. ---- */
+.bd-anxi-distraction{
+  position: absolute;
+  left: 3%;
+  bottom: 14%;
+  z-index: 6;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10px) scale(0.92);
+}
+
+.bd-anxi-distraction.bd-active{
+  animation: bd-anxi-distraction-pop 2.6s ease-out forwards;
+}
+
+/* ---- Delivery variant — world-attached, not a fixed HUD position.
+   left/top are set every frame by anxiDistraction.js to track the
+   specific Anxi obstacle's current on-screen position, so the bubble
+   visually travels with him exactly like the destination marker travels
+   with its house. Composition: bubble ABOVE Anxi with a downward tail —
+   the real Anxi sprite is already visible in the world just beneath it,
+   so no duplicate icon is shown here. ---- */
+.bd-delivery-anxi-distraction{
+  bottom: auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  transform: translate(-50%, -100%) translateY(4px) scale(0.9);
+}
+
+.bd-delivery-anxi-distraction .bd-anxi-distraction-img{
+  display: none;
+}
+
+.bd-delivery-anxi-distraction .bd-anxi-distraction-bubble{
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.bd-delivery-anxi-distraction .bd-anxi-distraction-bubble::after{
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  transform: translateX(-50%);
+  border-width: 8px 7px 0 7px;
+  border-style: solid;
+  border-color: var(--bd-yellow) transparent transparent transparent;
+}
+
+.bd-delivery-anxi-distraction.bd-active{
+  animation: bd-delivery-anxi-distraction-pop 2.6s ease-out forwards;
+}
+
+@keyframes bd-delivery-anxi-distraction-pop{
+  0%{   opacity: 0; transform: translate(-50%, -100%) translateY(4px) scale(0.9); }
+  10%{  opacity: 1; transform: translate(-50%, -100%) translateY(-8px) scale(1); }
+  85%{  opacity: 1; transform: translate(-50%, -100%) translateY(-8px) scale(1); }
+  100%{ opacity: 0; transform: translate(-50%, -100%) translateY(-14px) scale(0.96); }
+}
+
+@keyframes bd-anxi-distraction-pop{
+  0%{   opacity: 0; transform: translateY(10px) scale(0.92); }
+  10%{  opacity: 1; transform: translateY(0) scale(1); }
+  85%{  opacity: 1; transform: translateY(0) scale(1); }
+  100%{ opacity: 0; transform: translateY(-6px) scale(0.96); }
+}
+
+.bd-anxi-distraction-img{
+  height: clamp(48px, 8vh, 74px);
+  width: auto;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
+  flex-shrink: 0;
+}
+
+.bd-anxi-distraction-bubble{
+  background: var(--bd-cream);
+  border: 3px solid var(--bd-yellow);
+  border-radius: 16px;
+  padding: 8px 12px;
+  max-width: clamp(140px, 32vw, 220px);
+  box-shadow: 0 6px 12px rgba(74,26,18,0.3);
+  margin-bottom: 12px;
+}
+
+.bd-anxi-distraction-text{
+  margin: 0;
+  font-family: var(--bd-font-display);
+  font-weight: 700;
+  font-size: clamp(11px, 1.8vw, 13px);
+  line-height: 1.35;
+  color: var(--bd-burgundy);
+  text-align: left;
+}
+
+@media (orientation: portrait){
+  .bd-anxi-distraction{
+    left: 2%;
+    bottom: 16%;
+  }
+  .bd-anxi-distraction-img{
+    height: clamp(40px, 7vh, 58px);
+  }
+  .bd-anxi-distraction-bubble{
+    max-width: clamp(120px, 42vw, 180px);
+    padding: 6px 10px;
+  }
+}
+
 /* ---- Delivery HUD (TIEMPO + PEDIDOS) ---- */
 .bd-delivery-hud{
   position: absolute;
@@ -2129,6 +2317,37 @@ html, body{
   align-items: center;
   gap: 8px;
   pointer-events: none;
+}
+
+/* ---- Destination HUD — shows ONLY the current destination house,
+   matching the timer/progress pill style. Sourced from the same
+   DELIVERY_ROUTES / currentIndex the world's own house spawn already
+   uses (see deliveryDestination.js's _updateDestinationHudIcon()), so
+   the HUD and the world can never disagree about which house is
+   active. ---- */
+.bd-delivery-destination-hud{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(74, 26, 18, 0.55);
+  border-radius: 999px;
+  padding: 4px 10px 4px 14px;
+}
+
+.bd-delivery-destination-label{
+  font-family: var(--bd-font-body);
+  font-weight: 700;
+  font-size: clamp(9px, 1.3vw, 11px);
+  letter-spacing: 0.06em;
+  color: var(--bd-yellow);
+  white-space: nowrap;
+}
+
+.bd-delivery-destination-icon{
+  height: clamp(22px, 3.2vw, 30px);
+  width: auto;
+  display: block;
+  border-radius: 6px;
 }
 
 .bd-delivery-timer{
@@ -2222,6 +2441,16 @@ html, body{
   .bd-delivery-hud{
     top: 10px;
     gap: 5px;
+  }
+  .bd-delivery-destination-hud{
+    gap: 4px;
+    padding: 4px 8px 4px 10px;
+  }
+  .bd-delivery-destination-label{
+    font-size: 8px;
+  }
+  .bd-delivery-destination-icon{
+    height: clamp(18px, 4.5vw, 24px);
   }
   .bd-delivery-timer{
     gap: 4px;

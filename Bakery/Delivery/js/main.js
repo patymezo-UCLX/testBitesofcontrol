@@ -18,6 +18,7 @@
     BD.orderUI.init();
     BD.gameplay.init();
     BD.anxiSystem.init();
+    BD.anxiDistraction.init();
     BD.reviewSystem.init();
     BD.retrySystem.init();
     BD.deliverySystem.init();

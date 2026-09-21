@@ -15,8 +15,13 @@ BakeryDelivery.intro = {
     this.els.logo = document.getElementById('bd-logo');
     this.els.logoImg = this.els.logo.querySelector('.bd-logo-img');
     this.els.panel = document.getElementById('bd-instructions-panel');
+    this.els.panel2 = document.getElementById('bd-instructions-panel-2');
+    this.els.nextBtn = document.getElementById('bd-instructions-next-btn');
+    this.els.backBtn = document.getElementById('bd-instructions-back-btn');
     this.els.startBtn = document.getElementById('bd-start-btn');
 
+    this.els.nextBtn.addEventListener('click', () => this._showPanel2());
+    this.els.backBtn.addEventListener('click', () => this._showPanel1());
     this.els.startBtn.addEventListener('click', () => this.handleStart());
   },
 
@@ -24,7 +29,22 @@ BakeryDelivery.intro = {
     BakeryDelivery.setScreen('intro');
     this.els.screen.classList.add('bd-active');
     this.els.screen.setAttribute('aria-hidden', 'false');
+    this._showPanel1(); // always re-enter instructions at screen 1
     this.playEntrance();
+  },
+
+  /** Pure content navigation between the two instruction screens — never
+   *  touches Packing state, never affects how EMPEZAR starts the game. */
+  _showPanel1() {
+    this.els.panel2.classList.remove('bd-active');
+    this.els.panel.classList.remove('bd-instructions-hidden');
+  },
+
+  _showPanel2() {
+    this.els.panel.classList.add('bd-instructions-hidden');
+    this.els.panel2.classList.remove('bd-anim-in');
+    void this.els.panel2.offsetWidth; // restart the entrance animation each time
+    this.els.panel2.classList.add('bd-active', 'bd-anim-in');
   },
 
   playEntrance() {

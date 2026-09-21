@@ -29,6 +29,7 @@ BakeryDelivery.deliveryDestination = {
   completedCount: 0,        // successfully DELIVERED (correct lane)
   lastDeliveredDestination: 0, // 1-based — reserved for Stage 4's "return"
   _laneDecision: null,      // null | 'correct' | 'wrong' — decided once per arrival
+  _deliveryTriggered: false, // Change 2 — guards the marker-passthrough trigger against double-firing
 
   house: null,               // { x, widthPx } while a house exists on screen
   _ctaHandled: false,
@@ -40,6 +41,7 @@ BakeryDelivery.deliveryDestination = {
     this.els.layer = document.getElementById('bd-delivery-destination-layer');
     this.els.houseImg = document.getElementById('bd-delivery-house-img');
     this.els.marker = document.getElementById('bd-delivery-marker');
+    this.els.destinationIcon = document.getElementById('bd-delivery-destination-icon');
     this.els.ctaBtn = document.getElementById('bd-delivery-cta-btn');
 
     this.els.progressIcons = Array.from(document.querySelectorAll('.bd-delivery-progress-icon'));
@@ -67,6 +69,7 @@ BakeryDelivery.deliveryDestination = {
     this.segmentDistance = 0;
     this.completedCount = 0;
     this.lastDeliveredDestination = 0;
+    this._deliveryTriggered = false;
     this._laneDecision = null;
     this.deliveryElapsedMs = 0;
     this._ctaHandled = false;
@@ -77,6 +80,7 @@ BakeryDelivery.deliveryDestination = {
     if (this.els.laneControls) this.els.laneControls.classList.remove('bd-delivery-lane-controls-disabled');
     BakeryDelivery.deliveryMeli.setMoving(true);
     this._applySegmentSpeedMultiplier();
+    this._updateDestinationHudIcon();
   },
 
   /** @param {number} dt seconds since last frame */
@@ -126,8 +130,18 @@ BakeryDelivery.deliveryDestination = {
       }
 
       if (this._laneDecision === 'correct') {
-        if (world.speedMultiplier <= 0.01 && !world.isTransitioning()) {
-          this._settleAtDestination();
+        // Change 2: the marker itself is the trigger — Meli registers the
+        // delivery by passing through its forgiving zone, never a manual
+        // button tap. Checked continuously (not just once) so it fires
+        // the moment she's close enough, which in practice lands right
+        // around when the world finishes decelerating — the safety-net
+        // full-stop check just below exists only in case that moment is
+        // somehow missed (e.g. an unusual frame gap), so nothing can get
+        // permanently stuck waiting.
+        if (!this._deliveryTriggered && this._isMarkerNearMeli()) {
+          this._registerDelivery();
+        } else if (!this._deliveryTriggered && world.speedMultiplier <= 0.01 && !world.isTransitioning()) {
+          this._registerDelivery();
         }
       } else if (this._laneDecision === 'wrong') {
         const width = this.house ? this.house.widthPx : 0;
@@ -154,6 +168,7 @@ BakeryDelivery.deliveryDestination = {
 
   _spawnHouse(route) {
     this._laneDecision = null;
+    this._deliveryTriggered = false;
     this.els.houseImg.src = route.house;
     this.els.layer.classList.add('bd-active');
 
@@ -198,6 +213,34 @@ BakeryDelivery.deliveryDestination = {
     const houseWidth = this.house ? this.house.widthPx : 200;
     return meliLocalX + houseWidth * 0.18;
   },
+
+  /** Change 2 — forgiving trigger check: is Meli's fixed screen position
+   *  currently within the marker's trigger radius? Reuses the marker's
+   *  own on-screen position (already updated every frame by
+   *  _positionMarkerAndCta()), so this stays correct at any speed/segment
+   *  without any extra bookkeeping. */
+  _isMarkerNearMeli() {
+    const gameRect = document.getElementById('bd-delivery-game').getBoundingClientRect();
+    const meliRect = document.getElementById('bd-delivery-meli').getBoundingClientRect();
+    const meliCenterX = (meliRect.left - gameRect.left) + meliRect.width * 0.5;
+
+    const markerRect = this.els.marker.getBoundingClientRect();
+    const markerCenterX = (markerRect.left - gameRect.left) + markerRect.width * 0.5;
+
+    const radius = BakeryDelivery.deliveryConfig.MARKER_TRIGGER_RADIUS_PX;
+    return Math.abs(markerCenterX - meliCenterX) <= radius;
+  },
+
+  /** Registers exactly one delivery, guarded so it can never double-fire
+   *  for the same house — then reuses the EXISTING confirmation banner /
+   *  timing / next-segment flow unchanged. */
+  _registerDelivery() {
+    if (this._deliveryTriggered) return;
+    this._deliveryTriggered = true;
+    this._hideMarker();
+    this._showConfirmation();
+  },
+
 
   _hideHouse() {
     this.house = null;
@@ -280,6 +323,7 @@ BakeryDelivery.deliveryDestination = {
 
     this.mode = 'driving';
     this._applySegmentSpeedMultiplier();
+    this._updateDestinationHudIcon();
     if (this.els.laneControls) this.els.laneControls.classList.remove('bd-delivery-lane-controls-disabled');
   },
 
@@ -350,6 +394,17 @@ BakeryDelivery.deliveryDestination = {
   // PROGRESS UI (check1.png / uncheck1.png + N / total)
   // ------------------------------------------------------------------
 
+  /** Keeps the HUD's small "DESTINO" icon in sync with whichever house
+   *  the world will actually spawn next — reads the exact same
+   *  DELIVERY_ROUTES[currentIndex] the world's own _spawnHouse() uses,
+   *  so the two can never show a different destination from each other. */
+  _updateDestinationHudIcon() {
+    const route = BakeryDelivery.deliveryConfig.DELIVERY_ROUTES[this.currentIndex];
+    if (route && this.els.destinationIcon) {
+      this.els.destinationIcon.src = route.house;
+    }
+  },
+
   _updateProgressUI() {
     this.els.progressIcons.forEach((img, i) => {
       img.src = i < this.completedCount
@@ -419,11 +474,13 @@ BakeryDelivery.deliveryDestination = {
     this.currentIndex = idx;
     this.completedCount = idx;
     this._laneDecision = null;
+    this._deliveryTriggered = false;
     this.segmentDistance = BakeryDelivery.deliveryConfig.DELIVERY_ROUTES[idx].distance
       - BakeryDelivery.deliveryConfig.HOUSE_SPAWN_LEAD_DISTANCE - 50;
     this.mode = 'driving';
     this._ctaHandled = false;
     this._applySegmentSpeedMultiplier();
+    this._updateDestinationHudIcon();
     BakeryDelivery.deliveryMeli.setMoving(true);
     BakeryDelivery.deliveryObstacles.pause();
     this._updateProgressUI();

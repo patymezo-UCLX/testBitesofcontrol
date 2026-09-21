@@ -100,14 +100,12 @@
 
       <div id="bd-instructions-panel" class="bd-panel">
 
-        <p class="bd-panel-eyebrow">Instructions</p>
-        <h1 class="bd-panel-heading">¡Prepara los pedidos! 🍰</h1>
+        <p class="bd-panel-eyebrow">INSTRUCCIONES</p>
+        <h1 class="bd-panel-heading">¡PREPARA LOS PEDIDOS! 🍰</h1>
 
         <div class="bd-panel-text">
           <p>Atrapa con la caja solo los productos que aparecen en la nota del pedido.</p>
           <p>Ten cuidado: también caerán objetos que no pertenecen al pedido.</p>
-          <p>Anxi aparecerá con dudas durante el juego. Decide cómo responder y continúa preparando el pedido.</p>
-          <p>Cuando termines, puedes revisarlo antes de enviarlo, pero el tiempo sigue corriendo.</p>
           <p class="bd-panel-text-strong">¡Completa los pedidos y prepáralos para entregar!</p>
         </div>
 
@@ -137,11 +135,37 @@
           </div>
         </div>
 
-        <button id="bd-start-btn" class="bd-start-btn" type="button">
-          <span>START</span>
+        <button id="bd-instructions-next-btn" class="bd-start-btn" type="button">
+          <span>SIGUIENTE</span>
         </button>
 
       </div>
+
+      <!-- INSTRUCTIONS — SCREEN 2 OF 2 -->
+      <div id="bd-instructions-panel-2" class="bd-panel">
+
+        <p class="bd-panel-eyebrow">INSTRUCCIONES</p>
+        <h1 class="bd-panel-heading">ANXI PUEDE APARECER</h1>
+
+        <div class="bd-panel-text">
+          <p>Anxi aparecerá de vez en cuando con algunas dudas para distraerte.</p>
+          <p>Cuando termines un pedido, podrás decidir si quieres revisarlo antes de enviarlo.</p>
+          <p class="bd-panel-text-strong">Recuerda: el tiempo sigue corriendo.</p>
+        </div>
+
+        <img src="assets/anxi-worried-1.png" alt="Anxi" class="bd-instructions-anxi-img">
+
+        <div class="bd-instructions-nav-row">
+          <button id="bd-instructions-back-btn" class="bd-start-btn bd-start-btn-secondary" type="button">
+            <span>ATRÁS</span>
+          </button>
+          <button id="bd-start-btn" class="bd-start-btn" type="button">
+            <span>EMPEZAR</span>
+          </button>
+        </div>
+
+      </div>
+
     </div>
   </section>
 
@@ -190,6 +214,19 @@
 
     <!-- Brief, light feedback for a wrong catch. TEMPORARY ASSET — REPLACE LATER -->
     <div id="bd-oops-toast" class="bd-oops-toast" aria-hidden="true">¡Oops!</div>
+
+    <!-- ============================================================
+         PACKING ANXI DISTRACTION — non-blocking. Appears during active
+         Packing, never pauses anything (pointer-events:none throughout),
+         auto-dismisses. Distinct from the blocking end-of-order Anxi
+         overlay (#bd-anxi-overlay) used only at a real decision point.
+    ============================================================= -->
+    <div id="bd-anxi-distraction" class="bd-anxi-distraction" aria-hidden="true">
+      <img id="bd-anxi-distraction-img" class="bd-anxi-distraction-img" src="" alt="">
+      <div class="bd-anxi-distraction-bubble">
+        <p id="bd-anxi-distraction-text" class="bd-anxi-distraction-text"></p>
+      </div>
+    </div>
 
     <!-- Order-complete / review / packing-complete panel. Reused across
          several Stage 3 states (ready-to-send, review-completed, sent,
@@ -369,6 +406,34 @@
            BE REPLACED WITH ART LATER -->
       <div id="bd-delivery-fx-layer" class="bd-delivery-fx-layer"></div>
 
+      <!-- DELIVERY ANXI — "passing near" non-blocking distraction bubble.
+           Direct-collision uses the separate blocking decision overlay
+           below (#bd-delivery-anxi-overlay). -->
+      <div id="bd-delivery-anxi-distraction" class="bd-anxi-distraction bd-delivery-anxi-distraction" aria-hidden="true">
+        <img id="bd-delivery-anxi-distraction-img" class="bd-anxi-distraction-img" src="" alt="">
+        <div class="bd-anxi-distraction-bubble">
+          <p id="bd-delivery-anxi-distraction-text" class="bd-anxi-distraction-text"></p>
+        </div>
+      </div>
+
+      <!-- DELIVERY ANXI — direct-collision decision interaction. Reuses
+           the same #bd-anxi-overlay visual pattern from Packing, as its
+           own instance scoped to the Delivery screen. -->
+      <div id="bd-delivery-anxi-overlay" class="bd-anxi-overlay" aria-hidden="true">
+        <div class="bd-anxi-dim"></div>
+        <div id="bd-delivery-anxi-character" class="bd-anxi-character">
+          <img id="bd-delivery-anxi-img" src="" alt="Anxi" class="bd-anxi-img">
+        </div>
+        <div id="bd-delivery-anxi-bubble" class="bd-anxi-bubble">
+          <p id="bd-delivery-anxi-text" class="bd-anxi-text"></p>
+          <div id="bd-delivery-anxi-options" class="bd-anxi-options"></div>
+        </div>
+      </div>
+
+      <!-- Small non-blocking message during the direct-collision REVISAR
+           checking sequence — never a second decision screen. -->
+      <div id="bd-delivery-anxi-toast" class="bd-delivery-anxi-toast"></div>
+
       <!-- TEMPORARY DEBUG — REMOVE/DISABLE FOR FINAL. Only populated
            when BakeryDelivery.deliveryConfig.DELIVERY_DEBUG is true. -->
       <div id="bd-delivery-debug" class="bd-delivery-debug-layer" aria-hidden="true"></div>
@@ -386,6 +451,10 @@
              top-center, clear of Meli, obstacles, the destination house,
              and the mobile lane buttons. -->
         <div class="bd-delivery-hud">
+          <div id="bd-delivery-destination-hud" class="bd-delivery-destination-hud">
+            <span class="bd-delivery-destination-label">DESTINO</span>
+            <img id="bd-delivery-destination-icon" class="bd-delivery-destination-icon" src="" alt="Casa destino">
+          </div>
           <div id="bd-delivery-timer" class="bd-delivery-timer">
             <span class="bd-delivery-timer-label">TIEMPO</span>
             <span id="bd-delivery-timer-text" class="bd-delivery-timer-text">02:00</span>
@@ -457,6 +526,7 @@
 <script src="js/panelUI.js"></script>
 <script src="js/timerSystem.js"></script>
 <script src="js/anxiSystem.js"></script>
+<script src="js/anxiDistraction.js"></script>
 <script src="js/reviewSystem.js"></script>
 <script src="js/gameplay.js"></script>
 <script src="js/deliveryConfig.js"></script>
@@ -464,6 +534,7 @@
 <script src="js/deliveryMeli.js"></script>
 <script src="js/deliveryObstacles.js"></script>
 <script src="js/deliveryTimer.js"></script>
+<script src="js/deliveryAnxi.js"></script>
 <script src="js/deliveryDestination.js"></script>
 <script src="js/deliveryGameplay.js"></script>
 <script src="js/deliverySystem.js"></script>
