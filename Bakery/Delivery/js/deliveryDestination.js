@@ -107,45 +107,21 @@ BakeryDelivery.deliveryDestination = {
     } else if (this.mode === 'arriving') {
       this._updateHousePosition(dt);
 
-      const world = BakeryDelivery.deliveryWorld;
-      const targetStopX = this._computeTargetStopX();
-
-      // Decision point: checked ONCE per arrival, using Meli's ACTUAL
-      // rendered/visual lane (rounded — fair even mid-glide, since a
-      // glide past the halfway point already reads visually as "in"
-      // the target lane).
-      if (this._laneDecision === null && this.house.x <= targetStopX + cfg.ARRIVAL_DECEL_LEAD_PX) {
-        const route = cfg.DELIVERY_ROUTES[this.currentIndex];
-        const meliLane = BakeryDelivery.deliveryMeli.getVisualLaneRounded();
-        this._laneDecision = (meliLane === route.lane) ? 'correct' : 'wrong';
-
-        if (this._laneDecision === 'correct') {
-          world.setSpeedTarget(0, cfg.ARRIVAL_DECEL_DURATION_MS);
-        } else {
-          this._showMissedFeedback();
-          // World keeps moving at the current segment speed — the house
-          // simply scrolls past like a missed opportunity, never
-          // stopping the game.
-        }
+      // Pure touch detection — no separate pre-computed lane decision
+      // anymore, and no requirement to fully stop first. The marker
+      // itself (positioned at the REQUIRED lane's road level) is the
+      // single source of truth: the instant Meli's hitbox genuinely
+      // touches it, delivery registers, at whatever speed she's
+      // currently driving. If she's in the wrong lane she simply can't
+      // touch it — no separate "wrong" snapshot needed.
+      if (!this._deliveryTriggered && this._isMarkerTouchingMeli()) {
+        this._registerDelivery();
       }
 
-      if (this._laneDecision === 'correct') {
-        // Change 2: the marker itself is the trigger — Meli registers the
-        // delivery by passing through its forgiving zone, never a manual
-        // button tap. Checked continuously (not just once) so it fires
-        // the moment she's close enough, which in practice lands right
-        // around when the world finishes decelerating — the safety-net
-        // full-stop check just below exists only in case that moment is
-        // somehow missed (e.g. an unusual frame gap), so nothing can get
-        // permanently stuck waiting.
-        if (!this._deliveryTriggered && this._isMarkerNearMeli()) {
-          this._registerDelivery();
-        } else if (!this._deliveryTriggered && world.speedMultiplier <= 0.01 && !world.isTransitioning()) {
-          this._registerDelivery();
-        }
-      } else if (this._laneDecision === 'wrong') {
+      if (!this._deliveryTriggered) {
         const width = this.house ? this.house.widthPx : 0;
         if (this.house && this.house.x + width < -120) {
+          this._showMissedFeedback();
           BakeryDelivery.deliveryObstacles.start(); // fresh queue for the next segment — safe here, nothing is still in flight from this one
           this._beginNextSegment();
         }
@@ -219,7 +195,21 @@ BakeryDelivery.deliveryDestination = {
    *  own on-screen position (already updated every frame by
    *  _positionMarkerAndCta()), so this stays correct at any speed/segment
    *  without any extra bookkeeping. */
-  _isMarkerNearMeli() {
+  /** The single source of truth for "did Meli actually deliver this
+   *  one": both horizontal proximity to the marker AND being genuinely
+   *  in the marker's own lane (checked live, every frame — not a single
+   *  early snapshot that could go stale if she changes lanes after it
+   *  was taken). This replaces the old separate pre-computed
+   *  "correct"/"wrong" lane decision, which could permanently lock out
+   *  delivery even if Meli later drove right through the visible
+   *  marker. */
+  _isMarkerTouchingMeli() {
+    const route = BakeryDelivery.deliveryConfig.DELIVERY_ROUTES[this.currentIndex];
+    if (!route) return false;
+
+    const meliLane = BakeryDelivery.deliveryMeli.getVisualLaneRounded();
+    if (meliLane !== route.lane) return false;
+
     const gameRect = document.getElementById('bd-delivery-game').getBoundingClientRect();
     const meliRect = document.getElementById('bd-delivery-meli').getBoundingClientRect();
     const meliCenterX = (meliRect.left - gameRect.left) + meliRect.width * 0.5;
@@ -379,12 +369,21 @@ BakeryDelivery.deliveryDestination = {
     if (!this.house) return;
     const gameRect = document.getElementById('bd-delivery-game').getBoundingClientRect();
     const houseRect = this.els.houseImg.getBoundingClientRect();
+    const world = BakeryDelivery.deliveryWorld;
+    const route = BakeryDelivery.deliveryConfig.DELIVERY_ROUTES[this.currentIndex];
 
     const centerX = (houseRect.left - gameRect.left) + houseRect.width / 2;
-    const topY = houseRect.top - gameRect.top;
+
+    // The marker sits ON THE ROAD, at the Y of whichever lane this
+    // delivery actually requires (route.lane) — the SAME upper/lower
+    // fraction Meli and obstacles use for that lane. This is what makes
+    // "touch the marker" and "be in the correct lane" the same physical
+    // fact instead of two separate checks that can disagree.
+    const laneY = (route && route.lane === 0) ? world.laneYFraction.upper : world.laneYFraction.lower;
+    const groundY = world.containerHeight * laneY;
 
     this.els.marker.style.left = `${centerX}px`;
-    this.els.marker.style.top = `${topY}px`;
+    this.els.marker.style.top = `${groundY}px`;
 
     this.els.ctaBtn.style.left = `${centerX}px`;
     this.els.ctaBtn.style.top = `${(houseRect.bottom - gameRect.top) + 14}px`;

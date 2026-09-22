@@ -10,7 +10,7 @@ BakeryDelivery.deliveryConfig = {
 
   // World scroll speed, in CSS pixels/second of the rendered background.
   // 160 (Stage 1) → 176 (+10%) → 202 (+15%) → 232 (this pass, +15% from 202).
-  DELIVERY_WORLD_SPEED: 232,
+  DELIVERY_WORLD_SPEED: 250,
 
   // Meli's ride-cycle frame rate (1 → 2 → 3 → 4 → repeat).
   MELI_RIDE_FPS: 8,
@@ -77,6 +77,23 @@ BakeryDelivery.deliveryConfig = {
   // active road, while still leaving real breathing space.
   OBSTACLE_SPACING_MIN_MS: 1600,
   OBSTACLE_SPACING_MAX_MS: 2500,
+
+  // Minimum horizontal separation enforced BETWEEN obstacles at spawn
+  // time, on top of the time-based spacing above — prevents two
+  // obstacles landing very close in X even in different lanes. Same-lane
+  // needs clearly more room than the hitboxes themselves; different-lane
+  // still needs a visible stagger so nothing reads as stacked.
+  OBSTACLE_MIN_SAME_LANE_GAP_PX: 260,
+  OBSTACLE_MIN_DIFF_LANE_GAP_PX: 110,
+
+  // No obstacle may spawn within this many px (each direction) of the
+  // active destination house/marker's center — keeps a clean, readable
+  // zone around the delivery point.
+  DESTINATION_CLEAR_ZONE_PX: 260,
+
+  // Short delay before retrying a spawn slot that failed the spacing
+  // check above, rather than forcing an overlap.
+  OBSTACLE_SPAWN_RETRY_MS: 220,
 
   // Same subtle upper/lower depth scale used for Meli, applied to
   // obstacles too for visual consistency.

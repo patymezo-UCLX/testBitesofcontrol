@@ -181,24 +181,27 @@ BakeryDelivery.deliveryObstacles = {
     }
 
     this.spawnTimer = window.setTimeout(() => {
-      this._spawnNext();
-      this._scheduleNextSpawn();
+      const spawned = this._spawnNext();
+      this._scheduleNextSpawn(spawned ? undefined : cfg.OBSTACLE_SPAWN_RETRY_MS);
     }, delay);
   },
 
+  /** @returns {boolean} whether an obstacle was actually spawned. */
   _spawnNext() {
-    if (!this.patternQueue.length) return;
+    if (!this.patternQueue.length) return true;
     const entry = this.patternQueue[this.patternIndex % this.patternQueue.length];
+
+    const spawnX = this._computeSpawnX();
+    if (!this._isSpawnPositionValid(entry.lane, spawnX)) {
+      return false; // don't advance patternIndex — the same entry is retried shortly
+    }
+
     this.patternIndex += 1;
-    this._spawnObstacle(entry.lane, entry.kind || 'physical');
+    this._spawnObstacle(entry.lane, entry.kind || 'physical', spawnX);
+    return true;
   },
 
-  _pickTypeKey(kind) {
-    const keys = Object.keys(this.catalog).filter((k) => this.catalog[k].type === kind);
-    return keys[Math.floor(Math.random() * keys.length)];
-  },
-
-  _spawnObstacle(lane, kind) {
+  _computeSpawnX() {
     const gameEl = document.getElementById('bd-delivery-game');
     const rect = gameEl.getBoundingClientRect();
     const meliRect = document.getElementById('bd-delivery-meli').getBoundingClientRect();
@@ -208,12 +211,34 @@ BakeryDelivery.deliveryObstacles = {
     const currentSpeed = BakeryDelivery.deliveryWorld.getCurrentSpeed() || cfg.DELIVERY_WORLD_SPEED;
     const minReactionPx = cfg.OBSTACLE_MIN_REACTION_TIME_S * currentSpeed;
 
-    // Never closer than the viewport's own right edge, and never closer
-    // than the minimum-reaction-time distance from Meli — whichever is
-    // further right. On mobile this pushes the spawn point beyond the
-    // visible edge so warning time stays fair despite the narrow screen.
-    const spawnX = Math.max(rect.width, meliLocalX + minReactionPx);
+    return Math.max(rect.width, meliLocalX + minReactionPx);
+  },
 
+  _isSpawnPositionValid(lane, spawnX) {
+    const cfg = BakeryDelivery.deliveryConfig;
+    for (const o of this.pool) {
+      const dx = Math.abs(spawnX - o.x);
+      const minGap = (o.lane === lane) ? cfg.OBSTACLE_MIN_SAME_LANE_GAP_PX : cfg.OBSTACLE_MIN_DIFF_LANE_GAP_PX;
+      if (dx < minGap) return false;
+    }
+    return this._isClearOfDestinationZone(spawnX);
+  },
+
+  _isClearOfDestinationZone(spawnX) {
+    const dest = BakeryDelivery.deliveryDestination;
+    if (!dest || !dest.house) return true;
+    const cfg = BakeryDelivery.deliveryConfig;
+    const houseCenterX = dest.house.x + (dest.house.widthPx || 200) * 0.5;
+    return Math.abs(spawnX - houseCenterX) >= cfg.DESTINATION_CLEAR_ZONE_PX;
+  },
+
+
+  _pickTypeKey(kind) {
+    const keys = Object.keys(this.catalog).filter((k) => this.catalog[k].type === kind);
+    return keys[Math.floor(Math.random() * keys.length)];
+  },
+
+  _spawnObstacle(lane, kind, spawnX) {
     const typeKey = this._pickTypeKey(kind || 'physical');
     const meta = this.catalog[typeKey];
 

@@ -25,10 +25,12 @@ BakeryDelivery.exitControl = {
     this.els.btn = document.getElementById('bd-exit-btn');
     this.els.backdrop = document.getElementById('bd-exit-confirm-backdrop');
     this.els.stayBtn = document.getElementById('bd-exit-confirm-stay-btn');
+    this.els.restartDeliveryBtn = document.getElementById('bd-exit-confirm-restart-delivery-btn');
     this.els.leaveBtn = document.getElementById('bd-exit-confirm-leave-btn');
 
     this.els.btn.addEventListener('click', () => this.openConfirm());
     this.els.stayBtn.addEventListener('click', () => this.closeConfirm());
+    this.els.restartDeliveryBtn.addEventListener('click', () => this._restartDelivery());
     this.els.leaveBtn.addEventListener('click', () => this._confirmLeave());
   },
 
@@ -56,6 +58,10 @@ BakeryDelivery.exitControl = {
       this._pausedPhase = null;
     }
 
+    // "REINICIAR DELIVERY" only makes sense (and is only shown) while
+    // Delivery specifically is the paused phase.
+    this.els.restartDeliveryBtn.classList.toggle('bd-visible', this._pausedPhase === 'delivery');
+
     this.els.backdrop.classList.add('bd-active');
   },
 
@@ -75,6 +81,16 @@ BakeryDelivery.exitControl = {
       // the modal is already closed above regardless.
     }
     this._pausedPhase = null;
+  },
+
+  /** "REINICIAR DELIVERY" — closes the modal WITHOUT resuming the old
+   *  run (there's nothing to resume back into) and starts a fresh
+   *  Delivery attempt instead, reusing the exact same reset sequence as
+   *  the existing timeout/no-lives retry. */
+  _restartDelivery() {
+    this.els.backdrop.classList.remove('bd-active');
+    this._pausedPhase = null;
+    BakeryDelivery.deliveryGameplay.restartDelivery();
   },
 
   _confirmLeave() {

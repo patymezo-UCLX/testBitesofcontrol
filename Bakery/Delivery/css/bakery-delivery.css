@@ -1130,6 +1130,19 @@ html, body{
   border-color: rgba(255,255,255,0.8);
 }
 
+/* ---- "REINICIAR DELIVERY" — only relevant (and only shown) when the
+   exit-confirm modal was opened while Delivery specifically was the
+   active/paused phase; see exitControl.js's openConfirm(). ---- */
+.bd-exit-confirm-restart-btn{
+  display: none;
+  font-size: clamp(13px, 1.8vw, 15px);
+  padding: 10px 24px;
+}
+
+.bd-exit-confirm-restart-btn.bd-visible{
+  display: inline-block;
+}
+
 .bd-order-complete-heading{
   margin: 0 0 8px;
   font-family: var(--bd-font-display);

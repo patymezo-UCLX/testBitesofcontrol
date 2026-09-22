@@ -212,7 +212,21 @@ BakeryDelivery.deliveryGameplay = {
   },
 
   /** Restarts Delivery ONLY — timer/route/obstacles/Meli/world/lives all
-   *  reset to their very start, but the player stays on the Delivery
+  /** Public entry for restarting Delivery from the exit-confirmation
+   *  modal's "REINICIAR DELIVERY" button — same reset sequence as the
+   *  existing timeout/no-lives retry path, just reachable from a
+   *  different trigger. */
+  restartDelivery() {
+    this._hideTimeoutPanel();
+    this.stopDelivery();
+    BakeryDelivery.deliveryWorld.reset();
+    BakeryDelivery.deliveryMeli.reset(BakeryDelivery.deliveryConfig.STARTING_LANE);
+    BakeryDelivery.deliveryDestination.reset();
+    BakeryDelivery.deliveryTimer.reset();
+    this.startDelivery();
+  },
+
+  /*  reset to their very start, but the player stays on the Delivery
    *  screen and never has to replay Packing. Same retry path regardless
    *  of which failure condition (timer or lives) triggered it. */
   _retryAfterTimeout() {
