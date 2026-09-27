@@ -1,0 +1,560 @@
+/* ==========================================================================
+   CHALK BOARD — STYLES
+   Bites of Control visual identity: warm cream panels, rounded/playful UI,
+   pink/orange accents — matching Color Break and Clay Studio's conventions.
+   All visual assets (board, chalks, eraser, logo) are the provided PNGs,
+   used as-is; nothing here recreates them with CSS/SVG.
+   ========================================================================== */
+
+:root {
+  /* Primary button look - hot pink fill, warm yellow border, burgundy
+     "raised videogame" bottom shadow. Same tokens as Color Break / Clay
+     Studio so every Workshop activity shares one button language. */
+  --chb-btn-fill: #d63f93;
+  --chb-btn-border: #f5c451;
+  --chb-btn-shadow: #4f1a40;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+
+  overflow: hidden;
+
+  font-family: 'Segoe UI', Arial, sans-serif;
+
+  background-color: #f7c7b5;
+
+  color: #6b4a3a;
+}
+
+button {
+  font-family: inherit;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* ==========================================================================
+   SCREEN MANAGEMENT
+   ========================================================================== */
+
+.chb-screen {
+  display: none;
+
+  width: 100%;
+  height: 100%;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+}
+
+.chb-screen.chb-active {
+  display: flex;
+}
+
+/* Intro / instructions screens sit over the same warm wall used by the
+   other Workshop activities, so the whole place feels continuous. */
+#chb-screen-intro,
+#chb-screen-instructions {
+  background-color: #f7c7b5;
+  background-image: url("../assets/background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ==========================================================================
+   SHARED — CLOSE / BACK BUTTON
+   ========================================================================== */
+
+.chb-corner-button {
+  position: fixed;
+
+  top: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--chb-btn-fill);
+  border: 3px solid var(--chb-btn-border);
+  color: #ffffff;
+  cursor: pointer;
+
+  box-shadow: 0 6px 0 var(--chb-btn-shadow);
+
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  z-index: 30;
+}
+
+.chb-corner-button:hover {
+  transform: translateY(-2px);
+}
+
+.chb-corner-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 var(--chb-btn-shadow);
+}
+
+.chb-close-button {
+  right: 24px;
+
+  width: 52px;
+  height: 52px;
+
+  border-radius: 50%;
+
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.chb-back-button {
+  left: 24px;
+
+  padding: 12px 22px;
+
+  border-radius: 999px;
+
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   PANEL (intro / instructions)
+   ========================================================================== */
+
+.chb-panel {
+  width: min(640px, 92vw);
+  max-height: 88vh;
+
+  overflow-y: auto;
+
+  padding: 56px 44px 46px;
+
+  border-radius: 42px;
+
+  background: linear-gradient(180deg, #fffaf3 0%, #fdf1e2 100%);
+
+  box-shadow:
+    0 24px 0 rgba(0, 0, 0, 0.10),
+    0 0 0 6px #ffffff inset;
+
+  text-align: center;
+}
+
+.chb-title-image {
+  display: block;
+  width: min(300px, 66%);
+  height: auto;
+  margin: 0 auto 22px;
+}
+
+.chb-panel p {
+  font-size: 17px;
+  line-height: 1.6;
+
+  margin: 0 auto 16px;
+  max-width: 440px;
+}
+
+.chb-panel p:last-of-type {
+  margin-bottom: 34px;
+}
+
+.chb-instructions-panel h1 {
+  font-size: clamp(24px, 3.6vw, 32px);
+  font-weight: 900;
+  letter-spacing: 1px;
+
+  color: #e8368f;
+
+  margin-bottom: 20px;
+
+  text-shadow: 2px 2px 0 #fff3e0;
+}
+
+.chb-cta {
+  display: inline-block;
+
+  padding: 16px 52px;
+
+  border: 3px solid var(--chb-btn-border);
+  border-radius: 999px;
+
+  background: var(--chb-btn-fill);
+  color: #ffffff;
+
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 1px;
+
+  cursor: pointer;
+
+  box-shadow: 0 8px 0 var(--chb-btn-shadow);
+
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.chb-cta:hover {
+  transform: translateY(-2px);
+}
+
+.chb-cta:active {
+  transform: translateY(4px);
+  box-shadow: 0 4px 0 var(--chb-btn-shadow);
+}
+
+/* ==========================================================================
+   SCREEN — CHALK BOARD ACTIVITY
+   ========================================================================== */
+
+.chb-board-screen {
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+
+  background-color: #f7c7b5;
+  background-image: url("../assets/background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.chb-board-layout {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Full-viewport letterbox container the fixed-aspect stage is centered
+   inside. Padding keeps the board clear of the fixed corner button and
+   bottom toolbar. */
+.chb-stage-frame {
+  --chb-pad-top: 92px;
+  --chb-pad-bottom: 108px;
+  --chb-pad-side: 22px;
+
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: var(--chb-pad-top) var(--chb-pad-side) var(--chb-pad-bottom);
+
+  overflow: hidden;
+}
+
+/* The stage's aspect ratio is switched between the desktop (landscape)
+   and mobile (portrait) board art by JS (adds/removes chb-mode-mobile),
+   never by stretching one asset into the other's shape. Width is capped
+   against both the available width AND the available height (derived
+   from the frame's own padding above) so the whole board always stays
+   fully visible with no cropping or distortion. */
+.chb-stage {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.chb-stage.chb-mode-desktop {
+  aspect-ratio: 1536 / 1024;
+  width: min(
+    calc(100vw - (2 * var(--chb-pad-side, 22px))),
+    calc((100vh - var(--chb-pad-top, 92px) - var(--chb-pad-bottom, 108px)) * 1536 / 1024)
+  );
+}
+
+.chb-stage.chb-mode-mobile {
+  aspect-ratio: 941 / 1671;
+  width: min(
+    calc(100vw - (2 * var(--chb-pad-side, 22px))),
+    calc((100vh - var(--chb-pad-top, 92px) - var(--chb-pad-bottom, 108px)) * 941 / 1671)
+  );
+}
+
+.chb-board-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.chb-board-img.chb-hidden {
+  display: none;
+}
+
+/* The drawing surface sits exactly over the black interior of whichever
+   board asset is active (position set from JS, measured against each
+   PNG's own artwork — see ChalkBoard.BOARD_RECT in chalk-board.js). It
+   never covers the wooden/orange frame. */
+.chb-draw-canvas {
+  position: absolute;
+  z-index: 2;
+
+  touch-action: none;
+  user-select: none;
+
+  cursor: crosshair;
+}
+
+/* ---- tool tray: chalks + eraser resting on the board, PNGs as-is ---- */
+
+.chb-tool-tray {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5%;
+  transform: translateX(-50%);
+  z-index: 5;
+
+  display: flex;
+  align-items: flex-end;
+  gap: 2.2%;
+}
+
+.chb-tool {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  display: flex;
+  align-items: flex-end;
+
+  transform: translateY(0) scale(1) rotate(var(--chb-tool-tilt, 0deg));
+  transition: transform 0.15s ease, filter 0.15s ease;
+
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.25));
+}
+
+.chb-tool:nth-child(1) { --chb-tool-tilt: -8deg; }
+.chb-tool:nth-child(2) { --chb-tool-tilt: -4deg; }
+.chb-tool:nth-child(3) { --chb-tool-tilt: 3deg; }
+.chb-tool:nth-child(4) { --chb-tool-tilt: 7deg; }
+.chb-tool:nth-child(5) { --chb-tool-tilt: 0deg; }
+
+.chb-tool img {
+  width: clamp(38px, 7.4vmin, 78px);
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+
+.chb-tool-eraser img {
+  width: clamp(46px, 8.6vmin, 92px);
+}
+
+/* Selected feedback is deliberately subtle: a small lift + a soft glow -
+   never a big box around the tool. */
+.chb-tool.chb-tool-selected {
+  transform: translateY(-14%) scale(1.1) rotate(var(--chb-tool-tilt, 0deg));
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.65));
+}
+
+/* ---- REINICIAR / TERMINAR ---- */
+
+.chb-toolbar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+
+  padding: 12px 18px;
+
+  border-radius: 26px;
+
+  background: linear-gradient(180deg, #f0b94e 0%, #e2952c 100%);
+
+  box-shadow: 0 10px 0 rgba(0, 0, 0, 0.08);
+}
+
+.chb-tool-button {
+  min-width: 44px;
+  min-height: 44px;
+
+  padding: 12px 26px;
+
+  border: 3px solid var(--chb-btn-border);
+  border-radius: 999px;
+
+  background: var(--chb-btn-fill);
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+
+  cursor: pointer;
+
+  box-shadow: 0 6px 0 var(--chb-btn-shadow);
+
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.chb-tool-button:hover {
+  transform: translateY(-2px);
+}
+
+.chb-tool-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 var(--chb-btn-shadow);
+}
+
+/* ==========================================================================
+   MODALS — RESET CONFIRM / COMPLETION
+   ========================================================================== */
+
+.chb-modal-overlay {
+  display: none;
+
+  position: fixed;
+  inset: 0;
+
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(70, 40, 30, 0.42);
+
+  z-index: 50;
+
+  padding: 20px;
+}
+
+.chb-modal-overlay.chb-active {
+  display: flex;
+}
+
+.chb-modal-card {
+  width: min(420px, 92vw);
+
+  padding: 38px 32px 32px;
+
+  border-radius: 32px;
+
+  background: linear-gradient(180deg, #fffaf3 0%, #fdf1e2 100%);
+
+  box-shadow: 0 0 0 6px #ffffff inset;
+
+  text-align: center;
+}
+
+.chb-modal-card h2 {
+  font-size: 24px;
+  font-weight: 900;
+
+  color: #e8368f;
+
+  margin-bottom: 6px;
+}
+
+.chb-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  margin-top: 22px;
+}
+
+.chb-modal-button {
+  padding: 14px 24px;
+
+  border: 3px solid var(--chb-btn-border);
+  border-radius: 999px;
+
+  background: var(--chb-btn-fill);
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+
+  cursor: pointer;
+
+  box-shadow: 0 6px 0 var(--chb-btn-shadow);
+
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.chb-modal-button:hover {
+  transform: translateY(-2px);
+}
+
+.chb-modal-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 var(--chb-btn-shadow);
+}
+
+.chb-modal-button-secondary {
+  background: #fff3e0;
+  color: #a15b2e;
+  border: 3px solid #f0cf9a;
+  box-shadow: 0 6px 0 #d8b077;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 700px) {
+
+  .chb-panel {
+    padding: 42px 20px 32px;
+    border-radius: 28px;
+  }
+
+  .chb-stage-frame {
+    --chb-pad-top: 78px;
+    --chb-pad-bottom: 112px;
+    --chb-pad-side: 8px;
+  }
+
+  .chb-toolbar {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .chb-tool-button {
+    padding: 12px 20px;
+    font-size: 13.5px;
+  }
+}
+
+@media (max-height: 640px) {
+  .chb-toolbar {
+    bottom: 12px;
+  }
+
+  .chb-stage-frame {
+    --chb-pad-top: 64px;
+    --chb-pad-bottom: 92px;
+  }
+}

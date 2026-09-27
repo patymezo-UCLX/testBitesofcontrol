@@ -331,6 +331,28 @@
 
       </div>
 
+      <!-- CHALK BOARD -->
+      <div
+        class="activity-card"
+        role="button"
+        tabindex="0"
+        onclick="openChalkBoard()"
+        onkeydown="if(event.key==='Enter'||event.key===' '){openChalkBoard();}"
+        aria-label="Open Chalk Board"
+      >
+
+        <img
+          class="activity-thumb"
+          src="ChalkBoard/assets/logo.png"
+          alt="Chalk Board"
+        >
+
+        <span class="activity-subtitle">
+          Draw at your own pace.
+        </span>
+
+      </div>
+
       <!-- Future activity cards can be appended here using the same
            .activity-card structure — the grid layout already
            accommodates additional entries responsively. -->
@@ -362,6 +384,18 @@
 
       window.location.href =
         "ClayStudio/index.html";
+
+    }
+
+
+    /* =====================================================
+       CARD → CHALK BOARD
+    ===================================================== */
+
+    function openChalkBoard() {
+
+      window.location.href =
+        "ChalkBoard/index.html";
 
     }
 

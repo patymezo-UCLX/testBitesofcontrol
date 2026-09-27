@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <title>Chalk Board - Bites of Control</title>
+
+  <link rel="stylesheet" href="css/chalk-board.css">
+
+</head>
+
+<body>
+
+
+  <!-- ======================================================
+       SCREEN 1 — CHALK BOARD INTRO
+  ======================================================= -->
+
+  <section id="chb-screen-intro" class="chb-screen chb-active">
+
+    <button
+      class="chb-corner-button chb-back-button"
+      type="button"
+      onclick="ChalkBoard.exitToWorkshopMenu()"
+      aria-label="Back to Creative Workshop"
+    >
+      ← BACK
+    </button>
+
+    <div class="chb-panel">
+
+      <img
+        class="chb-title-image"
+        src="assets/logo.png"
+        alt="Chalk Board"
+      >
+
+      <p>
+        Dibuja lo que quieras en la pizarra.
+      </p>
+
+      <p>
+        Usa las tizas y deja que tu mano haga el resto.
+      </p>
+
+      <p>
+        Aquí no hay una forma correcta de hacerlo.
+      </p>
+
+      <button
+        class="chb-cta"
+        type="button"
+        onclick="ChalkBoard.showInstructions()"
+      >
+        EMPEZAR
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       SCREEN 2 — INSTRUCTIONS
+  ======================================================= -->
+
+  <section id="chb-screen-instructions" class="chb-screen">
+
+    <button
+      class="chb-corner-button chb-back-button"
+      type="button"
+      onclick="ChalkBoard.showIntro()"
+      aria-label="Back to Chalk Board intro"
+    >
+      ← BACK
+    </button>
+
+    <div class="chb-panel chb-instructions-panel">
+
+      <h1>CÓMO DIBUJAR</h1>
+
+      <p>Selecciona una tiza y arrastra sobre la pizarra para dibujar.</p>
+
+      <p>Usa el borrador para eliminar lo que quieras.</p>
+
+      <p>Puedes cambiar de color cuando quieras.</p>
+
+      <button
+        class="chb-cta"
+        type="button"
+        onclick="ChalkBoard.showBoard()"
+      >
+        ¡A DIBUJAR!
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       SCREEN 3 — CHALK BOARD ACTIVITY
+  ======================================================= -->
+
+  <section id="chb-screen-board" class="chb-screen chb-board-screen">
+
+    <button
+      class="chb-corner-button chb-close-button"
+      type="button"
+      onclick="ChalkBoard.exitToWorkshopMenu()"
+      aria-label="Back to Creative Workshop"
+    >
+      ×
+    </button>
+
+    <div class="chb-board-layout">
+
+      <div class="chb-stage-frame">
+        <div class="chb-stage" id="chb-stage">
+
+          <img class="chb-board-img chb-board-desktop" id="chb-board-desktop" src="assets/board_desktop.png" alt="">
+          <img class="chb-board-img chb-board-mobile" id="chb-board-mobile" src="assets/board_mobile.png" alt="">
+
+          <canvas class="chb-draw-canvas" id="chb-draw-canvas"></canvas>
+
+          <div class="chb-tool-tray" id="chb-tool-tray">
+
+            <button class="chb-tool chb-tool-chalk" type="button" data-tool="white" aria-label="Tiza blanca">
+              <img src="assets/chalk_white.png" alt="">
+            </button>
+
+            <button class="chb-tool chb-tool-chalk" type="button" data-tool="pink" aria-label="Tiza rosa">
+              <img src="assets/chalk_pink.png" alt="">
+            </button>
+
+            <button class="chb-tool chb-tool-chalk" type="button" data-tool="blue" aria-label="Tiza azul">
+              <img src="assets/chalk_blue.png" alt="">
+            </button>
+
+            <button class="chb-tool chb-tool-chalk" type="button" data-tool="green" aria-label="Tiza verde">
+              <img src="assets/chalk_green.png" alt="">
+            </button>
+
+            <button class="chb-tool chb-tool-eraser" type="button" data-tool="eraser" aria-label="Borrador">
+              <img src="assets/eraser_pink.png" alt="">
+            </button>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="chb-toolbar">
+
+        <button
+          class="chb-tool-button chb-tool-reset"
+          type="button"
+          onclick="ChalkBoard.requestReset()"
+        >
+          REINICIAR
+        </button>
+
+        <button
+          class="chb-tool-button chb-tool-finish"
+          type="button"
+          onclick="ChalkBoard.finishDrawing()"
+        >
+          TERMINAR
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       MODAL — RESET CONFIRM
+  ======================================================= -->
+
+  <div id="chb-modal-reset" class="chb-modal-overlay">
+    <div class="chb-modal-card">
+
+      <h2>¿Quieres borrar todo tu dibujo?</h2>
+
+      <div class="chb-modal-actions">
+
+        <button
+          class="chb-modal-button chb-modal-button-secondary"
+          type="button"
+          onclick="ChalkBoard.cancelReset()"
+        >
+          CANCELAR
+        </button>
+
+        <button
+          class="chb-modal-button chb-modal-button-primary"
+          type="button"
+          onclick="ChalkBoard.confirmReset()"
+        >
+          BORRAR
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================
+       MODAL — COMPLETION
+  ======================================================= -->
+
+  <div id="chb-modal-completion" class="chb-modal-overlay">
+    <div class="chb-modal-card">
+
+      <h2>¡Tu dibujo está listo!</h2>
+
+      <div class="chb-modal-actions">
+
+        <button
+          class="chb-modal-button chb-modal-button-secondary"
+          type="button"
+          onclick="ChalkBoard.keepDrawing()"
+        >
+          SEGUIR DIBUJANDO
+        </button>
+
+        <button
+          class="chb-modal-button chb-modal-button-primary"
+          type="button"
+          onclick="ChalkBoard.exitToWorkshopMenu()"
+        >
+          VOLVER AL WORKSHOP
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <script src="js/chalk-board.js"></script>
+
+</body>
+
+</html>
