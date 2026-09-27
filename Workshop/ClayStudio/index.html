@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Clay Studio - Bites of Control</title>
+
+  <link rel="stylesheet" href="css/clay-studio.css">
+
+</head>
+
+<body>
+
+
+  <!-- ======================================================
+       SCREEN 1 — CLAY STUDIO INTRO
+  ======================================================= -->
+
+  <section id="cs-screen-intro" class="cs-screen cs-active">
+
+    <button
+      class="cs-corner-button cs-back-button"
+      type="button"
+      onclick="ClayStudio.exitToWorkshopMenu()"
+      aria-label="Back to Creative Workshop"
+    >
+      ← BACK
+    </button>
+
+    <div class="cs-panel">
+
+      <img
+        class="cs-title-image"
+        src="assets/Title.png"
+        alt="Clay Studio"
+      >
+
+      <p>
+        Dale forma a la arcilla a tu manera.
+      </p>
+
+      <p>
+        Presiona y arrastra sobre distintas partes de la pieza para transformarla poco a poco.
+      </p>
+
+      <p>
+        No hay una forma correcta de hacerlo. Tómate tu tiempo y experimenta.
+      </p>
+
+      <button
+        class="cs-cta"
+        type="button"
+        onclick="ClayStudio.showInstructions()"
+      >
+        EMPEZAR
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       SCREEN 2 — INSTRUCTIONS
+  ======================================================= -->
+
+  <section id="cs-screen-instructions" class="cs-screen">
+
+    <button
+      class="cs-corner-button cs-back-button"
+      type="button"
+      onclick="ClayStudio.showIntro()"
+      aria-label="Back to Clay Studio intro"
+    >
+      ← BACK
+    </button>
+
+    <div class="cs-panel cs-instructions-panel">
+
+      <h1>CÓMO MOLDEAR</h1>
+
+      <p>Arrastra hacia afuera para ensanchar.</p>
+
+      <p>Arrastra hacia adentro para estrechar.</p>
+
+      <p>También puedes ajustar un poco la altura.</p>
+
+      <button
+        class="cs-cta"
+        type="button"
+        onclick="ClayStudio.showStudio()"
+      >
+        ¡A MOLDEAR!
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       SCREEN 3 — MOLDING ACTIVITY
+  ======================================================= -->
+
+  <section id="cs-screen-studio" class="cs-screen cs-studio-screen">
+
+    <button
+      class="cs-corner-button cs-close-button"
+      type="button"
+      onclick="ClayStudio.exitToWorkshopMenu()"
+      aria-label="Back to Creative Workshop"
+    >
+      ×
+    </button>
+
+    <div class="cs-studio-layout">
+
+      <p class="cs-studio-hint">DA FORMA A TU PIEZA</p>
+
+      <div class="cs-stage-frame">
+        <div class="cs-stage" id="cs-stage">
+          <img class="cs-wheel-img" id="cs-wheel-image" src="assets/pottery_wheel.png" alt="">
+          <canvas class="cs-wheel-highlight" id="cs-wheel-highlight"></canvas>
+          <canvas class="cs-clay-canvas" id="cs-clay-canvas"></canvas>
+          <img class="cs-clay-source" id="cs-clay-source" src="assets/clay_cylinder.png" alt="">
+        </div>
+      </div>
+
+      <div class="cs-toolbar">
+        <button
+          class="cs-tool-button cs-tool-reset"
+          type="button"
+          onclick="ClayStudio.resetClay()"
+        >
+          REINICIAR
+        </button>
+
+        <button
+          class="cs-tool-button cs-tool-finish"
+          type="button"
+          onclick="ClayStudio.finishPiece()"
+        >
+          TERMINAR
+        </button>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       MODAL — COMPLETION
+  ======================================================= -->
+
+  <div id="cs-modal-completion" class="cs-modal-overlay">
+    <div class="cs-modal-card">
+
+      <h2>¡Tu pieza está lista!</h2>
+
+      <div class="cs-modal-actions">
+
+        <button
+          class="cs-modal-button cs-modal-button-secondary"
+          type="button"
+          onclick="ClayStudio.keepMolding()"
+        >
+          SEGUIR MOLDEANDO
+        </button>
+
+        <button
+          class="cs-modal-button cs-modal-button-primary"
+          type="button"
+          onclick="ClayStudio.startOver()"
+        >
+          VOLVER A EMPEZAR
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <script src="js/clay-model.js"></script>
+  <script src="js/clay-render.js"></script>
+  <script src="js/wheel-render.js"></script>
+  <script src="js/clay-interaction.js"></script>
+  <script src="js/clay-studio.js"></script>
+
+</body>
+
+</html>

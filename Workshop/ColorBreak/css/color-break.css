@@ -109,14 +109,21 @@ button {
 
   padding: 12px 22px;
 
+  border: 3px solid #f5c451;
   border-radius: 999px;
 
-  background: #ec3f8c;
+  background: #d63f93;
   color: #ffffff;
 
   font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.5px;
+
+  box-shadow: 0 6px 0 #4f1a40;
+}
+
+.cb-back-button:active {
+  box-shadow: 0 3px 0 #4f1a40;
 }
 
 /* ==========================================================================
@@ -166,10 +173,10 @@ button {
 
   padding: 16px 52px;
 
-  border: none;
+  border: 3px solid #f5c451;
   border-radius: 999px;
 
-  background: linear-gradient(180deg, #ffb648 0%, #ff8a2b 100%);
+  background: #d63f93;
   color: #ffffff;
 
   font-size: 19px;
@@ -178,7 +185,7 @@ button {
 
   cursor: pointer;
 
-  box-shadow: 0 8px 0 #c9631a;
+  box-shadow: 0 8px 0 #4f1a40;
 
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
@@ -189,7 +196,7 @@ button {
 
 .cb-cta:active {
   transform: translateY(4px);
-  box-shadow: 0 4px 0 #c9631a;
+  box-shadow: 0 4px 0 #4f1a40;
 }
 
 /* ==========================================================================

@@ -309,6 +309,28 @@
 
       </div>
 
+      <!-- CLAY STUDIO -->
+      <div
+        class="activity-card"
+        role="button"
+        tabindex="0"
+        onclick="openClayStudio()"
+        onkeydown="if(event.key==='Enter'||event.key===' '){openClayStudio();}"
+        aria-label="Open Clay Studio"
+      >
+
+        <img
+          class="activity-thumb"
+          src="ClayStudio/assets/Title.png"
+          alt="Clay Studio"
+        >
+
+        <span class="activity-subtitle">
+          Mold clay at your own pace.
+        </span>
+
+      </div>
+
       <!-- Future activity cards can be appended here using the same
            .activity-card structure — the grid layout already
            accommodates additional entries responsively. -->
@@ -328,6 +350,18 @@
 
       window.location.href =
         "ColorBreak/index.html";
+
+    }
+
+
+    /* =====================================================
+       CARD → CLAY STUDIO
+    ===================================================== */
+
+    function openClayStudio() {
+
+      window.location.href =
+        "ClayStudio/index.html";
 
     }
 

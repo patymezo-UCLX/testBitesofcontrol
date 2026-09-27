@@ -1,0 +1,523 @@
+/* ==========================================================================
+   CLAY STUDIO — STYLES
+   Bites of Control visual identity: warm cream panels, rounded/playful UI,
+   pink/orange accents — matching Color Break's conventions. The clay/wheel
+   scene keeps the scale measured against the approved reference composite;
+   the UI is built around it rather than shrinking it to fit a panel.
+   ========================================================================== */
+
+:root {
+  /* Primary button look - hot pink fill, warm yellow border, burgundy
+     "raised videogame" bottom shadow. Source of truth: user-provided
+     button reference screenshot. */
+  --cs-btn-fill: #d63f93;
+  --cs-btn-border: #f5c451;
+  --cs-btn-shadow: #4f1a40;
+  --cs-btn-shadow-active: #4f1a40;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+
+  overflow: hidden;
+
+  font-family: 'Segoe UI', Arial, sans-serif;
+
+  background-color: #f7c7b5;
+
+  color: #6b4a3a;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ==========================================================================
+   SCREEN MANAGEMENT
+   ========================================================================== */
+
+.cs-screen {
+  display: none;
+
+  width: 100%;
+  height: 100%;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+}
+
+.cs-screen.cs-active {
+  display: flex;
+}
+
+/* Intro / instructions screens sit over the studio background wall so the
+   whole activity feels like one continuous place. */
+#cs-screen-intro,
+#cs-screen-instructions {
+  background-color: #f7c7b5;
+  background-image: url("../assets/studio_background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ==========================================================================
+   SHARED — CLOSE / BACK BUTTON
+   ========================================================================== */
+
+.cs-corner-button {
+  position: fixed;
+
+  top: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--cs-btn-fill);
+  border: 3px solid var(--cs-btn-border);
+  color: #ffffff;
+  cursor: pointer;
+
+  box-shadow: 0 6px 0 var(--cs-btn-shadow);
+
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  z-index: 30;
+}
+
+.cs-corner-button:hover {
+  transform: translateY(-2px);
+}
+
+.cs-corner-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 var(--cs-btn-shadow-active);
+}
+
+.cs-close-button {
+  right: 24px;
+
+  width: 52px;
+  height: 52px;
+
+  border-radius: 50%;
+
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cs-back-button {
+  left: 24px;
+
+  padding: 12px 22px;
+
+  border-radius: 999px;
+
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   PANEL (intro / instructions)
+   ========================================================================== */
+
+.cs-panel {
+  width: min(640px, 92vw);
+  max-height: 88vh;
+
+  overflow-y: auto;
+
+  padding: 56px 44px 46px;
+
+  border-radius: 42px;
+
+  background: linear-gradient(180deg, #fffaf3 0%, #fdf1e2 100%);
+
+  box-shadow:
+    0 24px 0 rgba(0, 0, 0, 0.10),
+    0 0 0 6px #ffffff inset;
+
+  text-align: center;
+}
+
+.cs-title-image {
+  display: block;
+  width: min(260px, 60%);
+  height: auto;
+  margin: 0 auto 22px;
+}
+
+.cs-panel p {
+  font-size: 17px;
+  line-height: 1.6;
+
+  margin: 0 auto 16px;
+  max-width: 440px;
+}
+
+.cs-panel p:last-of-type {
+  margin-bottom: 34px;
+}
+
+.cs-instructions-panel h1 {
+  font-size: clamp(24px, 3.6vw, 32px);
+  font-weight: 900;
+  letter-spacing: 1px;
+
+  color: #e8368f;
+
+  margin-bottom: 20px;
+
+  text-shadow: 2px 2px 0 #fff3e0;
+}
+
+.cs-cta {
+  display: inline-block;
+
+  padding: 16px 52px;
+
+  border: 3px solid var(--cs-btn-border);
+  border-radius: 999px;
+
+  background: var(--cs-btn-fill);
+  color: #ffffff;
+
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 1px;
+
+  cursor: pointer;
+
+  box-shadow: 0 8px 0 var(--cs-btn-shadow);
+
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.cs-cta:hover {
+  transform: translateY(-2px);
+}
+
+.cs-cta:active {
+  transform: translateY(4px);
+  box-shadow: 0 4px 0 var(--cs-btn-shadow-active);
+}
+
+/* ==========================================================================
+   SCREEN — MOLDING ACTIVITY
+   ========================================================================== */
+
+.cs-studio-screen {
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Plain full-size wrapper - the background now lives on .cs-stage itself,
+   which is cover-scaled (via JS, see js/clay-studio.js) to fill the whole
+   screen with no visible margins. The hint and toolbar float over it as
+   fixed-position elements, independent of this layout. */
+.cs-studio-layout {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.cs-studio-hint {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+
+  font-size: 14px;
+  color: #6b4a3a;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-align: center;
+  background: rgba(255, 250, 243, 0.85);
+  padding: 6px 18px;
+  border-radius: 999px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* The stage frame is the clay+wheel's home: a full-bleed viewport that the
+   fixed-aspect (1920x1080) stage is cover-scaled to fill, so the background
+   covers the whole screen with no empty margins while every element inside
+   the stage keeps its exact calibrated relative position. */
+.cs-stage-frame {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+.cs-stage {
+  position: relative;
+  flex: 0 0 auto;
+
+  width: 1920px;
+  height: 1080px;
+
+  transform: scale(var(--cs-stage-scale, 1));
+  transform-origin: center center;
+
+  background-image: url("../assets/studio_background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Pottery wheel: measured from the approved reference composite.
+   width  = 840/1920 = 43.75%
+   left   = 550/1920 = 28.645%
+   top    = 815/1080 = 75.463% */
+.cs-wheel-img {
+  position: absolute;
+  left: 28.645%;
+  top: 75.463%;
+  width: 43.75%;
+  height: auto;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Wheel rotation illusion: a soft highlight orbiting the top-disc surface,
+   positioned exactly over the wheel image (js/wheel-render.js). The wheel
+   PNG itself never rotates or gets redrawn. */
+.cs-wheel-highlight {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+}
+
+/* Clay cylinder: rendered as image-sliced canvas (see js/clay-render.js).
+   The canvas box is deliberately larger than the base clay silhouette
+   (transparent margin) to leave room for local width/height deformation;
+   its center-X and bottom stay fixed, matching the reference composite's
+   contact point. */
+.cs-clay-canvas {
+  position: absolute;
+  z-index: 2;
+  touch-action: none;
+  user-select: none;
+}
+
+/* Hidden source image - decoded normally, drawn into the canvas, never
+   shown directly. */
+.cs-clay-source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- toolbar ---- */
+
+.cs-toolbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+
+  width: min(500px, 94vw);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+
+  padding: 14px 18px;
+
+  border-radius: 26px;
+
+  background: linear-gradient(180deg, #f0b94e 0%, #e2952c 100%);
+
+  box-shadow: 0 10px 0 rgba(0, 0, 0, 0.08);
+}
+
+.cs-tool-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  min-width: 44px;
+  min-height: 44px;
+
+  padding: 12px 26px;
+
+  border: 3px solid var(--cs-btn-border);
+  border-radius: 999px;
+
+  background: var(--cs-btn-fill);
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+
+  cursor: pointer;
+
+  box-shadow: 0 6px 0 var(--cs-btn-shadow);
+
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.cs-tool-button:hover {
+  transform: translateY(-2px);
+}
+
+.cs-tool-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 var(--cs-btn-shadow-active);
+}
+
+/* ==========================================================================
+   MODAL — COMPLETION
+   ========================================================================== */
+
+.cs-modal-overlay {
+  display: none;
+
+  position: fixed;
+  inset: 0;
+
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(70, 40, 30, 0.42);
+
+  z-index: 50;
+
+  padding: 20px;
+}
+
+.cs-modal-overlay.cs-active {
+  display: flex;
+}
+
+.cs-modal-card {
+  width: min(420px, 92vw);
+
+  padding: 38px 32px 32px;
+
+  border-radius: 32px;
+
+  background: linear-gradient(180deg, #fffaf3 0%, #fdf1e2 100%);
+
+  box-shadow: 0 0 0 6px #ffffff inset;
+
+  text-align: center;
+}
+
+.cs-modal-card h2 {
+  font-size: 26px;
+  font-weight: 900;
+
+  color: #e8368f;
+
+  margin-bottom: 14px;
+}
+
+.cs-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  margin-top: 22px;
+}
+
+.cs-modal-button {
+  padding: 14px 24px;
+
+  border: 3px solid var(--cs-btn-border);
+  border-radius: 999px;
+
+  background: var(--cs-btn-fill);
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+
+  cursor: pointer;
+
+  box-shadow: 0 6px 0 var(--cs-btn-shadow);
+
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.cs-modal-button:hover {
+  transform: translateY(-2px);
+}
+
+.cs-modal-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 var(--cs-btn-shadow-active);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   Desktop-first: 1920x1080 is the primary target and is never compromised
+   to make mobile easier. Below this, the whole scene scales down together
+   (the stage keeps its 16:9 ratio and the clay/wheel keep their relative
+   proportions) and controls stay touch-friendly.
+   ========================================================================== */
+
+@media (max-width: 700px) {
+
+  .cs-panel {
+    padding: 42px 20px 32px;
+    border-radius: 28px;
+  }
+
+  .cs-studio-hint {
+    font-size: 12.5px;
+    top: 16px;
+  }
+
+  .cs-toolbar {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .cs-tool-button {
+    padding: 12px 20px;
+    font-size: 13.5px;
+  }
+}
+
+@media (max-height: 640px) {
+  .cs-studio-hint {
+    top: 14px;
+  }
+
+  .cs-toolbar {
+    bottom: 14px;
+  }
+}
