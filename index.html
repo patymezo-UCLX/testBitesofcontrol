@@ -4953,9 +4953,9 @@ const CLINIC_TRIGGER = {
 
 const WORKSHOP_TRIGGER = {
 
-  x: 0.742,
+  x: 0.736,
 
-  y: 0.300,
+  y: 0.418,
 
   radius: 0.045
 
@@ -5113,10 +5113,7 @@ function finishAutoWalk() {
     "workshop"
   ) {
 
-    showStatusModal(
-      "En progreso",
-      "Creative Workshop estará disponible próximamente."
-    );
+    enterWorkshop();
 
   }
 
@@ -5163,6 +5160,86 @@ const houseZones = [
 function getHouseColliders() {
 
   return houseZones.map(
+
+    zone => ({
+
+      x:
+        zone.x *
+        mapW,
+
+      y:
+        zone.y *
+        mapH,
+
+      w:
+        zone.w *
+        mapW,
+
+      h:
+        zone.h *
+        mapH
+
+    })
+
+  );
+
+}
+
+
+/* =========================================================
+   ENVIRONMENT COLLISIONS (trees, signposts, the swing set,
+   and the few bushes that sit on path edges acting as
+   boundaries). Same fractional-zone pattern as houseZones,
+   sized to each object's small base/footprint rather than
+   its full visible sprite, so Meli can still stand in front
+   of a tree canopy or a sign's wide arms without being
+   blocked by the whole drawing.
+========================================================= */
+
+const environmentZones = [
+
+  /* swing set (legs/base only, not the swing's overhead arc) */
+  { x: 0.118, y: 0.245, w: 0.085, h: 0.045 },
+
+  /* standalone tree, left side of map (trunk base only) */
+  { x: 0.074, y: 0.535, w: 0.024, h: 0.028 },
+
+  /* tree near the Clinic / Creative Workshop signpost (trunk base only) */
+  { x: 0.615, y: 0.355, w: 0.025, h: 0.03 },
+
+  /* tree bottom-right of the map (trunk base only) */
+  { x: 0.893, y: 0.618, w: 0.022, h: 0.026 },
+
+  /* "OPENING SOON" signpost in front of the Bakery */
+  { x: 0.415, y: 0.30, w: 0.05, h: 0.085 },
+
+  /* "CLINIC / Creative workshop" signpost near the Library */
+  { x: 0.253, y: 0.40, w: 0.035, h: 0.075 },
+
+  /* "CLINIC / Creative workshop" signpost near the Creative Workshop */
+  { x: 0.596, y: 0.40, w: 0.032, h: 0.09 },
+
+  /* "CALMWOOD / LIBRARY" signpost, center of the map */
+  { x: 0.352, y: 0.665, w: 0.026, h: 0.032 },
+
+  /* "CALMWOOD / LIBRARY" signpost, right side of the map */
+  { x: 0.790, y: 0.51, w: 0.045, h: 0.075 },
+
+  /* bush beside the Bakery that marks the edge of its front path */
+  { x: 0.404, y: 0.245, w: 0.042, h: 0.03 },
+
+  /* small bush directly in front of the Bakery, right of the sign */
+  { x: 0.498, y: 0.345, w: 0.026, h: 0.022 },
+
+  /* bush marking the path bend on the right side of the map */
+  { x: 0.698, y: 0.635, w: 0.042, h: 0.032 }
+
+];
+
+
+function getEnvironmentColliders() {
+
+  return environmentZones.map(
 
     zone => ({
 
@@ -5297,10 +5374,7 @@ window.addEventListener(
         nearWorkshop
       ) {
 
-        showStatusModal(
-          "En progreso",
-          "Creative Workshop estará disponible próximamente."
-        );
+        enterWorkshop();
 
       }
 
@@ -5624,6 +5698,29 @@ function collidesWithHouse(
       rectanglesOverlap(
         player,
         house
+      )
+    ) {
+
+      return true;
+
+    }
+
+  }
+
+
+  /* Same per-axis check, now also against trees, signposts,
+     the swing set, and boundary bushes — kept inside
+     collidesWithHouse() so the existing movement-resolution
+     call sites (X then Y) do not need to change at all. */
+  for (
+    const obstacle
+    of getEnvironmentColliders()
+  ) {
+
+    if (
+      rectanglesOverlap(
+        player,
+        obstacle
       )
     ) {
 
@@ -5988,6 +6085,38 @@ function enterBakery() {
     "Bakery/index.html"
   );
 
+}
+
+
+function enterLibrary() {
+
+  saveCurrentGame();
+
+  navigateWithTransition(
+    "Library/index.html"
+  );
+
+}
+
+
+function enterWorkshop() {
+
+  saveCurrentGame();
+
+  navigateWithTransition(
+    "Workshop/index.html"
+  );
+
+}
+
+
+/* NOTE: these two mobile button listeners used to be registered
+   INSIDE enterBakery() (only wired up once the player had already
+   entered the Bakery, and moot even then since that function
+   immediately navigates away) — moved here so the Enter Workshop /
+   Enter Clinic mobile buttons work from the very start, exactly like
+   every other mobile-enter-* button. No behavior for Bakery/Library
+   changed. */
 
 document
   .getElementById(
@@ -6014,26 +6143,10 @@ document
     "click",
     function () {
 
-      showStatusModal(
-        "En progreso",
-        "Creative Workshop estará disponible próximamente."
-      );
+      enterWorkshop();
 
     }
   );
-
-}
-
-
-function enterLibrary() {
-
-  saveCurrentGame();
-
-  navigateWithTransition(
-    "Library/index.html"
-  );
-
-}
 
 
 /* =========================================================

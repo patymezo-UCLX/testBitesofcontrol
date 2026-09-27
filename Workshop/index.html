@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Creative Workshop - Bites of Control</title>
+
+  <style>
+
+    /* =====================================================
+       GENERAL
+    ===================================================== */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+
+      overflow: hidden;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      font-family: 'Segoe UI', Arial, sans-serif;
+
+      background-color: #f7c7b5;
+      background-image: url("Images/background_activities.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    /* =====================================================
+       EXIT BUTTON
+    ===================================================== */
+
+    .exit-button {
+      position: fixed;
+
+      top: 24px;
+      right: 24px;
+
+      width: 56px;
+      height: 56px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+
+      background: #ec3f8c;
+      color: #ffffff;
+
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+
+      cursor: pointer;
+
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
+
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+      z-index: 20;
+    }
+
+    .exit-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .exit-button:active {
+      transform: translateY(2px);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
+    }
+
+    /* =====================================================
+       WORKSHOP PANEL
+    ===================================================== */
+
+    .workshop-panel {
+      position: relative;
+
+      width: min(560px, 88vw);
+
+      padding: 56px 44px 48px;
+
+      border-radius: 42px;
+
+      background: linear-gradient(180deg, #fffaf3 0%, #fdf1e2 100%);
+
+      box-shadow:
+        0 24px 0 rgba(0, 0, 0, 0.10),
+        0 0 0 6px #ffffff inset;
+
+      text-align: center;
+
+      z-index: 10;
+    }
+
+    .workshop-kicker {
+      display: inline-block;
+
+      padding: 8px 22px;
+
+      border-radius: 999px;
+
+      background: #6c3fa8;
+      color: #ffffff;
+
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 2px;
+
+      margin-bottom: 22px;
+    }
+
+    .workshop-panel h1 {
+      font-size: clamp(32px, 5vw, 46px);
+      font-weight: 900;
+      letter-spacing: 1px;
+
+      color: #e8368f;
+
+      margin-bottom: 18px;
+
+      text-shadow: 2px 2px 0 #fff3e0;
+    }
+
+    .workshop-panel p {
+      font-size: 17px;
+      line-height: 1.55;
+
+      color: #6b4a3a;
+
+      margin: 0 auto 34px;
+      max-width: 420px;
+    }
+
+    .workshop-cta {
+      display: inline-block;
+
+      padding: 16px 52px;
+
+      border: none;
+      border-radius: 999px;
+
+      background: linear-gradient(180deg, #ffb648 0%, #ff8a2b 100%);
+      color: #ffffff;
+
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 1px;
+
+      cursor: pointer;
+
+      box-shadow: 0 8px 0 #c9631a;
+
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .workshop-cta:hover {
+      transform: translateY(-2px);
+    }
+
+    .workshop-cta:active {
+      transform: translateY(4px);
+      box-shadow: 0 4px 0 #c9631a;
+    }
+
+    /* =====================================================
+       DECORATIVE DOTS
+    ===================================================== */
+
+    .workshop-dots {
+      position: absolute;
+      top: 26px;
+      left: 50%;
+      transform: translateX(-50%);
+
+      display: flex;
+      gap: 10px;
+    }
+
+    .workshop-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .workshop-dots span:nth-child(1) { background: #ec3f8c; }
+    .workshop-dots span:nth-child(2) { background: #ffb648; }
+    .workshop-dots span:nth-child(3) { background: #3fbfa8; }
+    .workshop-dots span:nth-child(4) { background: #6c3fa8; }
+
+    /* =====================================================
+       EXIT CONFIRMATION MODAL
+    ===================================================== */
+
+    .exit-modal-overlay {
+      display: none;
+
+      position: fixed;
+      inset: 0;
+
+      align-items: center;
+      justify-content: center;
+
+      background: rgba(70, 40, 30, 0.42);
+
+      z-index: 50;
+
+      padding: 20px;
+    }
+
+    .exit-modal-overlay.exit-modal-active {
+      display: flex;
+    }
+
+    .exit-modal-card {
+      width: min(420px, 92vw);
+
+      padding: 38px 32px 32px;
+
+      border-radius: 32px;
+
+      background: linear-gradient(180deg, #fffaf3 0%, #fdf1e2 100%);
+
+      box-shadow: 0 0 0 6px #ffffff inset;
+
+      text-align: center;
+    }
+
+    .exit-modal-card h2 {
+      font-size: 24px;
+      font-weight: 900;
+
+      color: #e8368f;
+
+      margin-bottom: 14px;
+    }
+
+    .exit-modal-card p {
+      font-size: 15.5px;
+      line-height: 1.55;
+      color: #6b4a3a;
+
+      margin-bottom: 10px;
+    }
+
+    .exit-modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      margin-top: 22px;
+    }
+
+    .exit-modal-button {
+      padding: 14px 24px;
+
+      border: 3px solid #ffffff;
+      border-radius: 999px;
+
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+
+      cursor: pointer;
+
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .exit-modal-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .exit-modal-button:active {
+      transform: translateY(2px);
+    }
+
+    .exit-modal-button-primary {
+      background: #ec3f8c;
+      color: #ffffff;
+      box-shadow: 0 6px 0 #a82468;
+    }
+
+    .exit-modal-button-primary:active {
+      box-shadow: 0 3px 0 #a82468;
+    }
+
+    .exit-modal-button-secondary {
+      background: #ffffff;
+      color: #6b4a3a;
+      border: 2px solid #f0d9c6;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .exit-modal-button-secondary:active {
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    /* =====================================================
+       MOBILE
+    ===================================================== */
+
+    @media (max-width: 700px) {
+
+      .workshop-panel {
+        width: 90%;
+        padding: 50px 26px 38px;
+        border-radius: 30px;
+      }
+
+      .exit-button {
+        top: 15px;
+        right: 15px;
+
+        width: 48px;
+        height: 48px;
+
+        border-width: 3px;
+
+        font-size: 24px;
+      }
+
+      .workshop-panel p {
+        font-size: 15px;
+      }
+
+      .workshop-cta {
+        padding: 14px 40px;
+        font-size: 17px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+
+  <!-- ===================================================
+       EXIT WORKSHOP → MAP
+  ==================================================== -->
+
+  <button
+    class="exit-button"
+    type="button"
+    onclick="exitWorkshop()"
+    aria-label="Exit Workshop"
+  >
+
+    ×
+
+  </button>
+
+
+  <!-- ===================================================
+       WORKSHOP INTRO
+  ==================================================== -->
+
+  <div class="workshop-panel">
+
+    <div class="workshop-dots">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+    <div class="workshop-kicker">
+      CREATIVE WORKSHOP
+    </div>
+
+    <h1>
+      WORKSHOP
+    </h1>
+
+    <p>
+      Welcome to the Creative Workshop!
+      <br>
+      Choose an activity, create, and take a break.
+    </p>
+
+    <button
+      class="workshop-cta"
+      type="button"
+      onclick="goToWorkshopMenu()"
+    >
+      EXPLORE
+    </button>
+
+  </div>
+
+
+  <!-- ===================================================
+       MODAL — EXIT CONFIRMATION
+  ==================================================== -->
+
+  <div id="exit-modal" class="exit-modal-overlay">
+    <div class="exit-modal-card">
+
+      <h2>¿Salir del Taller Creativo?</h2>
+      <p>Volverás al mapa principal.</p>
+
+      <div class="exit-modal-actions">
+
+        <button
+          class="exit-modal-button exit-modal-button-secondary"
+          type="button"
+          onclick="cancelExitWorkshop()"
+        >
+          CANCELAR
+        </button>
+
+        <button
+          class="exit-modal-button exit-modal-button-primary"
+          type="button"
+          onclick="confirmExitWorkshop()"
+        >
+          SÍ, SALIR
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <script>
+
+    /* =====================================================
+       EXPLORE → CREATIVE WORKSHOP MENU
+    ===================================================== */
+
+    function goToWorkshopMenu() {
+
+      window.location.href =
+        "menu.html";
+
+    }
+
+
+    /* =====================================================
+       EXIT → SHOW CONFIRMATION
+    ===================================================== */
+
+    function exitWorkshop() {
+
+      document
+        .getElementById("exit-modal")
+        .classList.add("exit-modal-active");
+
+    }
+
+
+    function cancelExitWorkshop() {
+
+      document
+        .getElementById("exit-modal")
+        .classList.remove("exit-modal-active");
+
+    }
+
+
+    /* =====================================================
+       CONFIRMED EXIT → MAIN WORLD MAP
+       (returns to the map, does NOT restart the game or
+       replay the intro — the existing save/resume system
+       on the main map handles that)
+    ===================================================== */
+
+    function confirmExitWorkshop() {
+
+      window.location.href =
+        "../index.html";
+
+    }
+
+  </script>
+
+
+</body>
+
+</html>

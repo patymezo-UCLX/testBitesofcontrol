@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Color Break - Bites of Control</title>
+
+  <link rel="stylesheet" href="css/color-break.css">
+
+</head>
+
+<body>
+
+
+  <!-- ======================================================
+       SCREEN 1 — COLOR BREAK INTRO
+  ======================================================= -->
+
+  <section id="cb-screen-intro" class="cb-screen cb-active">
+
+    <button
+      class="cb-corner-button cb-back-button"
+      type="button"
+      onclick="ColorBreak.exitToWorkshopMenu()"
+      aria-label="Back to Creative Workshop"
+    >
+      ← BACK
+    </button>
+
+    <div class="cb-panel">
+
+      <img
+        class="cb-title-image"
+        src="../Images/color break title.png"
+        alt="Color Break"
+      >
+
+      <p>
+        Elige una ilustración y coloréala a tu manera.
+      </p>
+
+      <p>
+        No hay colores correctos ni una forma perfecta de hacerlo.
+      </p>
+
+      <p>
+        Tómate tu tiempo y disfruta el proceso.
+      </p>
+
+      <button
+        class="cb-cta"
+        type="button"
+        onclick="ColorBreak.showDrawingSelection()"
+      >
+        EMPEZAR
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       SCREEN 2 — DRAWING SELECTION
+  ======================================================= -->
+
+  <section id="cb-screen-selection" class="cb-screen">
+
+    <button
+      class="cb-corner-button cb-back-button"
+      type="button"
+      onclick="ColorBreak.showIntro()"
+      aria-label="Back to Color Break intro"
+    >
+      ← BACK
+    </button>
+
+    <div class="cb-selection-panel">
+
+      <h1>
+        ELIGE UNA ILUSTRACIÓN
+      </h1>
+
+      <p class="cb-subtitle">
+        Escoge la que quieras colorear.
+      </p>
+
+      <div class="cb-drawing-grid" id="cb-drawing-grid">
+        <!-- 6 drawing cards injected by color-break.js -->
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       SCREEN 3 — COLORING ACTIVITY
+  ======================================================= -->
+
+  <section id="cb-screen-coloring" class="cb-screen cb-coloring-screen">
+
+    <button
+      class="cb-corner-button cb-close-button"
+      type="button"
+      onclick="ColorBreak.closeCanvasToSelection()"
+      aria-label="Back to drawing selection"
+    >
+      ×
+    </button>
+
+    <div class="cb-coloring-layout">
+
+      <p class="cb-coloring-hint">
+        Colorea a tu ritmo.
+      </p>
+
+      <div class="cb-canvas-frame">
+        <canvas id="cb-canvas"></canvas>
+      </div>
+
+      <div class="cb-toolbar">
+
+        <div class="cb-palette" id="cb-palette">
+          <!-- preset swatches + custom swatch injected by color-break.js -->
+          <input type="color" id="cb-custom-color-input" value="#ff4fa3">
+        </div>
+
+        <div class="cb-tool-divider"></div>
+
+        <div class="cb-tool-buttons">
+
+          <button
+            class="cb-tool-button cb-tool-selected"
+            id="cb-brush-button"
+            type="button"
+            onclick="ColorBreak.selectBrush()"
+          >
+            <svg class="cb-tool-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 20c0-2.8 1.6-4.4 4-4.4s3 1.4 3 3c0 1-.6 1.4-1.4 1.4H4Z" fill="currentColor"/>
+              <path d="M9.5 14.8 17 7.3a2 2 0 0 1 2.8 0l.9.9a2 2 0 0 1 0 2.8l-7.5 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14.5 9.8l2.7 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            COLOREAR
+          </button>
+
+          <button
+            class="cb-tool-button"
+            id="cb-eraser-button"
+            type="button"
+            onclick="ColorBreak.selectEraser()"
+          >
+            🧽 BORRAR
+          </button>
+
+          <button
+            class="cb-tool-button cb-tool-reset"
+            type="button"
+            onclick="ColorBreak.requestReset()"
+          >
+            REINICIAR
+          </button>
+
+          <button
+            class="cb-tool-button cb-tool-finish"
+            type="button"
+            onclick="ColorBreak.finishDrawing()"
+          >
+            TERMINAR
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       MODAL — RESET CONFIRM
+  ======================================================= -->
+
+  <div id="cb-modal-reset" class="cb-modal-overlay">
+    <div class="cb-modal-card">
+
+      <h2>¿Quieres empezar de nuevo?</h2>
+
+      <div class="cb-modal-actions">
+
+        <button
+          class="cb-modal-button cb-modal-button-secondary"
+          type="button"
+          onclick="ColorBreak.cancelReset()"
+        >
+          CANCELAR
+        </button>
+
+        <button
+          class="cb-modal-button cb-modal-button-primary"
+          type="button"
+          onclick="ColorBreak.confirmReset()"
+        >
+          REINICIAR
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================
+       MODAL — COMPLETION
+  ======================================================= -->
+
+  <div id="cb-modal-completion" class="cb-modal-overlay">
+    <div class="cb-modal-card">
+
+      <h2>¡LISTO!</h2>
+
+      <p>Tu ilustración está terminada.</p>
+
+      <p>Puedes seguir coloreando o elegir otra cuando quieras.</p>
+
+      <div class="cb-modal-actions">
+
+        <button
+          class="cb-modal-button cb-modal-button-secondary"
+          type="button"
+          onclick="ColorBreak.keepColoring()"
+        >
+          SEGUIR COLOREANDO
+        </button>
+
+        <button
+          class="cb-modal-button cb-modal-button-primary"
+          type="button"
+          onclick="ColorBreak.chooseAnother()"
+        >
+          ELEGIR OTRA
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <script src="js/color-break.js"></script>
+
+</body>
+
+</html>

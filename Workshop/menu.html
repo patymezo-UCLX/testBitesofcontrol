@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Creative Workshop Menu - Bites of Control</title>
+
+  <style>
+
+    /* =====================================================
+       GENERAL
+    ===================================================== */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      width: 100vw;
+      min-height: 100vh;
+
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+
+      padding: 40px 20px;
+
+      font-family: 'Segoe UI', Arial, sans-serif;
+
+      background-color: #f7c7b5;
+      background-image: url("Images/background_activities.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    /* =====================================================
+       BACK BUTTON
+    ===================================================== */
+
+    .back-button {
+      position: fixed;
+
+      top: 24px;
+      left: 24px;
+
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 12px 22px;
+
+      border: 3px solid #ffffff;
+      border-radius: 999px;
+
+      background: #ec3f8c;
+      color: #ffffff;
+
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+
+      cursor: pointer;
+
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
+
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+      z-index: 20;
+    }
+
+    .back-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .back-button:active {
+      transform: translateY(2px);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
+    }
+
+    /* =====================================================
+       MENU PANEL
+    ===================================================== */
+
+    .menu-panel {
+      width: min(980px, 96vw);
+      margin-top: 60px;
+
+      padding: 44px 36px 50px;
+
+      border-radius: 40px;
+
+      background: linear-gradient(180deg, #fffaf3 0%, #fdf1e2 100%);
+
+      box-shadow:
+        0 24px 0 rgba(0, 0, 0, 0.10),
+        0 0 0 6px #ffffff inset;
+
+      text-align: center;
+    }
+
+    .menu-panel h1 {
+      font-size: clamp(28px, 4.5vw, 40px);
+      font-weight: 900;
+      letter-spacing: 1px;
+
+      color: #e8368f;
+
+      margin-bottom: 10px;
+
+      text-shadow: 2px 2px 0 #fff3e0;
+    }
+
+    .menu-panel .menu-subtitle {
+      font-size: 16px;
+      color: #6b4a3a;
+      margin-bottom: 36px;
+    }
+
+    /* =====================================================
+       ACTIVITY GRID — reusable, accommodates more cards later
+    ===================================================== */
+
+    .activity-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 26px;
+
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .activity-card {
+      position: relative;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      padding: 26px 22px 24px;
+
+      border-radius: 28px;
+
+      background: #ffffff;
+      border: 4px solid #ffe0ee;
+
+      cursor: pointer;
+
+      box-shadow: 0 10px 0 rgba(0, 0, 0, 0.08);
+
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .activity-card:hover {
+      transform: translateY(-4px);
+      border-color: #ec3f8c;
+      box-shadow: 0 14px 0 rgba(0, 0, 0, 0.10);
+    }
+
+    .activity-card:active {
+      transform: translateY(2px);
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .activity-card img.activity-thumb {
+      width: 100%;
+      max-width: 220px;
+      height: auto;
+
+      object-fit: contain;
+
+      margin-bottom: 14px;
+    }
+
+    .activity-card .activity-subtitle {
+      font-size: 14px;
+      color: #8a6a56;
+      font-weight: 600;
+    }
+
+    .activity-card .activity-badge {
+      position: absolute;
+      top: -12px;
+      right: -10px;
+
+      padding: 6px 14px;
+
+      border-radius: 999px;
+
+      background: #3fbfa8;
+      color: #ffffff;
+
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    /* Placeholder for future activity slots — invisible unless used */
+    .activity-card.activity-card-empty {
+      visibility: hidden;
+      pointer-events: none;
+      box-shadow: none;
+    }
+
+    /* =====================================================
+       MOBILE
+    ===================================================== */
+
+    @media (max-width: 700px) {
+
+      body {
+        padding: 24px 14px;
+      }
+
+      .back-button {
+        top: 14px;
+        left: 14px;
+
+        padding: 10px 18px;
+        font-size: 13px;
+      }
+
+      .menu-panel {
+        margin-top: 46px;
+        padding: 34px 18px 34px;
+        border-radius: 28px;
+      }
+
+      .activity-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 18px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+
+  <!-- ===================================================
+       BACK → WORKSHOP INTRO
+  ==================================================== -->
+
+  <button
+    class="back-button"
+    type="button"
+    onclick="backToWorkshopIntro()"
+    aria-label="Back to Workshop intro"
+  >
+    ← BACK
+  </button>
+
+
+  <!-- ===================================================
+       CREATIVE WORKSHOP MENU
+  ==================================================== -->
+
+  <div class="menu-panel">
+
+    <h1>
+      CREATIVE WORKSHOP
+    </h1>
+
+    <p class="menu-subtitle">
+      Choose an activity, create, and take a break.
+    </p>
+
+    <div class="activity-grid" id="activity-grid">
+
+      <!-- COLOR BREAK -->
+      <div
+        class="activity-card"
+        role="button"
+        tabindex="0"
+        onclick="openColorBreak()"
+        onkeydown="if(event.key==='Enter'||event.key===' '){openColorBreak();}"
+        aria-label="Open Color Break"
+      >
+
+        <img
+          class="activity-thumb"
+          src="Images/color break title.png"
+          alt="Color Break"
+        >
+
+        <span class="activity-subtitle">
+          Color at your own pace.
+        </span>
+
+      </div>
+
+      <!-- Future activity cards can be appended here using the same
+           .activity-card structure — the grid layout already
+           accommodates additional entries responsively. -->
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    /* =====================================================
+       CARD → COLOR BREAK
+    ===================================================== */
+
+    function openColorBreak() {
+
+      window.location.href =
+        "ColorBreak/index.html";
+
+    }
+
+
+    /* =====================================================
+       BACK → WORKSHOP INTRO
+    ===================================================== */
+
+    function backToWorkshopIntro() {
+
+      window.location.href =
+        "index.html";
+
+    }
+
+  </script>
+
+
+</body>
+
+</html>
