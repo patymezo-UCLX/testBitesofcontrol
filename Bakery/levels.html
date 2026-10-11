@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
 
@@ -7,7 +7,7 @@
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   >
 
   <title>Bakery Levels - Bites of Control</title>
@@ -26,72 +26,93 @@
     }
 
 
+    html, body {
+      min-height: 100%;
+    }
+
+
     body {
-      width: 100vw;
-      min-height: 100vh;
+      width: 100%;
+      min-height: 100dvh;
 
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
 
-      padding: 30px;
+      overflow-x: hidden;
+      overflow-y: auto;
+
+      padding:
+        max(28px, env(safe-area-inset-top))
+        max(20px, env(safe-area-inset-right))
+        max(28px, env(safe-area-inset-bottom))
+        max(20px, env(safe-area-inset-left));
 
       font-family: Arial, sans-serif;
 
-      background: #f8d3c2;
+      position: relative;
     }
 
 
     /* =====================================================
-       LEVEL PANEL
+       BACKGROUND — suelo de madera
+       Se ve directamente detrás de las tarjetas: sin panel
+       blanco/crema ni overlay encima.
+       background-size: cover nunca deforma la textura, solo
+       recorta para llenar el viewport.
     ===================================================== */
 
-    .levels-panel {
-      width: min(900px, 95%);
+    .bakery-levels-bg {
+      position: fixed;
+      inset: 0;
 
-      padding: 45px;
+      background-image: url("assets/bakery-levels-bg.jpg");
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: cover;
 
-      background:
-        rgba(255, 255, 255, 0.88);
-
-      border-radius: 40px;
-
-      text-align: center;
+      z-index: 0;
     }
 
 
     /* =====================================================
-       TITLE
+       CONTENT WRAPPER
+       (layout only — no background, no border, no shadow)
     ===================================================== */
 
-    h1 {
-      margin-bottom: 35px;
+    .levels-content {
+      position: relative;
+      z-index: 1;
 
-      color: #e83f78;
+      width: min(1100px, 96vw);
 
-      font-size:
-        clamp(
-          38px,
-          6vw,
-          70px
-        );
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      margin: clamp(10px, 3vh, 40px) auto;
     }
 
 
     /* =====================================================
        LEVEL GRID
+       Desktop: 3 columns x 2 rows.
+       Tablet:  2 columns.
+       Mobile:  2 columns, 1 if especially narrow.
     ===================================================== */
 
     .levels-grid {
+      width: 100%;
+
       display: grid;
 
       grid-template-columns:
         repeat(
-          2,
+          3,
           minmax(0, 1fr)
         );
 
-      gap: 20px;
+      gap: clamp(16px, 2.6vw, 28px);
     }
 
 
@@ -100,24 +121,27 @@
     ===================================================== */
 
     .level-card {
-      min-height: 160px;
+      position: relative;
 
-      padding: 25px;
+      aspect-ratio: 3 / 2;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(6px, 1.2vw, 12px);
+
+      padding: clamp(14px, 2.4vw, 22px);
 
       border: none;
-      border-radius: 25px;
+      border-radius: clamp(18px, 2.4vw, 26px);
 
-      background: #ffd65a;
-
-      color: #703249;
+      background: #f3c94a;
 
       cursor: pointer;
 
       box-shadow:
         0 6px 0 #d8a92e;
-
-      font-size: 20px;
-      font-weight: bold;
 
       transition:
         transform 0.15s ease,
@@ -140,34 +164,49 @@
     }
 
 
-    .level-card span {
-      display: block;
+    .level-card .level-art {
+      width: 80%;
+      height: 80%;
+      object-fit: contain;
 
-      margin-top: 10px;
-
-      font-size: 14px;
-      font-weight: normal;
+      pointer-events: none;
     }
 
 
     /* =====================================================
-       LOCKED LEVELS
+       "PRÓXIMAMENTE" (reserved, not-yet-developed) CARDS
+       — visually reserved, never a padlock, never a dead link
     ===================================================== */
 
-    .level-card.locked {
-      opacity: 0.55;
+    .level-card.pending {
+      background: #f7e2ab;
 
-      cursor: not-allowed;
-
-      background: #ddd;
+      cursor: default;
 
       box-shadow:
-        0 6px 0 #aaa;
+        0 6px 0 #ddc484;
     }
 
 
-    .level-card.locked:hover {
+    .level-card.pending:hover {
       transform: none;
+    }
+
+
+    .level-card.pending .level-art {
+      width: 68%;
+      height: 68%;
+    }
+
+
+    .level-card .level-soon-label {
+      color: #a9744f;
+
+      font-size: clamp(13px, 1.6vw, 17px);
+      font-weight: bold;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      text-align: center;
     }
 
 
@@ -176,22 +215,24 @@
     ===================================================== */
 
     .back-button {
-      margin-top: 35px;
+      margin-top: clamp(24px, 3.5vw, 36px);
 
       padding:
-        12px 28px;
+        clamp(10px, 1.6vw, 12px) clamp(24px, 3.5vw, 28px);
 
-      border: none;
+      border: 3px solid #f5c451;
       border-radius: 25px;
 
-      background: #e83f78;
+      background: #d63f93;
 
       color: white;
 
-      font-size: 17px;
+      font-size: clamp(15px, 1.7vw, 17px);
       font-weight: bold;
 
       cursor: pointer;
+
+      box-shadow: 0 5px 0 #4f1a40;
 
       transition:
         transform 0.15s ease;
@@ -207,6 +248,8 @@
     .back-button:active {
       transform:
         translateY(2px);
+
+      box-shadow: 0 2px 0 #4f1a40;
     }
 
 
@@ -214,30 +257,37 @@
        RESPONSIVE
     ===================================================== */
 
-    @media (max-width: 700px) {
+    /* tablet */
+    @media (max-width: 900px) {
 
-      body {
-        padding: 20px;
+      .levels-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
       }
 
+    }
 
-      .levels-panel {
-        width: 100%;
 
-        padding:
-          35px 20px;
+    /* mobile */
+    @media (max-width: 600px) {
 
-        border-radius: 30px;
+      .levels-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
       }
 
+    }
+
+
+    /* especially narrow phones */
+    @media (max-width: 380px) {
 
       .levels-grid {
         grid-template-columns: 1fr;
       }
 
-
       .level-card {
-        min-height: 130px;
+        aspect-ratio: 16 / 10;
       }
 
     }
@@ -250,94 +300,24 @@
 <body>
 
 
-  <div class="levels-panel">
+  <!-- ===================================================
+       BACKGROUND — suelo de madera
+  ==================================================== -->
+
+  <div class="bakery-levels-bg" aria-hidden="true"></div>
+
+
+  <div class="levels-content">
 
 
     <!-- =================================================
-         TITLE
+         LEVELS (rendered from data — see LEVELS below)
     ================================================== -->
 
-    <h1>
-      Bakery Levels
-    </h1>
-
-
-    <!-- =================================================
-         LEVELS
-    ================================================== -->
-
-    <div class="levels-grid">
-
-
-      <!-- LEVEL 1 -->
-
-      <button
-        class="level-card"
-        type="button"
-        onclick="openKitchen()"
-      >
-
-        Level 1
-
-        <span>
-          Kitchen Puzzle
-        </span>
-
-      </button>
-
-
-      <!-- LEVEL 2 -->
-
-      <button
-        class="level-card"
-        type="button"
-        onclick="openLabels()"
-      >
-
-        Level 2
-
-        <span>
-          Labels
-        </span>
-
-      </button>
-
-
-      <!-- LEVEL 3 — BAKERY DELIVERY -->
-
-      <button
-        class="level-card"
-        type="button"
-        onclick="openBakeryDelivery()"
-      >
-
-        Level 3
-
-        <span>
-          Bakery Delivery
-        </span>
-
-      </button>
-
-
-      <!-- LEVEL 4 -->
-
-      <button
-        class="level-card locked"
-        type="button"
-        disabled
-      >
-
-        Level 4
-
-        <span>
-          Locked
-        </span>
-
-      </button>
-
-
-    </div>
+    <div
+      class="levels-grid"
+      id="levelsGrid"
+    ></div>
 
 
     <!-- =================================================
@@ -350,7 +330,7 @@
       onclick="goBack()"
     >
 
-      ← Back
+      ← Volver
 
     </button>
 
@@ -361,39 +341,174 @@
   <script>
 
     /* =====================================================
-       LEVEL 1 — KITCHEN PUZZLE
+       TESTING MODE
+       -----------------------------------------------------
+       While true, every implemented level renders unlocked
+       regardless of progress: no locks shown, no previous
+       level required, direct access to anything built.
+       Set to false to restore real unlock enforcement once
+       the game is ready — isLevelUnlocked() below is the
+       real check and is left intact on purpose.
     ===================================================== */
 
-    function openKitchen() {
+    const TESTING_MODE = true;
 
-      window.location.href =
-        "Kitchen/index.html";
+
+    /* =====================================================
+       LEVELS
+       -----------------------------------------------------
+       status: 'ready'   -> implemented, has a real route
+               'pending' -> reserved slot, not yet built,
+                            no route (never a fake link)
+
+       Exact order requested: Etiquetas Imperfectas,
+       Bakery Delivery, Utensilios Inquietos (the real game
+       previously labeled "Kitchen Puzzle" — same route,
+       Kitchen/index.html, only its display name/art changed),
+       then Manchas Escondidas, then two generic
+       "Próximamente" slots.
+    ===================================================== */
+
+    const LEVELS = [
+      {
+        id: "labels",
+        name: "Etiquetas Imperfectas",
+        status: "ready",
+        href: "Labels/index.html",
+        art: "assets/title-labels.png"
+      },
+      {
+        id: "delivery",
+        name: "Bakery Delivery",
+        status: "ready",
+        href: "Delivery/index.html",
+        art: "assets/title-delivery.png"
+      },
+      {
+        id: "kitchen",
+        name: "Utensilios Inquietos",
+        status: "ready",
+        href: "Kitchen/index.html",
+        art: "assets/title-utensilios-inquietos.png"
+      },
+      {
+        id: "manchas-escondidas",
+        name: "Manchas Escondidas",
+        status: "pending",
+        href: null,
+        art: "assets/title-manchas-escondidas.png"
+      },
+      {
+        id: "proximo-5",
+        name: "Próximamente",
+        status: "pending",
+        href: null,
+        art: null
+      },
+      {
+        id: "proximo-6",
+        name: "Próximamente",
+        status: "pending",
+        href: null,
+        art: null
+      }
+    ];
+
+
+    /* =====================================================
+       REAL UNLOCK LOGIC (kept for when testing mode ends)
+       -----------------------------------------------------
+       First level always open; each following level needs
+       the previous one marked complete in localStorage.
+       Nothing currently writes to "bakeryLevelProgress" —
+       this is the hook future completion tracking can use.
+    ===================================================== */
+
+    function isLevelUnlocked(levelIndex) {
+
+      if (TESTING_MODE) {
+        return true;
+      }
+
+      if (levelIndex === 0) {
+        return true;
+      }
+
+      let progress = {};
+
+      try {
+        progress =
+          JSON.parse(
+            localStorage.getItem("bakeryLevelProgress")
+          ) || {};
+      } catch (e) {
+        progress = {};
+      }
+
+      const previousLevel = LEVELS[levelIndex - 1];
+
+      return Boolean(progress[previousLevel.id]);
 
     }
 
 
     /* =====================================================
-       LEVEL 2 — LABELS
+       RENDER
     ===================================================== */
 
-    function openLabels() {
+    function renderLevels() {
 
-      window.location.href =
-        "Labels/index.html";
+      const grid = document.getElementById("levelsGrid");
+      grid.innerHTML = "";
+
+      LEVELS.forEach(function (level, index) {
+
+        const isReady = level.status === "ready";
+        const unlocked = isReady && isLevelUnlocked(index);
+
+        const card = document.createElement(isReady ? "button" : "div");
+        card.className =
+          "level-card" + (isReady ? "" : " pending");
+        if (isReady) {
+          card.type = "button";
+        }
+
+        if (isReady && unlocked) {
+          card.addEventListener("click", function () {
+            window.location.href = level.href;
+          });
+        }
+
+        if (level.art) {
+          const img = document.createElement("img");
+          img.className = "level-art";
+          img.src = level.art;
+          img.alt = level.name;
+          card.appendChild(img);
+        }
+
+        if (!isReady) {
+          const soon = document.createElement("span");
+          soon.className = "level-soon-label";
+          soon.textContent = "Próximamente";
+          card.appendChild(soon);
+        }
+
+        if (!level.art && isReady) {
+          // safety net only — every real level ships with art
+          const name = document.createElement("span");
+          name.className = "level-soon-label";
+          name.textContent = level.name;
+          card.appendChild(name);
+        }
+
+        grid.appendChild(card);
+
+      });
 
     }
 
-
-    /* =====================================================
-       LEVEL 3 — BAKERY DELIVERY
-    ===================================================== */
-
-    function openBakeryDelivery() {
-
-      window.location.href =
-        "Delivery/index.html";
-
-    }
+    renderLevels();
 
 
     /* =====================================================

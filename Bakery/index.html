@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
 
@@ -7,7 +7,7 @@
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   >
 
   <title>Bakery - Bites of Control</title>
@@ -26,11 +26,19 @@
     }
 
 
-    body {
-      width: 100vw;
-      height: 100vh;
+    html, body {
+      min-height: 100%;
+    }
 
-      overflow: hidden;
+
+    body {
+      position: relative;
+
+      min-height: 100dvh;
+      width: 100%;
+
+      overflow-x: hidden;
+      overflow-y: auto;
 
       display: flex;
       justify-content: center;
@@ -39,6 +47,47 @@
       font-family: Arial, sans-serif;
 
       background: #f7c7b5;
+
+      padding:
+        max(16px, env(safe-area-inset-top))
+        max(16px, env(safe-area-inset-right))
+        max(16px, env(safe-area-inset-bottom))
+        max(16px, env(safe-area-inset-left));
+    }
+
+
+    /* =====================================================
+       BACKGROUND ILLUSTRATION
+       (own layer so it can use background-size: cover
+       without ever stretching/deforming the artwork;
+       cover crops but always keeps original proportions)
+    ===================================================== */
+
+    .bakery-bg {
+      position: fixed;
+      inset: 0;
+
+      background-image: url("assets/bakery-interior.jpg");
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: cover;
+
+      z-index: 0;
+    }
+
+
+    /* soft readability veil behind the card only, doesn't touch the art */
+    .bakery-bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+
+      background:
+        radial-gradient(
+          ellipse at center,
+          rgba(0, 0, 0, 0.18) 0%,
+          rgba(0, 0, 0, 0.32) 100%
+        );
     }
 
 
@@ -49,29 +98,29 @@
     .exit-button {
       position: fixed;
 
-      top: 24px;
-      right: 24px;
+      top: max(24px, env(safe-area-inset-top));
+      right: max(24px, env(safe-area-inset-right));
 
-      width: 56px;
-      height: 56px;
+      width: clamp(44px, 6vw, 56px);
+      height: clamp(44px, 6vw, 56px);
 
       display: flex;
       align-items: center;
       justify-content: center;
 
-      border: 4px solid #f5b444;
+      border: 4px solid #f5c451;
       border-radius: 50%;
 
-      background: #d83a8f;
+      background: #d63f93;
       color: white;
 
-      font-size: 31px;
+      font-size: clamp(22px, 3vw, 31px);
       font-weight: bold;
       line-height: 1;
 
       cursor: pointer;
 
-      box-shadow: 0 4px 0 #98305e;
+      box-shadow: 0 4px 0 #4f1a40;
 
       z-index: 9999;
 
@@ -87,24 +136,91 @@
 
     .exit-button:active {
       transform: scale(0.94);
+      box-shadow: 0 2px 0 #4f1a40;
     }
 
 
     /* =====================================================
        PANEL
+       One single card. Its content (title/paragraphs/
+       buttons) is swapped by JS between step 1 and step 2 —
+       there is never more than one step in the DOM at once.
+       A fixed-ish min-height keeps both steps a similar size
+       so the card doesn't jump when the content changes.
     ===================================================== */
 
     .panel {
-      width: min(700px, 85%);
+      position: relative;
+      z-index: 1;
 
-      padding: 50px;
+      width: min(640px, 92vw);
 
-      background:
-        rgba(255, 255, 255, 0.85);
+      min-height: clamp(320px, 44vh, 420px);
+      max-height: calc(100dvh - 48px);
+      overflow-y: auto;
 
-      border-radius: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      padding: clamp(28px, 4.5vw, 50px);
+
+      margin: clamp(60px, 10vh, 90px) 0 24px;
+
+      background: #fffaf3;
+
+      border-radius: clamp(24px, 4vw, 40px);
+      box-shadow: 0 18px 40px rgba(79, 26, 64, 0.35);
 
       text-align: center;
+    }
+
+
+    /* =====================================================
+       STEP CONTENT + TRANSITION
+    ===================================================== */
+
+    .step-content {
+      width: 100%;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      opacity: 1;
+      transform: translateY(0);
+
+      transition:
+        opacity 0.22s ease,
+        transform 0.22s ease;
+    }
+
+
+    .step-content.step-transitioning {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+
+    /* =====================================================
+       STEP INDICATOR ("1 de 2" / "2 de 2")
+    ===================================================== */
+
+    .step-indicator {
+      margin-bottom: clamp(10px, 1.8vw, 16px);
+
+      padding: 4px 16px;
+
+      border-radius: 999px;
+
+      background: rgba(214, 63, 147, 0.12);
+      color: #c23172;
+
+      font-size: clamp(12px, 1.4vw, 14px);
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
 
@@ -113,16 +229,18 @@
     ===================================================== */
 
     h1 {
-      margin-bottom: 25px;
+      margin-bottom: clamp(14px, 2.5vw, 22px);
 
-      color: #e83f78;
+      color: #d63f93;
 
       font-size:
         clamp(
-          42px,
-          7vw,
-          80px
+          24px,
+          5vw,
+          40px
         );
+
+      line-height: 1.15;
     }
 
 
@@ -131,38 +249,61 @@
     ===================================================== */
 
     p {
-      margin-bottom: 35px;
-
       color: #71334a;
 
       font-size:
         clamp(
           16px,
           2vw,
-          22px
+          18px
         );
 
       line-height: 1.5;
     }
 
+    p + p {
+      margin-top: clamp(10px, 1.6vw, 14px);
+    }
+
+    p strong {
+      color: #c23172;
+    }
+
 
     /* =====================================================
-       EXPLORE BUTTON
+       BUTTON ROW
+    ===================================================== */
+
+    .step-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(10px, 2vw, 16px);
+
+      margin-top: clamp(22px, 3.5vw, 32px);
+    }
+
+
+    /* =====================================================
+       PRIMARY BUTTON (Siguiente / ¡Comencemos!)
     ===================================================== */
 
     .play-button {
-      padding: 14px 40px;
+      padding: clamp(12px, 1.8vw, 15px) clamp(32px, 5vw, 44px);
 
-      border: none;
+      border: 3px solid #f5c451;
       border-radius: 30px;
 
-      background: #e83f78;
+      background: #d63f93;
       color: white;
 
-      font-size: 20px;
+      font-size: clamp(17px, 2.2vw, 21px);
       font-weight: bold;
 
       cursor: pointer;
+
+      box-shadow: 0 6px 0 #4f1a40;
 
       transition:
         transform 0.15s ease;
@@ -175,36 +316,105 @@
 
 
     .play-button:active {
+      transform: scale(0.96) translateY(2px);
+      box-shadow: 0 3px 0 #4f1a40;
+    }
+
+
+    /* =====================================================
+       SECONDARY BUTTON (← Atrás)
+    ===================================================== */
+
+    .back-step-button {
+      padding: clamp(12px, 1.8vw, 15px) clamp(24px, 4vw, 34px);
+
+      border: 3px solid #d63f93;
+      border-radius: 30px;
+
+      background: transparent;
+      color: #d63f93;
+
+      font-size: clamp(16px, 2vw, 19px);
+      font-weight: bold;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.15s ease,
+        background 0.15s ease;
+    }
+
+
+    .back-step-button:hover {
+      background: rgba(214, 63, 147, 0.08);
+      transform: scale(1.03);
+    }
+
+
+    .back-step-button:active {
       transform: scale(0.96);
     }
 
 
     /* =====================================================
-       MOBILE
+       RESPONSIVE
     ===================================================== */
 
+    /* tablet / small laptop */
+    @media (max-width: 900px) {
+
+      .panel {
+        width: min(560px, 94vw);
+      }
+
+    }
+
+
+    /* mobile portrait + narrow mobile landscape
+       — shrink the card, not the text */
     @media (max-width: 700px) {
 
       .panel {
-        width: 90%;
+        width: 94vw;
 
-        padding:
-          45px 25px;
+        min-height: clamp(280px, 50vh, 380px);
 
-        border-radius: 30px;
+        padding: 26px 20px;
+
+        border-radius: 26px;
+
+        margin-top: clamp(56px, 14vh, 80px);
+      }
+
+
+      p {
+        font-size: clamp(16px, 4vw, 18px);
       }
 
 
       .exit-button {
-        top: 15px;
-        right: 15px;
-
-        width: 48px;
-        height: 48px;
+        width: 46px;
+        height: 46px;
 
         border-width: 3px;
 
-        font-size: 26px;
+        font-size: 24px;
+      }
+
+    }
+
+
+    /* short / landscape phones: keep the card reachable without clipping */
+    @media (max-height: 480px) {
+
+      body {
+        align-items: flex-start;
+      }
+
+      .panel {
+        margin-top: 70px;
+        max-height: calc(100dvh - 90px);
+        min-height: 0;
       }
 
     }
@@ -218,6 +428,13 @@
 
 
   <!-- ===================================================
+       BACKGROUND — interior de la pastelería
+  ==================================================== -->
+
+  <div class="bakery-bg" aria-hidden="true"></div>
+
+
+  <!-- ===================================================
        EXIT BAKERY → MAP
   ==================================================== -->
 
@@ -225,7 +442,7 @@
     class="exit-button"
     type="button"
     onclick="exitBakery()"
-    aria-label="Exit Bakery"
+    aria-label="Salir de Bakery"
   >
 
     ×
@@ -234,38 +451,14 @@
 
 
   <!-- ===================================================
-       BAKERY INTRO
+       BAKERY INTRO — una sola tarjeta, contenido en 2 pasos
   ==================================================== -->
 
   <div class="panel">
 
-
-    <h1>
-      BAKERY
-    </h1>
-
-
-    <p>
-
-      Welcome to the Bakery!
-
-      <br>
-
-      Complete the activities and explore each level.
-
-    </p>
-
-
-    <button
-      class="play-button"
-      type="button"
-      onclick="goToLevels()"
-    >
-
-      Explore
-
-    </button>
-
+    <div class="step-content" id="stepContent">
+      <!-- el contenido del paso actual se inserta aquí vía JS -->
+    </div>
 
   </div>
 
@@ -273,7 +466,131 @@
   <script>
 
     /* =====================================================
-       EXPLORE → BAKERY LEVELS
+       PASOS DE LA BIENVENIDA
+       -----------------------------------------------------
+       Un solo panel, el contenido se sustituye con un
+       pequeño fade — nunca hay dos pasos en pantalla a la
+       vez. El comportamiento de CUÁNDO se muestra esta
+       bienvenida no cambió: sigue apareciendo siempre al
+       cargar index.html.
+    ===================================================== */
+
+    const STEPS = [
+      {
+        indicator: "1 de 2",
+        title: "¡TE PRESENTO LA GRAN PASTELERÍA!",
+        paragraphs: [
+          "Pero antes de la <strong>gran inauguración</strong>, todavía hay mucho por hacer.",
+          "Juntos tendremos que preparar recetas, organizar pedidos y enfrentar desafíos inesperados en el camino."
+        ]
+      },
+      {
+        indicator: "2 de 2",
+        title: "¡UN PASO A LA VEZ!",
+        paragraphs: [
+          "Recuerda: <strong>no todo tiene que salir perfecto ni necesitamos tener todas las respuestas para seguir avanzando.</strong>",
+          "Un paso a la vez. <strong>¡Hagamos realidad este sueño!</strong>"
+        ]
+      }
+    ];
+
+    let currentStepIndex = 0;
+
+
+    function buildStepButtons(stepIndex) {
+
+      const wrap = document.createElement("div");
+      wrap.className = "step-buttons";
+
+      if (stepIndex === 1) {
+
+        const back = document.createElement("button");
+        back.type = "button";
+        back.className = "back-step-button";
+        back.textContent = "← Atrás";
+        back.onclick = function () { goToStep(0); };
+        wrap.appendChild(back);
+
+        const start = document.createElement("button");
+        start.type = "button";
+        start.className = "play-button";
+        start.textContent = "¡Comencemos!";
+        start.onclick = goToLevels;
+        wrap.appendChild(start);
+
+      } else {
+
+        const next = document.createElement("button");
+        next.type = "button";
+        next.className = "play-button";
+        next.textContent = "Siguiente →";
+        next.onclick = function () { goToStep(1); };
+        wrap.appendChild(next);
+
+      }
+
+      return wrap;
+
+    }
+
+
+    function renderStep(stepIndex) {
+
+      const container = document.getElementById("stepContent");
+      const step = STEPS[stepIndex];
+
+      container.innerHTML = "";
+
+      const indicator = document.createElement("span");
+      indicator.className = "step-indicator";
+      indicator.textContent = step.indicator;
+      container.appendChild(indicator);
+
+      const h1 = document.createElement("h1");
+      h1.textContent = step.title;
+      container.appendChild(h1);
+
+      step.paragraphs.forEach(function (html) {
+        const p = document.createElement("p");
+        p.innerHTML = html;
+        container.appendChild(p);
+      });
+
+      container.appendChild(buildStepButtons(stepIndex));
+
+    }
+
+
+    function goToStep(stepIndex) {
+
+      if (stepIndex === currentStepIndex) {
+        return;
+      }
+
+      const container = document.getElementById("stepContent");
+
+      container.classList.add("step-transitioning");
+
+      window.setTimeout(function () {
+        currentStepIndex = stepIndex;
+        renderStep(currentStepIndex);
+        // forzar reflow antes de quitar la clase, para que la
+        // transición de entrada se reproduzca
+        void container.offsetWidth;
+        container.classList.remove("step-transitioning");
+      }, 220);
+
+    }
+
+
+    renderStep(currentStepIndex);
+
+
+    /* =====================================================
+       COMENZAR → BAKERY LEVELS
+       (comportamiento sin cambios: siempre navega a
+       levels.html; no hay lógica de progreso/almacenamiento
+       que condicione cuándo se muestra esta bienvenida)
     ===================================================== */
 
     function goToLevels() {
@@ -285,7 +602,7 @@
 
 
     /* =====================================================
-       EXIT → MAIN MAP
+       SALIR → MAPA PRINCIPAL
     ===================================================== */
 
     function exitBakery() {
