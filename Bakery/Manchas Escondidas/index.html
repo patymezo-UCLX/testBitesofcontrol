@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Manchas Escondidas — Bites of Control</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+  :root {
+    --me-pink:        #ff4f9a;
+    --me-pink-dark:   #d92d78;
+    --me-pink-light:  #ffc4de;
+    --me-orange:      #ff9a3d;
+    --me-yellow:      #ffcf4d;
+    --me-cream:       #fff3df;
+    --me-burgundy:    #6b2a1f;
+    --me-burgundy-dark:#4a1a12;
+    --me-green:       #4bc97a;
+    --me-green-dark:  #2f9a57;
+    --me-font-display: 'Baloo 2', 'Fredoka', system-ui, sans-serif;
+    --me-font-body: 'Quicksand', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+    font-family: var(--me-font-body);
+    background-color: #ffb347;
+  }
+
+  body {
+    background-image: url('assets/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  @media (max-width: 760px) {
+    body {
+      background-image: url('assets/background mobile.jpg');
+    }
+  }
+
+  button { font-family: inherit; cursor: pointer; }
+
+  img { -webkit-user-drag: none; user-select: none; }
+
+  /* ===================== STAGE ===================== */
+
+  #me-stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(10px, 2vh, 26px) clamp(10px, 3vw, 26px);
+  }
+
+  #me-hud {
+    width: min(86vw, 900px);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: clamp(8px, 1.6vh, 16px);
+  }
+
+  /* Window indicator and progress bar removed from the UI per request;
+     elements are kept in the DOM (hidden) so the underlying "enough
+     cleaning to advance" logic, which still uses them internally,
+     doesn't need to change. */
+  #me-window-indicator,
+  #me-progress-track {
+    display: none;
+  }
+
+  .me-pill {
+    font-family: var(--me-font-display);
+    font-weight: 700;
+    color: var(--me-cream);
+    background: linear-gradient(180deg, var(--me-burgundy) 0%, var(--me-burgundy-dark) 100%);
+    border: 3px solid var(--me-yellow);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: clamp(13px, 1.6vw, 18px);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+    white-space: nowrap;
+    transition: color 0.25s ease, border-color 0.25s ease;
+  }
+
+  #me-timer.me-low-time {
+    color: #ffe1e1;
+    border-color: #ff5a5a;
+    animation: me-pulse 0.9s ease-in-out infinite;
+  }
+
+  @keyframes me-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.07); }
+  }
+
+  #me-progress-track {
+    width: min(86vw, 900px);
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(74, 26, 18, 0.35);
+    border: 2px solid rgba(74, 26, 18, 0.45);
+    overflow: hidden;
+    margin-bottom: clamp(10px, 2vh, 20px);
+  }
+
+  #me-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--me-green-dark), var(--me-green));
+    border-radius: 999px;
+    transition: width 0.25s ease;
+  }
+
+  /* ===================== WINDOW ===================== */
+
+  #me-window-frame {
+    position: relative;
+    width: min(74vh, 86vw, 900px);
+    aspect-ratio: 1269 / 805;
+    margin: 0 auto;
+  }
+
+  /* Fixed-size "window" into which the inner wrap is scaled. Clipping here
+     means the magnified view can never spill out over the buttons below or
+     outside the glass, however far the player pans. */
+  #me-window-viewport {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  #me-window-wrap {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform-origin: 50% 50%;
+    transition: transform 0.18s ease, transform-origin 0.05s linear;
+  }
+
+  /* Scaling around an interior origin point always keeps the whole
+     original box covered, so panning the origin (done in JS, following the
+     pointer) can never reveal empty space beyond the window's edges —
+     no manual clamping math needed. */
+  #me-window-wrap.me-zoomed {
+    transform: scale(2.75);
+  }
+
+  #me-window-img,
+  #me-stain-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  #me-window-img {
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #me-stain-canvas {
+    cursor: none;
+  }
+
+  #me-sponge {
+    position: absolute;
+    width: clamp(46px, 9vw, 90px);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 5;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
+  }
+
+  #me-sponge.me-visible { opacity: 1; }
+
+  .me-anxi-corner {
+    position: absolute;
+    right: -2%;
+    bottom: -11%;
+    width: clamp(78px, 21.5%, 187px);
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  #me-anxi-img {
+    width: 100%;
+    display: block;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+  }
+
+  #me-anxi-bubble {
+    position: absolute;
+    right: 60%;
+    bottom: 78%;
+    width: max-content;
+    max-width: clamp(160px, 30vw, 280px);
+    background: var(--me-cream);
+    color: var(--me-burgundy-dark);
+    font-family: var(--me-font-display);
+    font-weight: 600;
+    font-size: clamp(12px, 1.4vw, 15px);
+    line-height: 1.3;
+    padding: 10px 14px;
+    border-radius: 16px;
+    border: 3px solid var(--me-orange);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+    transform-origin: bottom right;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+
+  #me-anxi-bubble::after {
+    content: "";
+    position: absolute;
+    right: 18px;
+    bottom: -10px;
+    border-width: 10px 8px 0 8px;
+    border-style: solid;
+    border-color: var(--me-orange) transparent transparent transparent;
+  }
+
+  #me-anxi-bubble.me-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* ===================== TOOL ROW (sponge / lupa) ===================== */
+
+  #me-tool-row {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 2.4vw, 20px);
+    margin-top: clamp(10px, 2vh, 18px);
+  }
+
+  .me-tool-btn {
+    width: clamp(58px, 10vw, 86px);
+    height: clamp(58px, 10vw, 86px);
+    border-radius: 20px;
+    border: 3px solid transparent;
+    background: rgba(74, 26, 18, 0.35);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .me-tool-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .me-tool-btn:active { transform: translateY(2px); }
+
+  .me-tool-btn.me-tool-active {
+    border-color: var(--me-yellow);
+    background: var(--me-pink);
+    box-shadow: 0 4px 0 var(--me-pink-dark);
+  }
+
+  /* ===================== ACTION ROW (reset / next) ===================== */
+
+  #me-action-row {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: clamp(10px, 2vw, 18px);
+    margin-top: clamp(12px, 2.4vh, 22px);
+  }
+
+  #me-reset-btn {
+    font-family: var(--me-font-body);
+    font-weight: 600;
+    font-size: clamp(11px, 1.4vw, 13px);
+    color: rgba(74, 26, 18, 0.7);
+    background: rgba(255,255,255,0.5);
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    opacity: 0.85;
+  }
+
+  #me-reset-btn:hover { opacity: 1; }
+
+  /* ===================== NEXT BUTTON ===================== */
+
+  #me-next-btn {
+    font-family: var(--me-font-display);
+    font-weight: 700;
+    font-size: clamp(15px, 2vw, 20px);
+    color: var(--me-cream);
+    background: var(--me-pink);
+    border: 3px solid var(--me-yellow);
+    border-radius: 999px;
+    padding: 12px 30px;
+    box-shadow: 0 5px 0 var(--me-pink-dark);
+    transition: transform 0.12s ease, opacity 0.2s ease, filter 0.2s ease;
+  }
+
+  #me-next-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--me-pink-dark); }
+
+  #me-next-btn:disabled {
+    opacity: 0.45;
+    filter: grayscale(0.4);
+    cursor: default;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.2);
+  }
+
+  #me-next-btn:disabled:active { transform: none; }
+
+  /* ===================== EXIT BUTTON ===================== */
+
+  #me-exit-btn {
+    position: absolute;
+    top: clamp(10px, 2vh, 22px);
+    right: clamp(10px, 2vw, 22px);
+    width: clamp(38px, 6vw, 52px);
+    height: clamp(38px, 6vw, 52px);
+    border-radius: 50%;
+    border: 4px solid var(--me-yellow);
+    background: var(--me-pink);
+    box-shadow: 0 4px 0 var(--me-pink-dark);
+    color: var(--me-cream);
+    font-family: var(--me-font-display);
+    font-weight: 700;
+    font-size: clamp(16px, 2.4vw, 22px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    line-height: 1;
+  }
+
+  /* ===================== OVERLAYS / MODALS ===================== */
+
+  .me-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(40, 16, 10, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+  }
+
+  .me-overlay.me-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .me-panel {
+    position: relative;
+    width: min(400px, 90vw);
+    max-height: 92vh;
+    overflow-y: auto;
+    background: linear-gradient(180deg, var(--me-burgundy) 0%, var(--me-burgundy-dark) 100%);
+    border: 4px solid var(--me-orange);
+    border-radius: 28px;
+    padding: clamp(20px, 4vh, 34px) clamp(18px, 4vw, 28px) clamp(22px, 3vh, 28px);
+    text-align: center;
+    box-shadow: 0 14px 0 rgba(0,0,0,0.22);
+    transform: translateY(14px) scale(0.95);
+    transition: transform 0.22s ease;
+  }
+
+  .me-overlay.me-visible .me-panel {
+    transform: translateY(0) scale(1);
+  }
+
+  .me-panel-anxi {
+    width: clamp(70px, 20vw, 110px);
+    margin: -58px auto 6px;
+    display: block;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
+  }
+
+  .me-title-art {
+    width: min(260px, 70vw);
+    margin: 0 auto 14px;
+    display: block;
+  }
+
+  .me-panel h2 {
+    font-family: var(--me-font-display);
+    color: var(--me-yellow);
+    font-size: clamp(19px, 3.4vw, 25px);
+    margin: 0 0 12px;
+    line-height: 1.2;
+  }
+
+  .me-panel p {
+    color: var(--me-cream);
+    font-size: clamp(13.5px, 2.4vw, 15.5px);
+    line-height: 1.5;
+    margin: 0 0 10px;
+  }
+
+  .me-panel p strong { color: var(--me-yellow); }
+
+  .me-btn-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .me-btn-row.me-row-horizontal {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .me-btn {
+    font-family: var(--me-font-display);
+    font-weight: 700;
+    font-size: clamp(14px, 2.6vw, 16px);
+    color: var(--me-cream);
+    background: var(--me-pink);
+    border: 3px solid var(--me-yellow);
+    border-radius: 999px;
+    padding: 12px 20px;
+    box-shadow: 0 5px 0 var(--me-pink-dark);
+    transition: transform 0.12s ease;
+    flex: 1;
+  }
+
+  .me-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--me-pink-dark); }
+
+  .me-btn:disabled {
+    opacity: 0.55;
+    filter: grayscale(0.35);
+    cursor: default;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.2);
+  }
+
+  .me-btn:disabled:active { transform: none; }
+
+  .me-welcome-screen { display: none; }
+  .me-welcome-screen.me-welcome-screen-active { display: block; }
+
+  .me-btn-secondary {
+    background: transparent;
+    border: 2px solid var(--me-cream);
+    box-shadow: none;
+    color: var(--me-cream);
+  }
+
+  .me-btn-secondary:active { transform: translateY(2px); }
+
+  #me-welcome-instructions {
+    text-align: left;
+    background: rgba(0,0,0,0.18);
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin: 12px 0;
+  }
+
+  #me-welcome-instructions p { margin: 0; }
+
+  /* ===================== RESPONSIVE ===================== */
+
+  @media (max-width: 760px) {
+    #me-window-frame { width: min(62vh, 92vw, 640px); }
+    .me-anxi-corner { bottom: -12%; width: clamp(74px, 24%, 158px); }
+    #me-hud { width: min(78vw, 900px); padding-right: 46px; }
+    .me-pill { font-size: clamp(11px, 3vw, 14px); padding: 5px 12px; }
+    #me-anxi-bubble { max-width: clamp(130px, 48vw, 220px); font-size: clamp(11px, 3vw, 13px); }
+    .me-tool-btn { width: clamp(54px, 15vw, 80px); height: clamp(54px, 15vw, 80px); }
+  }
+
+  @media (max-width: 480px) and (orientation: portrait) {
+    #me-stage { justify-content: flex-start; padding-top: clamp(14px, 4vh, 30px); }
+    #me-window-frame { width: min(90vw, 560px); margin-top: clamp(14px, 4vh, 30px); }
+  }
+
+  @media (orientation: landscape) and (max-height: 480px) {
+    #me-window-frame { width: min(60vh, 70vw, 640px); }
+    #me-hud, #me-progress-track { width: min(60vh, 70vw, 640px); }
+    #me-tool-row { margin-top: 6px; gap: 10px; }
+    .me-tool-btn { width: clamp(42px, 9vw, 60px); height: clamp(42px, 9vw, 60px); }
+    #me-action-row { margin-top: 6px; gap: 10px; }
+    #me-next-btn { padding: 8px 22px; }
+    #me-reset-btn { padding: 6px 12px; }
+  }
+
+</style>
+</head>
+<body>
+
+  <div id="me-stage">
+
+    <button id="me-exit-btn" type="button" aria-label="Salir de Manchas Escondidas">&times;</button>
+
+    <div id="me-hud">
+      <div class="me-pill" id="me-timer">02:00</div>
+      <div class="me-pill" id="me-window-indicator">Ventana 1 de 6</div>
+    </div>
+
+    <div id="me-progress-track">
+      <div id="me-progress-fill"></div>
+    </div>
+
+    <div id="me-window-frame">
+
+      <div id="me-window-viewport">
+        <div id="me-window-wrap">
+
+          <img id="me-window-img" src="assets/window_1.png" alt="Ventana de la pastelería">
+
+          <canvas id="me-stain-canvas"></canvas>
+
+          <img id="me-sponge" src="assets/Sponge_1.png" alt="">
+
+        </div>
+      </div>
+
+      <div class="me-anxi-corner">
+        <div id="me-anxi-bubble"></div>
+        <img id="me-anxi-img" src="assets/Anxi_alert.png" alt="Anxi">
+      </div>
+
+    </div>
+
+    <div id="me-tool-row">
+      <button id="me-tool-sponge-btn" class="me-tool-btn me-tool-active" type="button" aria-label="Esponja: limpiar las manchas" aria-pressed="true">
+        <img src="assets/Sponge_1.png" alt="">
+      </button>
+      <button id="me-tool-lupa-btn" class="me-tool-btn" type="button" aria-label="Lupa: inspeccionar la ventana" aria-pressed="false">
+        <img src="assets/lupa.png" alt="">
+      </button>
+    </div>
+
+    <div id="me-action-row">
+      <button id="me-reset-btn" type="button">Reiniciar ventana</button>
+      <button id="me-next-btn" type="button" disabled>Siguiente ventana →</button>
+    </div>
+
+  </div>
+
+  <!-- WELCOME OVERLAY (2 screens) -->
+  <div class="me-overlay" id="me-welcome-overlay">
+    <div class="me-panel">
+
+      <div class="me-welcome-screen me-welcome-screen-active" data-welcome-screen="1">
+        <img class="me-title-art" src="../assets/title-manchas-escondidas.png" alt="¡Manchas Escondidas!">
+        <p>¡El gran día se acerca y es momento de dejar todo listo para la inauguración!</p>
+        <p>Tienes 6 ventanas por limpiar y el tiempo corre.</p>
+        <div class="me-btn-row">
+          <button class="me-btn" id="me-welcome-next-btn" type="button">Siguiente →</button>
+        </div>
+      </div>
+
+      <div class="me-welcome-screen" data-welcome-screen="2">
+        <h2>¿Cómo jugar?</h2>
+        <p>Desliza la esponja sobre las manchas para limpiar las ventanas.</p>
+        <p>Puedes utilizar la lupa para revisar los detalles, pero ¡cuidado!, el tiempo sigue corriendo.</p>
+        <p>Algunas manchas no desaparecerán completamente.</p>
+        <div id="me-welcome-instructions">
+          <p>Recuerda: <strong>no todo tiene que quedar perfecto para poder avanzar.</strong></p>
+        </div>
+        <p>¡Completa las seis ventanas antes de que se acabe el tiempo!</p>
+        <div class="me-btn-row">
+          <button class="me-btn" id="me-start-btn" type="button">¡A limpiar!</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- QUESTION OVERLAY -->
+  <div class="me-overlay" id="me-question-overlay">
+    <div class="me-panel">
+      <img class="me-panel-anxi" src="assets/Anxi_pregunt.png" alt="Anxi">
+      <h2 id="me-question-text"></h2>
+      <div class="me-btn-row">
+        <button class="me-btn" id="me-question-a" type="button"></button>
+        <button class="me-btn" id="me-question-b" type="button"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXIT CONFIRM OVERLAY -->
+  <div class="me-overlay" id="me-exit-confirm-overlay">
+    <div class="me-panel">
+      <h2>¿Seguro que quieres salir?</h2>
+      <p>Si sales ahora, perderás el progreso de esta partida.</p>
+      <div class="me-btn-row">
+        <button class="me-btn" id="me-keep-playing-btn" type="button">Seguir jugando</button>
+        <button class="me-btn me-btn-secondary" id="me-confirm-exit-btn" type="button">Salir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WIN OVERLAY -->
+  <div class="me-overlay" id="me-win-overlay">
+    <div class="me-panel">
+      <h2>¡LO LOGRASTE!</h2>
+      <p>¡Las seis ventanas están listas para la inauguración!</p>
+      <p>Quizá todavía quede alguna pequeña marca, pero eso no significa que hayas hecho un mal trabajo.</p>
+      <p><strong>A veces, saber cuándo detenerse también es parte del reto.</strong></p>
+      <div class="me-btn-row">
+        <button class="me-btn" id="me-win-continue-btn" type="button">Continuar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOSE OVERLAY -->
+  <div class="me-overlay" id="me-lose-overlay">
+    <div class="me-panel">
+      <h2>¡SE ACABÓ EL TIEMPO!</h2>
+      <p>¡El tiempo pasó volando!</p>
+      <p>A veces, intentar que todo quede perfecto nos hace perder de vista lo que realmente importa.</p>
+      <p>Puedes volver a intentarlo. Esta vez, recuerda que no necesitas borrar cada pequeña marca para avanzar.</p>
+      <div class="me-btn-row">
+        <button class="me-btn" id="me-retry-btn" type="button">Volver a intentar</button>
+        <button class="me-btn me-btn-secondary" id="me-lose-exit-btn" type="button">Salir</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+
+  "use strict";
+
+  /* =====================================================
+     CONFIG — easy to tweak after playtesting
+  ===================================================== */
+
+  const TOTAL_TIME_SECONDS = 120;   // total time for all 6 windows
+  const LOW_TIME_THRESHOLD = 20;    // seconds left when the timer turns urgent
+  const CLEAN_THRESHOLD = 0.6;      // 0..1 average cleanliness needed to unlock "Siguiente ventana"
+  const PERMANENT_MIN_OPACITY = 0.12; // persistent stains keep 12% of their original intensity once clean
+  const CLEAN_DONE = 0.93;            // erased fraction at which a stain counts as clean (the faint leftover is snapped away)
+  const WINDOW_COUNT = 6;
+  // Per-dab strength. Dabs are spaced a fixed fraction of the brush radius
+  // apart (see eraseAlongPath). Each dab must stay fairly strong: canvas
+  // alpha is 8-bit, so very faint dabs round away to nothing and a stain
+  // would stall at ~12% instead of ever reaching zero. One full pass over a stain multiplies the
+  // ink under the brush by roughly 0.5 / 0.6 / 0.65 for easy / medium / hard
+  // stains: every stain visibly fades from the very first pass and is
+  // practically gone after ~5-8 passes.
+  const PEAK_ALPHA_BY_HARDNESS = { 1: 0.12, 2: 0.095, 3: 0.077 };
+
+  const ANXI_LINES = [
+    "¿Y si alguien nota una mancha?",
+    "¡Espera! Creo que todavía veo algo…",
+    "¿Segura de que ya quedó limpia?",
+    "¡Mira esa esquina! ¿Y si revisamos otra vez?",
+    "No podemos dejar ni una sola mancha… ¿o sí?",
+    "¡El tiempo se acaba! ¡Pero todavía hay detalles!",
+    "¿Y si mejor revisamos todas otra vez?"
+  ];
+  // ANXI_LINES[0] plays on start; ANXI_LINES[i] (i=1..6) plays on reaching window i.
+
+  const QUESTIONS = {
+    2: {
+      text: "Creo que todavía queda una mancha… ¿y si alguien la ve?",
+      optionA: "Revisar otra vez",
+      optionB: "Seguir adelante"
+    },
+    4: {
+      text: "¿Y si no están lo suficientemente limpias para la inauguración?",
+      optionA: "Limpiar un poco más",
+      optionB: "Pasar a la siguiente"
+    },
+    6: {
+      text: "¿De verdad vamos a terminar así? ¡Todavía podría haber manchas!",
+      optionA: "Volver a revisar",
+      optionB: "Dar por terminado"
+    }
+  };
+
+  /* Per-window stain layout. Coordinates are percentages of the window
+     canvas (0-100). scale = stain width as % of canvas width.
+     hardness: 1 (soft) .. 3 (tough) controls how fast a stain erases.
+     permanent: true -> a faint trace always remains, by design. */
+
+  const WINDOW_STAINS = [
+    [ // window 1
+      { img: "stain_1.png", x: 27, y: 36, scale: 34, rot: -12, hardness: 1, permanent: false },
+      { img: "stain_4.png", x: 64, y: 28, scale: 30, rot: 18,  hardness: 3, permanent: true  },
+      { img: "stain_2.png", x: 42, y: 64, scale: 24, rot: -20, hardness: 2, permanent: false }
+    ],
+    [ // window 2
+      { img: "stain_3.png", x: 30, y: 30, scale: 32, rot: 8,   hardness: 2, permanent: false },
+      { img: "stain_5.png", x: 60, y: 55, scale: 30, rot: -15, hardness: 2, permanent: true  }
+    ],
+    [ // window 3
+      { img: "stain_2.png", x: 24, y: 50, scale: 26, rot: 15,  hardness: 1, permanent: false },
+      { img: "stain_4.png", x: 56, y: 27, scale: 32, rot: -10, hardness: 3, permanent: false },
+      { img: "stain_1.png", x: 42, y: 68, scale: 22, rot: 25,  hardness: 1, permanent: false }
+    ],
+    [ // window 4
+      { img: "stain_5.png", x: 31, y: 33, scale: 34, rot: -8,  hardness: 2, permanent: true  },
+      { img: "stain_3.png", x: 60, y: 60, scale: 28, rot: 20,  hardness: 2, permanent: false }
+    ],
+    [ // window 5
+      { img: "stain_4.png", x: 27, y: 44, scale: 30, rot: 12,  hardness: 3, permanent: false },
+      { img: "stain_1.png", x: 56, y: 24, scale: 24, rot: -18, hardness: 1, permanent: false },
+      { img: "stain_2.png", x: 46, y: 66, scale: 22, rot: 10,  hardness: 1, permanent: true  }
+    ],
+    [ // window 6
+      { img: "stain_3.png", x: 29, y: 31, scale: 32, rot: -14, hardness: 2, permanent: true  },
+      { img: "stain_4.png", x: 58, y: 50, scale: 32, rot: 16,  hardness: 3, permanent: true  }
+    ]
+  ];
+
+  /* =====================================================
+     DOM
+  ===================================================== */
+
+  const els = {
+    stage: document.getElementById("me-stage"),
+    timer: document.getElementById("me-timer"),
+    windowIndicator: document.getElementById("me-window-indicator"),
+    progressFill: document.getElementById("me-progress-fill"),
+    windowViewport: document.getElementById("me-window-viewport"),
+    windowWrap: document.getElementById("me-window-wrap"),
+    windowImg: document.getElementById("me-window-img"),
+    canvas: document.getElementById("me-stain-canvas"),
+    sponge: document.getElementById("me-sponge"),
+    anxiImg: document.getElementById("me-anxi-img"),
+    anxiBubble: document.getElementById("me-anxi-bubble"),
+    spongeToolBtn: document.getElementById("me-tool-sponge-btn"),
+    lupaToolBtn: document.getElementById("me-tool-lupa-btn"),
+    resetBtn: document.getElementById("me-reset-btn"),
+    nextBtn: document.getElementById("me-next-btn"),
+    exitBtn: document.getElementById("me-exit-btn"),
+
+    welcomeOverlay: document.getElementById("me-welcome-overlay"),
+    welcomeScreen1: document.querySelector('[data-welcome-screen="1"]'),
+    welcomeScreen2: document.querySelector('[data-welcome-screen="2"]'),
+    welcomeNextBtn: document.getElementById("me-welcome-next-btn"),
+    startBtn: document.getElementById("me-start-btn"),
+
+    questionOverlay: document.getElementById("me-question-overlay"),
+    questionText: document.getElementById("me-question-text"),
+    questionA: document.getElementById("me-question-a"),
+    questionB: document.getElementById("me-question-b"),
+
+    exitConfirmOverlay: document.getElementById("me-exit-confirm-overlay"),
+    keepPlayingBtn: document.getElementById("me-keep-playing-btn"),
+    confirmExitBtn: document.getElementById("me-confirm-exit-btn"),
+
+    winOverlay: document.getElementById("me-win-overlay"),
+    winContinueBtn: document.getElementById("me-win-continue-btn"),
+
+    loseOverlay: document.getElementById("me-lose-overlay"),
+    retryBtn: document.getElementById("me-retry-btn"),
+    loseExitBtn: document.getElementById("me-lose-exit-btn")
+  };
+
+  const ctx = els.canvas.getContext("2d");
+
+  /* =====================================================
+     IMAGE PRELOAD
+  ===================================================== */
+
+  const IMAGE_FILES = [
+    "window_1.png", "window_2.png", "window_3.png",
+    "window_4.png", "window_5.png", "window_6.png",
+    "stain_1.png", "stain_2.png", "stain_3.png", "stain_4.png", "stain_5.png",
+    "Anxi_alert.png", "Anxi_pregunt.png",
+    "Sponge_1.png", "Sponge_tallar.png",
+    "lupa.png"
+  ];
+
+  const IMAGES = {};
+  let imagesReady = false;
+
+  function preloadImages(callback) {
+    let remaining = IMAGE_FILES.length;
+    let done = false;
+    function finish() {
+      if (done) { return; }
+      done = true;
+      callback();
+    }
+    IMAGE_FILES.forEach(function (file) {
+      const img = new Image();
+      img.onload = function () {
+        remaining -= 1;
+        if (remaining <= 0) { finish(); }
+      };
+      img.onerror = function () {
+        remaining -= 1;
+        if (remaining <= 0) { finish(); }
+      };
+      img.src = "assets/" + file;
+      IMAGES[file] = img;
+    });
+    // Safety net: never block the welcome button forever on a slow asset.
+    setTimeout(finish, 4000);
+  }
+
+  /* =====================================================
+     STATE
+  ===================================================== */
+
+  const state = {
+    windowIndex: 0,          // 0-based, 0..5
+    stains: [],               // runtime stain instances for current window
+    timeLeft: TOTAL_TIME_SECONDS,
+    timerId: null,
+    running: false,           // timer actively counting
+    ended: false,              // win or lose reached
+    zoomed: false,
+    tool: "sponge",            // "sponge" | "lupa"
+    dragging: false,
+    lastPointer: null,
+    stampCarry: 0,
+    returnedFromQuestion: false
+  };
+
+  /* =====================================================
+     TIMER
+  ===================================================== */
+
+  function formatTime(totalSeconds) {
+    const s = Math.max(0, Math.ceil(totalSeconds));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return (m < 10 ? "0" + m : m) + ":" + (r < 10 ? "0" + r : r);
+  }
+
+  function updateTimerDisplay() {
+    els.timer.textContent = formatTime(state.timeLeft);
+    if (state.timeLeft <= LOW_TIME_THRESHOLD) {
+      els.timer.classList.add("me-low-time");
+    } else {
+      els.timer.classList.remove("me-low-time");
+    }
+  }
+
+  function startTimer() {
+    if (state.timerId !== null) { return; }
+    state.running = true;
+    let last = performance.now();
+    state.timerId = setInterval(function () {
+      const now = performance.now();
+      const dt = (now - last) / 1000;
+      last = now;
+      if (!state.running || state.ended) { return; }
+      state.timeLeft -= dt;
+      if (state.timeLeft <= 0) {
+        state.timeLeft = 0;
+        updateTimerDisplay();
+        loseGame();
+        return;
+      }
+      updateTimerDisplay();
+    }, 100);
+  }
+
+  function stopTimer() {
+    if (state.timerId !== null) {
+      clearInterval(state.timerId);
+      state.timerId = null;
+    }
+    state.running = false;
+  }
+
+  /* =====================================================
+     CANVAS SIZING
+  ===================================================== */
+
+  function sizeCanvas() {
+    const rect = els.canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    els.canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    els.canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    renderStains();
+  }
+
+  /* =====================================================
+     STAIN SYSTEM
+  ===================================================== */
+
+  function makeStainCanvas(imgFile, alpha) {
+    const img = IMAGES[imgFile];
+    const naturalW = img.naturalWidth || 500;
+    const naturalH = img.naturalHeight || 500;
+    const maxDim = 420;
+    const ratio = Math.min(1, maxDim / Math.max(naturalW, naturalH));
+    const cw = Math.max(1, Math.round(naturalW * ratio));
+    const ch = Math.max(1, Math.round(naturalH * ratio));
+    const c = document.createElement("canvas");
+    c.width = cw;
+    c.height = ch;
+    const cctx = c.getContext("2d");
+    cctx.globalAlpha = alpha;
+    cctx.drawImage(img, 0, 0, cw, ch);
+    return c;
+  }
+
+  // Coarse (48-wide) copies of each stain's alpha, only used when the page is
+  // opened from file:// and the browser blocks reading canvas pixels: the
+  // sponge dabs are then replayed on this small map so progress is measured
+  // from where the ink really is, instead of guessed from areas.
+  const INK_MAPS = {"stain_1.png": {"w": 48, "h": 43, "d": "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"}, "stain_2.png": {"w": 48, "h": 43, "d": "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"}, "stain_3.png": {"w": 48, "h": 43, "d": "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"}, "stain_4.png": {"w": 48, "h": 55, "d": "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"}, "stain_5.png": {"w": 48, "h": 53, "d": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGT8EXXgsACoRAAAASAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQBhxm0tLKJCVSGgAAXQAAFJIdAAAAAAAAAAAAAABFAAAAAAAAAAAAAAAAAAATCAAAABhz0tLRq0XRQQBQogcAXcoVAAAAAAAAAAASJS8DAAAAAAAAAAAAAAAAABfLpgASA4ofqsrR0XKlSUvIzyE4Mj0ltsElAAAAACa/WwAAAAAAAAAAAAAAAAAAAAiJYwADAA1bYw5nz9HR0dHR0YqoSxxq0tFCAAAAIX8nAAAAAAAAAAAAAAAAAAAAAAAAScFVCUNPlpCCydHS0dHS0dDRymdIrzUAAAAxNwMAJwAAAAAAAAAAAAAAAAAAAAAAH4uKgLjR0dLS0tLS0tHR0dHR0MayZQkAB0khEAYAAAAAAAAAAAAAAAAAIC4AAAAnARgJotLS0tLS0tLS0tLS0tHR0tC/ZxoNexNEAAAAAAAAAAAAAAAAAAAAEChfcgcAAhg10dLS0tLS0tLS0tLR0dHR0tDMUUdoOhNrAAAAAAAADYpwAAAAAAAAAAA5oqARCw1GvNLS0tLR0tLS0dHS0dLS0apim1wRAAERAAAAAAVOrtKzAAAAAAAAAAAAACFsLQIWcNHS0tLS0tLS0dHS0tHS0snR0Ud0VAAAAAIlZottX1EeAAAAAAAAAAAAAABqKJhNQ9HS0tLS0tLS0tLS0tLS0tLR0dHRlRIYS0cpAQAAAAAAAAAAAAAAAAAAAAFzADK70dLS0tLS0tLS0tLS0tLS0tLR0tLR0JtJDFMAAAAAAAAAAAAAAAAAAAAAAAAANh5U0NLS0tLS0tLS0tLS0tLS0tLS0tHR0Z4BAAAAAAAAAAAAAAAAAAAAAAAAAAAQAzF60dLR0tHR0tLS0dHS0tLS0tLS0tLS0scQBwAAAAAAAAAAAAAAAAAAAAAAAAAskNHS0dLS0tHS0tLS0tLS0tLS0tLS0tLRtBgGLAQEAAAAAAAAAAAAAAAAAAAAAACP0tGcxtLS0tLS0tHS0tLS0tLS0tLR0dHRzEIBAAAAAAIBAAAAAAAAAAAAAAAAAACa0cEiOLCzZsHR0dLS0tLS0tLS0tLS0dF6ESNRubMHAF5VAAAAAAAAAAAAAAAAAAAWZCEPbK0IQi9Fy9LR0tLS0tLS0tHSlXBVEgAAEDIAAAAdAAAAAAAAAAAAAAAAAAAAAAlaZSoBGl/C0tLS0tLR0tK8w9DPXiQCRxsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABueAi0bBs/S0tHD0bjR0tJaD39mIwwAADMwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHIMAKzS0pRiIAKG0cwXAEtDARIAAACOEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACGahwx4GQMrzzoAAAAJAAAAAAAAEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACqWgAATgAAAAAAGAoAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACJdwAAAAAAAAAAAAAAAAAACQwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFBQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}};
+
+  const SAMPLE_SIZE = 36;
+
+  // When the page is opened straight from disk (file://) instead of through
+  // a server, Chrome/Firefox treat every local image as tainting the canvas
+  // for security reasons, so ctx.getImageData() throws a SecurityError.
+  // We detect that once and fall back to an analytic (non-pixel-reading)
+  // progress estimate so the game still works correctly either way — the
+  // actual erasing (drawImage with destination-out) is unaffected by this,
+  // only *measuring* how much got erased needs the fallback.
+  let PIXEL_READ_OK = true;
+
+  function sampleAlphaSum(canvas, sampleCanvas) {
+    try {
+      const sctx = sampleCanvas.getContext("2d");
+      sctx.clearRect(0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+      sctx.drawImage(canvas, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+      const data = sctx.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE).data;
+      let sum = 0;
+      for (let i = 3; i < data.length; i += 4) { sum += data[i]; }
+      return sum;
+    } catch (err) {
+      PIXEL_READ_OK = false;
+      return null;
+    }
+  }
+
+  function makeInkSim(file) {
+    const m = INK_MAPS[file];
+    const bin = atob(m.d);
+    const mass = new Float32Array(bin.length);
+    let total = 0;
+    for (let i = 0; i < bin.length; i++) { mass[i] = bin.charCodeAt(i) / 255; total += mass[i]; }
+    return { w: m.w, h: m.h, mass: mass, total: Math.max(total, 1e-6) };
+  }
+
+  // Replays one sponge dab (local stain-canvas coordinates) on the coarse map.
+  function simDab(s, lx, ly, radius, alpha) {
+    const sim = s.sim;
+    const cw = s.topCanvas.width / sim.w;
+    const ch = s.topCanvas.height / sim.h;
+    let left = 0;
+    for (let j = 0; j < sim.h; j++) {
+      const dy = (j + 0.5) * ch - ly;
+      for (let i = 0; i < sim.w; i++) {
+        const idx = j * sim.w + i;
+        const dx = (i + 0.5) * cw - lx;
+        const d = Math.sqrt(dx * dx + dy * dy) / radius;
+        if (d < 1) {
+          const fall = d <= 0.75 ? 1 : (1 - d) / 0.25;
+          sim.mass[idx] *= 1 - alpha * fall;
+        }
+        left += sim.mass[idx];
+      }
+    }
+    s.sweptFraction = Math.max(0, Math.min(1, 1 - left / sim.total));
+  }
+
+  function buildStainInstance(def) {
+    const topCanvas = makeStainCanvas(def.img, 1);
+    const floorCanvas = def.permanent ? makeStainCanvas(def.img, PERMANENT_MIN_OPACITY) : null;
+    const sampleCanvas = document.createElement("canvas");
+    sampleCanvas.width = SAMPLE_SIZE;
+    sampleCanvas.height = SAMPLE_SIZE;
+    const sampledAlpha = PIXEL_READ_OK ? sampleAlphaSum(topCanvas, sampleCanvas) : null;
+    const initialAlpha = sampledAlpha === null ? null : Math.max(1, sampledAlpha);
+    return {
+      def: def,
+      topCanvas: topCanvas,
+      floorCanvas: floorCanvas,
+      sampleCanvas: sampleCanvas,
+      initialAlpha: initialAlpha,
+      erased: 0,          // 0..1 — from real pixel alpha when available
+      sweptFraction: 0,   // 0..1 — analytic fallback, used when pixel reads are blocked
+      lastSampleTime: 0,
+      cleaned: false,
+      sim: makeInkSim(def.img)
+    };
+  }
+
+  function refreshErasedFraction(s, force) {
+    if (!PIXEL_READ_OK || s.initialAlpha === null) {
+      s.erased = Math.max(0, Math.min(1, s.sweptFraction));
+      clampToCap(s);
+      return;
+    }
+    const now = performance.now();
+    if (!force && now - s.lastSampleTime < 70) { return; }
+    s.lastSampleTime = now;
+    const currentAlpha = sampleAlphaSum(s.topCanvas, s.sampleCanvas);
+    if (currentAlpha === null) {
+      // Reading just broke mid-game (shouldn't normally happen once detected
+      // at build time, but stay safe): keep using the swept-area estimate.
+      s.erased = Math.max(0, Math.min(1, s.sweptFraction));
+      clampToCap(s);
+      return;
+    }
+    const fraction = 1 - currentAlpha / s.initialAlpha;
+    s.erased = Math.max(0, Math.min(1, fraction));
+    clampToCap(s);
+  }
+
+  // A permanent stain's "erased" bookkeeping must never read past its cap,
+  // even momentarily from a single strong dab — the floorCanvas already
+  // guarantees the visual minimum, but pinning the number too keeps the
+  // "once floored, no further passes change it" behavior exact rather than
+  // approximate.
+  function clampToCap(s) {
+    if (!s.cleaned && s.erased >= CLEAN_DONE) {
+      // Practically invisible leftover (<4% of the stain's ink): clear it so
+      // normal stains end at exactly 0% and persistent ones at their floor.
+      const tc = s.topCanvas.getContext("2d");
+      tc.clearRect(0, 0, s.topCanvas.width, s.topCanvas.height);
+      s.cleaned = true;
+      s.erased = 1;
+    }
+  }
+
+  function loadWindow(index) {
+
+    state.windowIndex = index;
+    setTool("sponge");
+
+    els.windowImg.src = "assets/window_" + (index + 1) + ".png";
+
+    state.stains = WINDOW_STAINS[index].map(buildStainInstance);
+
+    els.windowIndicator.textContent = "Ventana " + (index + 1) + " de " + WINDOW_COUNT;
+
+    updateProgress();
+    sizeCanvas();
+    hideSponge();
+
+    if (QUESTIONS[index + 1]) {
+      // first visit to a question-window shows its regular Anxi line too,
+      // the question itself only appears once the player reaches the next button
+    }
+
+    if (index > 0 && ANXI_LINES[index]) {
+      showAnxiBubble(ANXI_LINES[index]);
+    }
+  }
+
+  function stainCenterPx(def, canvasCssW, canvasCssH) {
+    return {
+      cx: (def.x / 100) * canvasCssW,
+      cy: (def.y / 100) * canvasCssH
+    };
+  }
+
+  function renderStains() {
+    const rect = els.canvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    ctx.clearRect(0, 0, w, h);
+
+    state.stains.forEach(function (s) {
+      const displayW = (s.def.scale / 100) * w;
+      const aspect = s.topCanvas.height / s.topCanvas.width;
+      const displayH = displayW * aspect;
+      const center = stainCenterPx(s.def, w, h);
+
+      ctx.save();
+      ctx.translate(center.cx, center.cy);
+      ctx.rotate((s.def.rot * Math.PI) / 180);
+
+      if (s.floorCanvas) {
+        ctx.drawImage(s.floorCanvas, -displayW / 2, -displayH / 2, displayW, displayH);
+      }
+      ctx.drawImage(s.topCanvas, -displayW / 2, -displayH / 2, displayW, displayH);
+
+      ctx.restore();
+    });
+  }
+
+  function eraseAt(clientX, clientY) {
+    const rect = els.canvas.getBoundingClientRect();
+    const px = clientX - rect.left;
+    const py = clientY - rect.top;
+    const w = rect.width;
+    const h = rect.height;
+
+    if (px < -40 || py < -40 || px > w + 40 || py > h + 40) { return; }
+
+    const brushRadiusMain = Math.max(18, w * 0.085);
+
+    state.stains.forEach(function (s) {
+      if (s.cleaned) { return; }
+
+      const displayW = (s.def.scale / 100) * w;
+      const aspect = s.topCanvas.height / s.topCanvas.width;
+      const displayH = displayW * aspect;
+      const center = stainCenterPx(s.def, w, h);
+
+      const dx = px - center.cx;
+      const dy = py - center.cy;
+      const rad = (-s.def.rot * Math.PI) / 180;
+      const ux = dx * Math.cos(rad) - dy * Math.sin(rad);
+      const uy = dx * Math.sin(rad) + dy * Math.cos(rad);
+
+      const scaleFactor = displayW / s.topCanvas.width;
+      const lx = ux / scaleFactor + s.topCanvas.width / 2;
+      const ly = uy / scaleFactor + s.topCanvas.height / 2;
+      const brushRadiusLocal = brushRadiusMain / scaleFactor;
+
+      // Skip stains far from the touch point for performance. The margin is
+      // generous (beyond half the stain's own box) so the brush still
+      // registers over the stain's outer edges and soft/transparent fringes,
+      // not just its solid center.
+      const reach = brushRadiusLocal + Math.max(s.topCanvas.width, s.topCanvas.height) * 0.62;
+      if (Math.abs(ux / scaleFactor) > reach || Math.abs(uy / scaleFactor) > reach) { return; }
+
+      // Harder stains resist with a softer, less opaque dab so they still
+      // need more passes than easy ones, but every stain now erases quickly
+      // enough that progress is clearly visible after just a few passes
+      // rather than needing dozens before any change shows.
+      const peakAlpha = PEAK_ALPHA_BY_HARDNESS[s.def.hardness] || 0.095;
+
+      const tctx = s.topCanvas.getContext("2d");
+      tctx.save();
+      tctx.globalCompositeOperation = "destination-out";
+      const grad = tctx.createRadialGradient(lx, ly, 0, lx, ly, brushRadiusLocal);
+      grad.addColorStop(0, "rgba(0,0,0," + peakAlpha + ")");
+      grad.addColorStop(0.75, "rgba(0,0,0," + peakAlpha + ")");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      tctx.fillStyle = grad;
+      tctx.beginPath();
+      tctx.arc(lx, ly, brushRadiusLocal, 0, Math.PI * 2);
+      tctx.fill();
+      tctx.restore();
+
+      if (!PIXEL_READ_OK) {
+        simDab(s, lx, ly, brushRadiusLocal, peakAlpha);
+      }
+
+      refreshErasedFraction(s, false);
+    });
+
+    renderStains();
+    updateProgress();
+  }
+
+  // Distance between consecutive sponge dabs, proportional to the brush so
+  // the strength of a pass doesn't depend on window size or on how many
+  // pointer events the device happens to deliver.
+  function brushSpacing() {
+    const rect = els.canvas.getBoundingClientRect();
+    return Math.max(5, Math.max(18, rect.width * 0.085) * 0.45);
+  }
+
+  function eraseAlongPath(x1, y1, x2, y2) {
+    const dist = Math.hypot(x2 - x1, y2 - y1);
+    if (dist === 0) { return; }
+    const spacing = brushSpacing();
+    let d = state.stampCarry;
+    while (d <= dist) {
+      const t = d / dist;
+      eraseAt(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t);
+      d += spacing;
+    }
+    state.stampCarry = d - dist;
+  }
+
+  function windowCleanliness() {
+    if (state.stains.length === 0) { return 1; }
+    const total = state.stains.reduce(function (sum, s) { return sum + s.erased; }, 0);
+    return total / state.stains.length;
+  }
+
+  function updateProgress() {
+    const pct = Math.round(windowCleanliness() * 100);
+    els.progressFill.style.width = pct + "%";
+    els.nextBtn.disabled = !state.stains.every(function (st) { return st.cleaned; });
+  }
+
+  /* =====================================================
+     SPONGE CURSOR
+  ===================================================== */
+
+  function showSponge() { els.sponge.classList.add("me-visible"); }
+  function hideSponge() { els.sponge.classList.remove("me-visible"); }
+
+  function moveSponge(clientX, clientY) {
+    const rect = els.windowWrap.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    els.sponge.style.left = x + "px";
+    els.sponge.style.top = y + "px";
+  }
+
+  /* =====================================================
+     LUPA (magnifier) PANNING
+  ===================================================== */
+
+  // Moves the zoomed-in view to follow the pointer/finger. Because the
+  // scale transform is anchored at a point expressed as a percentage of
+  // the viewport's own box, and the viewport clips anything outside it,
+  // the magnified content can never show empty space beyond the window's
+  // edges no matter where the origin is set — so no manual pan-limits are
+  // needed, just clamping the percentage itself to [0, 100].
+  function updateLupaOrigin(clientX, clientY) {
+    const rect = els.windowViewport.getBoundingClientRect();
+    if (!rect.width || !rect.height) { return; }
+    let px = ((clientX - rect.left) / rect.width) * 100;
+    let py = ((clientY - rect.top) / rect.height) * 100;
+    px = Math.max(0, Math.min(100, px));
+    py = Math.max(0, Math.min(100, py));
+    els.windowWrap.style.transformOrigin = px + "% " + py + "%";
+  }
+
+  /* =====================================================
+     ANXI BUBBLE
+  ===================================================== */
+
+  let anxiTimeout = null;
+
+  function showAnxiBubble(text) {
+    if (anxiTimeout) { clearTimeout(anxiTimeout); }
+    els.anxiImg.src = "assets/Anxi_alert.png";
+    els.anxiBubble.textContent = text;
+    els.anxiBubble.classList.add("me-visible");
+    anxiTimeout = setTimeout(function () {
+      els.anxiBubble.classList.remove("me-visible");
+    }, 3600);
+  }
+
+  /* =====================================================
+     POINTER / TOUCH HANDLING
+  ===================================================== */
+
+  function onPointerDown(e) {
+    if (state.ended || state.tool !== "sponge") { return; }
+    state.dragging = true;
+    state.lastPointer = { x: e.clientX, y: e.clientY };
+    els.sponge.src = "assets/Sponge_tallar.png";
+    showSponge();
+    moveSponge(e.clientX, e.clientY);
+    eraseAt(e.clientX, e.clientY);
+    state.stampCarry = brushSpacing();
+    try { els.canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  }
+
+  function onPointerMove(e) {
+    if (state.tool === "sponge") { moveSponge(e.clientX, e.clientY); }
+    if (state.tool === "lupa") { updateLupaOrigin(e.clientX, e.clientY); }
+    if (!state.dragging || state.ended || state.tool !== "sponge") { return; }
+    const last = state.lastPointer;
+    if (last) {
+      eraseAlongPath(last.x, last.y, e.clientX, e.clientY);
+    }
+    state.lastPointer = { x: e.clientX, y: e.clientY };
+  }
+
+  function onPointerUp(e) {
+    if (!state.dragging) { return; }
+    state.dragging = false;
+    state.lastPointer = null;
+    els.sponge.src = "assets/Sponge_1.png";
+    hideSponge();
+    state.stains.forEach(function (s) { refreshErasedFraction(s, true); });
+    renderStains();
+    updateProgress();
+  }
+
+  els.canvas.addEventListener("pointerdown", onPointerDown);
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("pointercancel", onPointerUp);
+  els.canvas.addEventListener("pointerleave", function (e) {
+    if (!state.dragging) { hideSponge(); }
+  });
+
+  /* =====================================================
+     TOOLS (esponja / lupa)
+  ===================================================== */
+
+  function setTool(tool) {
+    state.tool = tool;
+    state.zoomed = (tool === "lupa");
+
+    els.windowWrap.classList.toggle("me-zoomed", state.zoomed);
+
+    els.spongeToolBtn.classList.toggle("me-tool-active", tool === "sponge");
+    els.spongeToolBtn.setAttribute("aria-pressed", tool === "sponge" ? "true" : "false");
+    els.lupaToolBtn.classList.toggle("me-tool-active", tool === "lupa");
+    els.lupaToolBtn.setAttribute("aria-pressed", tool === "lupa" ? "true" : "false");
+
+    if (tool !== "sponge") {
+      state.dragging = false;
+      state.lastPointer = null;
+      hideSponge();
+    }
+
+    if (tool !== "lupa") {
+      // Restore the normal, un-panned view (progress itself lives in
+      // state.stains and is untouched by any of this).
+      els.windowWrap.style.transformOrigin = "50% 50%";
+    }
+  }
+
+  els.spongeToolBtn.addEventListener("click", function () {
+    setTool("sponge");
+  });
+
+  els.lupaToolBtn.addEventListener("click", function () {
+    setTool("lupa");
+  });
+
+  /* =====================================================
+     RESET CURRENT WINDOW
+  ===================================================== */
+
+  els.resetBtn.addEventListener("click", function () {
+    if (state.ended) { return; }
+    loadWindow(state.windowIndex);
+  });
+
+  /* =====================================================
+     NEXT WINDOW / QUESTIONS
+  ===================================================== */
+
+  function goToNextWindow() {
+    const nextIndex = state.windowIndex + 1;
+    if (nextIndex >= WINDOW_COUNT) {
+      winGame();
+      return;
+    }
+    loadWindow(nextIndex);
+  }
+
+  function openQuestion(windowNumber) {
+    const q = QUESTIONS[windowNumber];
+    els.questionText.textContent = q.text;
+    els.questionA.textContent = q.optionA;
+    els.questionB.textContent = q.optionB;
+
+    els.questionA.onclick = function () {
+      closeOverlay(els.questionOverlay);
+      // Option A: stay / review current window a bit more.
+      if (windowNumber === WINDOW_COUNT) {
+        // last window — just close and let them keep cleaning / click again
+        return;
+      }
+      // stays on the same window; nothing else to do
+    };
+
+    els.questionB.onclick = function () {
+      closeOverlay(els.questionOverlay);
+      if (windowNumber === WINDOW_COUNT) {
+        winGame();
+      } else {
+        loadWindow(state.windowIndex + 1);
+      }
+    };
+
+    openOverlay(els.questionOverlay);
+  }
+
+  els.nextBtn.addEventListener("click", function () {
+    if (els.nextBtn.disabled || state.ended) { return; }
+    const windowNumber = state.windowIndex + 1;
+    if (QUESTIONS[windowNumber]) {
+      openQuestion(windowNumber);
+    } else {
+      goToNextWindow();
+    }
+  });
+
+  /* =====================================================
+     OVERLAY HELPERS
+  ===================================================== */
+
+  function openOverlay(el) { el.classList.add("me-visible"); }
+  function closeOverlay(el) { el.classList.remove("me-visible"); }
+
+  /* =====================================================
+     WIN / LOSE
+  ===================================================== */
+
+  function winGame() {
+    state.ended = true;
+    stopTimer();
+    hideSponge();
+    openOverlay(els.winOverlay);
+  }
+
+  function loseGame() {
+    if (state.ended) { return; }
+    state.ended = true;
+    stopTimer();
+    hideSponge();
+    closeOverlay(els.questionOverlay);
+    closeOverlay(els.exitConfirmOverlay);
+    openOverlay(els.loseOverlay);
+  }
+
+  /* =====================================================
+     EXIT FLOW
+  ===================================================== */
+
+  els.exitBtn.addEventListener("click", function () {
+    if (state.ended) { return; }
+    openOverlay(els.exitConfirmOverlay);
+  });
+
+  els.keepPlayingBtn.addEventListener("click", function () {
+    closeOverlay(els.exitConfirmOverlay);
+  });
+
+  els.confirmExitBtn.addEventListener("click", function () {
+    window.location.href = "../levels.html";
+  });
+
+  els.loseExitBtn.addEventListener("click", function () {
+    window.location.href = "../levels.html";
+  });
+
+  els.winContinueBtn.addEventListener("click", function () {
+    window.location.href = "../levels.html";
+  });
+
+  /* =====================================================
+     RETRY
+  ===================================================== */
+
+  function resetGame() {
+    stopTimer();
+    state.timeLeft = TOTAL_TIME_SECONDS;
+    state.ended = false;
+    state.running = false;
+    closeOverlay(els.loseOverlay);
+    closeOverlay(els.winOverlay);
+    closeOverlay(els.questionOverlay);
+    closeOverlay(els.exitConfirmOverlay);
+    updateTimerDisplay();
+    loadWindow(0);
+    startTimer();
+  }
+
+  els.retryBtn.addEventListener("click", resetGame);
+
+  /* =====================================================
+     START
+  ===================================================== */
+
+  els.welcomeNextBtn.addEventListener("click", function () {
+    els.welcomeScreen1.classList.remove("me-welcome-screen-active");
+    els.welcomeScreen2.classList.add("me-welcome-screen-active");
+  });
+
+  function beginGame() {
+    closeOverlay(els.welcomeOverlay);
+    loadWindow(0);
+    showAnxiBubble(ANXI_LINES[0]);
+    startTimer();
+  }
+
+  els.startBtn.addEventListener("click", function () {
+    if (els.startBtn.disabled) { return; }
+    if (imagesReady) {
+      beginGame();
+      return;
+    }
+    // Assets are still finishing their (near-instant, local) preload: give
+    // real visual feedback and start automatically the moment they're ready,
+    // instead of letting the click silently do nothing.
+    const originalLabel = els.startBtn.textContent;
+    els.startBtn.disabled = true;
+    els.startBtn.textContent = "Cargando...";
+    const waitForImages = setInterval(function () {
+      if (!imagesReady) { return; }
+      clearInterval(waitForImages);
+      els.startBtn.disabled = false;
+      els.startBtn.textContent = originalLabel;
+      beginGame();
+    }, 100);
+  });
+
+  /* =====================================================
+     RESIZE
+  ===================================================== */
+
+  let resizeRaf = null;
+  function onResize() {
+    if (resizeRaf) { cancelAnimationFrame(resizeRaf); }
+    resizeRaf = requestAnimationFrame(sizeCanvas);
+  }
+  window.addEventListener("resize", onResize);
+  window.addEventListener("orientationchange", onResize);
+
+  /* =====================================================
+     INIT
+  ===================================================== */
+
+  function init() {
+    updateTimerDisplay();
+    openOverlay(els.welcomeOverlay);
+    // Start loading assets immediately, in the background, while the player
+    // reads the two instruction screens — by the time they reach "¡A
+    // limpiar!" the images are virtually always already in place. The
+    // start button itself is never gated/disabled up front, so a click
+    // always does something.
+    preloadImages(function () {
+      imagesReady = true;
+    });
+  }
+
+  init();
+
+})();
+</script>
+
+</body>
+</html>
