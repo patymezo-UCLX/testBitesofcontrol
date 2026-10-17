@@ -1,618 +1,11645 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 
 <head>
 
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  >
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, user-scalable=no"
+>
 
-  <title>Bakery - Bites of Control</title>
+<title>Bites of Control</title>
 
+<style>
 
-  <style>
+/* =========================================================
+   OPTIONAL CUSTOM FONT
 
-    /* =====================================================
-       GENERAL
-    ===================================================== */
+   When you choose your font, place the .woff2 file in:
+   Intro/fonts/
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+   Then uncomment this block and replace the file/name.
 
+@font-face {
+  font-family: "BOCFont";
+  src: url("Intro/fonts/your-font.woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
 
-    html, body {
-      min-height: 100%;
-    }
-
-
-    body {
-      position: relative;
-
-      min-height: 100dvh;
-      width: 100%;
-
-      overflow-x: hidden;
-      overflow-y: auto;
-
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      font-family: Arial, sans-serif;
-
-      background: #f7c7b5;
-
-      padding:
-        max(16px, env(safe-area-inset-top))
-        max(16px, env(safe-area-inset-right))
-        max(16px, env(safe-area-inset-bottom))
-        max(16px, env(safe-area-inset-left));
-    }
+========================================================= */
 
 
-    /* =====================================================
-       BACKGROUND ILLUSTRATION
-       (own layer so it can use background-size: cover
-       without ever stretching/deforming the artwork;
-       cover crops but always keeps original proportions)
-    ===================================================== */
+/* =========================================================
+   GENERAL
+========================================================= */
 
-    .bakery-bg {
-      position: fixed;
-      inset: 0;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-      background-image: url("assets/bakery-interior.jpg");
-      background-repeat: no-repeat;
-      background-position: center center;
-      background-size: cover;
+html,
+body {
+  width: 100%;
+  height: 100%;
 
-      z-index: 0;
-    }
+  overflow: hidden;
 
+  background: #000;
 
-    /* soft readability veil behind the card only, doesn't touch the art */
-    .bakery-bg::after {
-      content: "";
-      position: absolute;
-      inset: 0;
+  font-family: Arial, Helvetica, sans-serif;
 
-      background:
-        radial-gradient(
-          ellipse at center,
-          rgba(0, 0, 0, 0.18) 0%,
-          rgba(0, 0, 0, 0.32) 100%
-        );
-    }
+  touch-action: none;
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
 
 
-    /* =====================================================
-       EXIT BUTTON
-    ===================================================== */
+/* =========================================================
+   GAME CANVAS
+========================================================= */
 
-    .exit-button {
-      position: fixed;
+#game-canvas.dragging-map {
+  cursor: grabbing !important;
+}
 
-      top: max(24px, env(safe-area-inset-top));
-      right: max(24px, env(safe-area-inset-right));
+#game-canvas {
+  position: absolute;
 
-      width: clamp(44px, 6vw, 56px);
-      height: clamp(44px, 6vw, 56px);
+  touch-action: none;
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+  inset: 0;
 
-      border: 4px solid #f5c451;
-      border-radius: 50%;
-
-      background: #d63f93;
-      color: white;
-
-      font-size: clamp(22px, 3vw, 31px);
-      font-weight: bold;
-      line-height: 1;
-
-      cursor: pointer;
-
-      box-shadow: 0 4px 0 #4f1a40;
-
-      z-index: 9999;
-
-      transition:
-        transform 0.15s ease;
-    }
+  width: 100%;
+  height: 100%;
+}
 
 
-    .exit-button:hover {
-      transform: scale(1.06);
-    }
+/* =========================================================
+   LOADING + GAME INTRO
+========================================================= */
+
+#loading,
+#cover-screen,
+#intro-screen {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#loading {
+  z-index: 9999;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  background: #ffad27;
+  color: white;
+}
+
+.loading-logo {
+  width: clamp(180px, 22vw, 320px);
+  height: auto;
+  margin-bottom: 52px;
+  animation: loadingLogoFloat 1.8s ease-in-out infinite;
+}
+
+.loading-title {
+  margin-bottom: 44px;
+
+  color: #f13b91;
+
+  font-size: clamp(30px, 5vw, 58px);
+  font-weight: 1000;
+  letter-spacing: 1px;
+
+  text-shadow:
+    0 4px 0 #a82b68,
+    0 6px 0 rgba(255,255,255,0.18);
+
+  animation: loadingPulse 0.8s ease-in-out infinite alternate;
+}
+
+.loading-dots {
+  position: relative;
+  width: 90px;
+  height: 90px;
+
+  animation: rotateLoading 1.35s linear infinite;
+}
+
+.loading-dots span {
+  position: absolute;
+
+  width: 28px;
+  height: 28px;
+
+  border-radius: 50%;
+
+  box-shadow: 0 4px 5px rgba(89, 62, 22, 0.22);
+}
+
+.loading-dots span:nth-child(1) {
+  top: 0;
+  left: 31px;
+  background: #d63a90;
+}
+
+.loading-dots span:nth-child(2) {
+  top: 31px;
+  right: 0;
+  background: #8fa43d;
+}
+
+.loading-dots span:nth-child(3) {
+  bottom: 0;
+  left: 31px;
+  background: #d63a90;
+}
+
+.loading-dots span:nth-child(4) {
+  top: 31px;
+  left: 0;
+  background: #8fa43d;
+}
+
+@keyframes rotateLoading {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes loadingPulse {
+  from {
+    transform: scale(1);
+    opacity: 0.82;
+  }
+
+  to {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes loadingLogoFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
 
 
-    .exit-button:active {
-      transform: scale(0.94);
-      box-shadow: 0 2px 0 #4f1a40;
-    }
+/* =========================================================
+   COVER / START SCREEN
+========================================================= */
+
+#cover-screen {
+  z-index: 9400;
+
+  display: none;
+
+  overflow: hidden;
+
+  background-image: url("Intro/Cover_desktop_Bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.cover-logo {
+  position: absolute;
+
+  top: clamp(24px, 5vh, 62px);
+  left: clamp(24px, 6vw, 90px);
+
+  width: clamp(180px, 20vw, 320px);
+  height: auto;
+
+  filter: drop-shadow(0 8px 6px rgba(97, 46, 18, 0.18));
+}
+
+.cover-settings {
+  position: absolute;
+
+  top: 28px;
+  right: 32px;
+
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 4px solid #f6bd45;
+  border-radius: 50%;
+
+  background: #d83a8f;
+  color: white;
+
+  font-size: 26px;
+  font-weight: 900;
+
+  box-shadow: 0 4px 0 #98305e;
+}
+
+.cover-actions {
+  position: absolute;
+
+  left: 50%;
+  bottom: clamp(28px, 6vh, 74px);
+
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 18px;
+
+  width: min(620px, 90vw);
+}
+
+.game-pink-button {
+  min-width: 170px;
+
+  padding: 12px 28px;
+
+  border: 3px solid #f6bc45;
+  border-radius: 28px;
+
+  background: #d63a90;
+  color: white;
+
+  font-size: 18px;
+  font-weight: 900;
+
+  box-shadow: 0 5px 0 #8f2d60;
+
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.game-pink-button:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.game-pink-button:active {
+  transform: translateY(2px) scale(0.97);
+}
+
+.game-pink-button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+}
 
 
-    /* =====================================================
-       PANEL
-       One single card. Its content (title/paragraphs/
-       buttons) is swapped by JS between step 1 and step 2 —
-       there is never more than one step in the DOM at once.
-       A fixed-ish min-height keeps both steps a similar size
-       so the card doesn't jump when the content changes.
-    ===================================================== */
+/* =========================================================
+   MELI INTRO
+========================================================= */
 
-    .panel {
-      position: relative;
-      z-index: 1;
+#intro-screen {
+  z-index: 9300;
 
-      width: min(640px, 92vw);
+  display: none;
 
-      min-height: clamp(320px, 44vh, 420px);
-      max-height: calc(100dvh - 48px);
-      overflow-y: auto;
+  overflow: hidden;
 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+  background-image:
+    linear-gradient(rgba(51, 61, 13, 0.18), rgba(51, 61, 13, 0.18)),
+    url("map.png");
 
-      padding: clamp(28px, 4.5vw, 50px);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
 
-      margin: clamp(60px, 10vh, 90px) 0 24px;
+.intro-logo {
+  position: absolute;
 
-      background: #fffaf3;
+  top: 24px;
+  left: 28px;
 
-      border-radius: clamp(24px, 4vw, 40px);
-      box-shadow: 0 18px 40px rgba(79, 26, 64, 0.35);
+  width: clamp(120px, 14vw, 215px);
+  height: auto;
 
-      text-align: center;
-    }
+  z-index: 3;
+}
 
+.intro-dialogue-panel {
+  position: absolute;
 
-    /* =====================================================
-       STEP CONTENT + TRANSITION
-    ===================================================== */
+  left: 50%;
+  top: 49%;
 
-    .step-content {
-      width: 100%;
+  transform: translate(-50%, -50%);
 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+  width: min(760px, 78vw);
+  min-height: 390px;
 
-      opacity: 1;
-      transform: translateY(0);
+  padding:
+    54px
+    70px
+    120px;
 
-      transition:
-        opacity 0.22s ease,
-        transform 0.22s ease;
-    }
+  display: flex;
+  flex-direction: column;
 
+  align-items: center;
+  justify-content: center;
 
-    .step-content.step-transitioning {
+  text-align: center;
+
+  border-radius: 44px;
+
+  background: rgba(238, 133, 13, 0.84);
+
+  color: white;
+
+  box-shadow: 0 18px 40px rgba(87, 57, 8, 0.16);
+}
+
+.intro-step {
+  display: none;
+
+  width: 100%;
+}
+
+.intro-step.active {
+  display: block;
+}
+
+.intro-step h2 {
+  margin-bottom: 30px;
+
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 1000;
+  line-height: 0.98;
+}
+
+.intro-step p {
+  max-width: 650px;
+  margin: 0 auto 24px;
+
+  font-size: clamp(15px, 1.6vw, 19px);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.player-name-input {
+  display: block;
+
+  width: min(380px, 82%);
+  height: 52px;
+
+  margin: 8px auto 22px;
+  padding: 0 18px;
+
+  border: 4px solid #f6bd45;
+  border-radius: 20px;
+
+  outline: none;
+
+  background: rgba(255,255,255,0.96);
+
+  color: #71334a;
+
+  font-size: 18px;
+  font-weight: 800;
+
+  text-align: center;
+
+  box-shadow: 0 5px 0 rgba(135, 73, 31, 0.28);
+}
+
+.player-name-input:focus {
+  border-color: #d63a90;
+}
+
+.intro-meli {
+  position: absolute;
+
+  z-index: 4;
+
+  left: 50%;
+  bottom: clamp(34px, 5vh, 70px);
+
+  transform: translateX(-50%);
+
+  height: clamp(150px, 25vh, 250px);
+  width: auto;
+
+  pointer-events: none;
+
+  filter: drop-shadow(0 8px 5px rgba(73, 70, 17, 0.16));
+}
+
+.intro-skip {
+  position: absolute;
+
+  right: 32px;
+  bottom: 30px;
+
+  z-index: 5;
+}
+
+.intro-final-button {
+  margin-top: 55px;
+}
+
+.intro-nav-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+
+  margin-top: 8px;
+}
+
+.intro-nav-row .intro-final-button {
+  margin-top: 0;
+}
+
+.game-pink-button-secondary {
+  background: rgba(255, 255, 255, 0.16);
+  color: white;
+  border-color: rgba(246, 188, 69, 0.6);
+  box-shadow: 0 5px 0 rgba(143, 45, 96, 0.35);
+  min-width: 130px;
+}
+
+.intro-anxi-wrap {
+  position: absolute;
+  left: 44%;
+  bottom: clamp(50px, 7vh, 90px);
+  transform: translateX(clamp(78px, 11vw, 150px));
+
+  z-index: 4;
+  pointer-events: none;
+
+  display: none;
+}
+
+.intro-anxi-wrap.intro-anxi-visible {
+  display: block;
+}
+
+.intro-anxi {
+  display: block;
+
+  height: clamp(105px, 17.5vh, 190px);
+  width: auto;
+
+  filter: drop-shadow(0 8px 5px rgba(73, 70, 17, 0.16));
+
+  opacity: 0;
+  transform: translateX(140%) translateY(0) scale(1);
+}
+
+.intro-anxi.anxi-entrance-play {
+  animation: anxi-entrance 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes anxi-entrance {
+  0% {
+    opacity: 0;
+    transform: translateX(140%) translateY(0) scale(1);
+  }
+  12% {
+    opacity: 1;
+  }
+  38% {
+    transform: translateX(50%) translateY(-10px) scale(1);
+  }
+  62% {
+    transform: translateX(0%) translateY(6px) scale(0.94);
+  }
+  82% {
+    transform: translateX(0%) translateY(0) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0%) translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .intro-nav-row {
+    gap: 12px;
+  }
+
+ .game-pink-button-secondary,
+.intro-nav-row .game-pink-button {
+  min-width: 0;
+  flex: 1 1 0;
+  padding: 12px 14px;
+}
+
+.intro-anxi-wrap {
+  bottom: 44px;
+  transform: translateX(clamp(58px, 15vw, 95px));
+}
+
+.intro-anxi-wrap.intro-anxi-visible {
+  animation: anxiEntranceTablet 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.intro-anxi {
+  height: clamp(95px, 15.5vh, 145px);
+}
+
+@keyframes anxiEntranceTablet {
+  0% {
+    opacity: 0;
+    transform:
+      translateX(calc(clamp(58px, 15vw, 95px) + 90px))
+      translateY(20px)
+      scale(0.85);
+  }
+
+  65% {
+    opacity: 1;
+    transform:
+      translateX(calc(clamp(58px, 15vw, 95px) - 6px))
+      translateY(-4px)
+      scale(1.03);
+  }
+
+  82% {
+    transform:
+      translateX(calc(clamp(58px, 15vw, 95px) + 3px))
+      translateY(2px)
+      scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform:
+      translateX(clamp(58px, 15vw, 95px))
+      translateY(0)
+      scale(1);
+  }
+}
+
+}
+
+@media (max-width: 480px) {
+
+  .intro-nav-row {
+    gap: 10px;
+  }
+
+  .intro-nav-row .game-pink-button {
+    font-size: 15px;
+    padding: 11px 10px;
+  }
+
+  .intro-anxi-wrap {
+    transform: translateX(clamp(48px, 14vw, 75px));
+  }
+
+  .intro-anxi-wrap.intro-anxi-visible {
+    animation: anxiEntranceMobile 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .intro-anxi {
+    height: 98px;
+  }
+
+  @keyframes anxiEntranceMobile {
+    0% {
       opacity: 0;
-      transform: translateY(8px);
+      transform:
+        translateX(calc(clamp(48px, 14vw, 75px) + 70px))
+        translateY(18px)
+        scale(0.85);
     }
 
-
-    /* =====================================================
-       STEP INDICATOR ("1 de 2" / "2 de 2")
-    ===================================================== */
-
-    .step-indicator {
-      margin-bottom: clamp(10px, 1.8vw, 16px);
-
-      padding: 4px 16px;
-
-      border-radius: 999px;
-
-      background: rgba(214, 63, 147, 0.12);
-      color: #c23172;
-
-      font-size: clamp(12px, 1.4vw, 14px);
-      font-weight: bold;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
+    65% {
+      opacity: 1;
+      transform:
+        translateX(calc(clamp(48px, 14vw, 75px) - 5px))
+        translateY(-4px)
+        scale(1.03);
     }
 
-
-    /* =====================================================
-       TITLE
-    ===================================================== */
-
-    h1 {
-      margin-bottom: clamp(14px, 2.5vw, 22px);
-
-      color: #d63f93;
-
-      font-size:
-        clamp(
-          24px,
-          5vw,
-          40px
-        );
-
-      line-height: 1.15;
+    82% {
+      transform:
+        translateX(calc(clamp(48px, 14vw, 75px) + 2px))
+        translateY(1px)
+        scale(0.98);
     }
 
-
-    /* =====================================================
-       DESCRIPTION
-    ===================================================== */
-
-    p {
-      color: #71334a;
-
-      font-size:
-        clamp(
-          16px,
-          2vw,
-          18px
-        );
-
-      line-height: 1.5;
+    100% {
+      opacity: 1;
+      transform:
+        translateX(clamp(48px, 14vw, 75px))
+        translateY(0)
+        scale(1);
     }
+  }
 
-    p + p {
-      margin-top: clamp(10px, 1.6vw, 14px);
+}
+
+/* =========================================================
+   INTRO RESPONSIVE
+========================================================= */
+
+@media (orientation: portrait) {
+
+  #cover-screen {
+    background-image: url("Intro/Cover_mobile_Bg.jpg");
+    background-position: center top;
+  }
+
+  .cover-logo {
+    display: block;
+
+    top: 34px;
+    left: 50%;
+
+    width: min(62vw, 285px);
+
+    transform: translateX(-50%);
+
+    z-index: 3;
+  }
+
+  .cover-actions {
+    bottom: max(30px, 6vh);
+
+    flex-direction: column;
+
+    gap: 12px;
+  }
+
+  .game-pink-button {
+    min-width: min(250px, 72vw);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .cover-settings {
+    top: 16px;
+    right: 16px;
+
+    width: 46px;
+    height: 46px;
+
+    border-width: 3px;
+
+    font-size: 22px;
+  }
+
+  .intro-logo {
+    top: 15px;
+    left: 15px;
+
+    width: 125px;
+  }
+
+  .intro-dialogue-panel {
+    top: 46%;
+
+    width: 90vw;
+    min-height: 370px;
+
+    padding:
+      38px
+      24px
+      118px;
+
+    border-radius: 32px;
+  }
+
+  .intro-step h2 {
+    margin-bottom: 22px;
+  }
+
+  .intro-step p {
+    font-size: 14px;
+  }
+
+  .intro-meli {
+  bottom: 115px;
+  height: clamp(135px, 22vh, 205px);
+}
+
+  /* ANXI MOBILE — subir personaje */
+ .intro-anxi-wrap {
+  bottom: 128px;
+}
+
+  .intro-skip {
+    right: 16px;
+    bottom: 15px;
+
+    min-width: auto;
+
+    padding: 10px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .intro-dialogue-panel {
+    top: 45%;
+
+    min-height: 350px;
+  }
+
+  .intro-step h2 {
+    font-size: 28px;
+  }
+
+  .player-name-input {
+    width: 92%;
+  }
+
+  .intro-meli {
+    height: 140px;
+  }
+
+  /* ANXI EN CELULARES PEQUEÑOS */
+  .intro-anxi-wrap {
+    bottom: 95px;
+  }
+}
+
+
+/* =========================================================
+   LOCATION PROMPTS
+========================================================= */
+
+.location-prompt {
+  position: fixed;
+
+  left: 50%;
+  bottom: 70px;
+
+  transform: translateX(-50%);
+
+  display: none;
+
+  padding: 13px 24px;
+
+  background: rgba(123, 45, 84, 0.92);
+
+  border: 3px solid #f6ba44;
+  border-radius: 18px;
+
+  color: white;
+
+  font-size: 16px;
+  font-weight: 800;
+
+  box-shadow:
+    0 5px 0
+    rgba(87, 34, 55, 0.45);
+
+  z-index: 700;
+
+  pointer-events: none;
+
+  white-space: nowrap;
+}
+
+.location-prompt .key {
+  display: inline-block;
+
+  min-width: 30px;
+
+  margin: 0 5px;
+
+  padding: 3px 8px;
+
+  border-radius: 7px;
+
+  background: white;
+
+  color: #7b2d54;
+}
+
+/* =========================================================
+   COLLAPSIBLE BOTTOM MENU WRAPPER
+========================================================= */
+
+#menu-wrapper {
+  position: fixed;
+
+  left: 50%;
+  bottom: 8px;
+
+  transform: translateX(-50%);
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  z-index: 650;
+}
+
+
+/* =========================================================
+   MENU TOGGLE
+========================================================= */
+
+#menu-toggle {
+  position: relative;
+
+  z-index: 5;
+
+  width: 52px;
+  height: 38px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 3px solid #f7b83c;
+
+  border-radius: 18px 18px 22px 22px;
+
+  background: #d83a8f;
+
+  color: white;
+
+  font-size: 20px;
+  font-weight: 900;
+
+  box-shadow:
+    0 4px 0 #98305e;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease;
+}
+
+#menu-toggle:hover {
+  transform: scale(1.06);
+}
+
+#menu-toggle:active {
+  transform: scale(0.94);
+}
+
+
+/* =========================================================
+   BOTTOM MENU
+========================================================= */
+
+#bottom-menu {
+  position: absolute;
+
+  left: 50%;
+  bottom: 44px;
+
+  transform:
+    translateX(-50%);
+
+  width: min(570px, 88vw);
+
+  min-height: 88px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 28px;
+
+  padding:
+    11px 32px;
+
+  background-image:
+    url("Menu/bottom_bar.png");
+
+  background-size:
+    100% 100%;
+
+  background-repeat:
+    no-repeat;
+
+  background-position:
+    center;
+
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease,
+    visibility 0.22s ease;
+}
+
+
+/* MENU CLOSED */
+
+#bottom-menu.menu-closed {
+  opacity: 0;
+
+  visibility: hidden;
+
+  pointer-events: none;
+
+  transform:
+    translateX(-50%)
+    translateY(20px)
+    scale(0.93);
+}
+
+
+/* MENU OPEN */
+
+#bottom-menu.menu-open {
+  opacity: 1;
+
+  visibility: visible;
+
+  pointer-events: auto;
+
+  transform:
+    translateX(-50%)
+    translateY(0)
+    scale(1);
+}
+
+
+/* =========================================================
+   MENU ICONS
+========================================================= */
+
+.menu-icon-button {
+  flex: 0 0 auto;
+
+  width: 78px;
+  height: 70px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease;
+}
+
+.menu-icon-button img {
+  display: block;
+
+  max-width: 100%;
+  max-height: 100%;
+
+  object-fit: contain;
+
+  pointer-events: none;
+}
+
+.menu-icon-button:hover {
+  transform:
+    translateY(-4px)
+    scale(1.06);
+}
+
+.menu-icon-button:active {
+  transform:
+    translateY(1px)
+    scale(0.94);
+}
+
+
+/* =========================================================
+   MOBILE ENTER BUTTONS
+========================================================= */
+
+.mobile-enter-button {
+  position: fixed;
+
+  right: 20px;
+  bottom: 25px;
+
+  display: none;
+
+  min-height: 50px;
+
+  padding: 0 20px;
+
+  border: 3px solid #f7b83c;
+
+  border-radius: 25px;
+
+  background: #d33b91;
+
+  color: white;
+
+  font-weight: 800;
+  font-size: 15px;
+
+  z-index: 720;
+
+  box-shadow:
+    0 5px 0 #8e275f;
+}
+
+
+/* =========================================================
+   MOBILE D-PAD
+========================================================= */
+
+#dpad {
+  display: none;
+
+  position: fixed;
+
+  bottom: 20px;
+  left: 25px;
+
+  width: 150px;
+  height: 150px;
+
+  opacity: 0.65;
+
+  z-index: 640;
+}
+
+#dpad .btn {
+  position: absolute;
+
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background:
+    rgba(255,255,255,0.88);
+
+  color: #333;
+
+  border:
+    2px solid
+    rgba(0,0,0,0.12);
+
+  border-radius: 13px;
+
+  font-size: 20px;
+
+  pointer-events: auto;
+}
+
+#dpad .btn.pressed {
+  transform: scale(0.88);
+
+  background: white;
+}
+
+#btn-up {
+  top: 0;
+  left: 52px;
+}
+
+#btn-down {
+  bottom: 0;
+  left: 52px;
+}
+
+#btn-left {
+  top: 52px;
+  left: 0;
+}
+
+#btn-right {
+  top: 52px;
+  right: 0;
+}
+
+
+
+/* =========================================================
+   PARK
+========================================================= */
+
+#park-screen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+  z-index: 1000;
+
+  background-image: url("park/park_bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+
+/* =========================================================
+   PARK CONTROLS
+========================================================= */
+
+.park-top-controls {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  z-index: 120;
+}
+
+.round-btn {
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 4px solid #f5b444;
+  border-radius: 50%;
+
+  background: #d83a8f;
+  color: white;
+
+  font-size: 28px;
+  font-weight: 900;
+
+  box-shadow: 0 4px 0 #98305e;
+}
+
+
+/* =========================================================
+   PARK SCENE
+========================================================= */
+
+#park-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+.park-object {
+  position: absolute;
+
+  border: 0;
+  padding: 0;
+  background: transparent;
+
+  cursor: pointer;
+
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease;
+}
+
+.park-object img {
+  display: block;
+  width: 100%;
+  height: auto;
+
+  pointer-events: none;
+
+  filter:
+    drop-shadow(0 7px 4px rgba(73, 70, 17, 0.18));
+}
+
+.park-object:hover {
+  transform:
+    translate(-50%, -50%)
+    scale(1.08);
+}
+
+.park-object:active {
+  transform:
+    translate(-50%, -50%)
+    scale(0.96);
+}
+
+/*
+  POSITIONS
+  Change only these values later if you want
+  to move an object around the Park.
+*/
+
+#park-recorder {
+  left: 31%;
+  top: 57%;
+  width: clamp(88px, 10vw, 155px);
+}
+
+#park-headphones {
+  left: 44%;
+  top: 66%;
+  width: clamp(100px, 11vw, 175px);
+}
+
+#park-binoculars {
+  left: 58%;
+  top: 66%;
+  width: clamp(105px, 12vw, 185px);
+}
+
+#park-fidget {
+  left: 70%;
+  top: 56%;
+  width: clamp(88px, 9vw, 145px);
+}
+
+
+/* =========================================================
+   PARK INTRO
+========================================================= */
+
+#park-intro-overlay {
+  position: absolute;
+  inset: 0;
+
+  z-index: 80;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  padding: 60px 24px 70px;
+
+  background: rgba(68, 76, 22, 0.40);
+}
+
+.park-intro-content {
+  width: min(850px, 90vw);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
+.park-description {
+  margin-bottom: 24px;
+
+  color: white;
+
+  font-size: clamp(17px, 1.8vw, 24px);
+  font-weight: 900;
+  line-height: 1.35;
+
+  text-shadow:
+    0 2px 5px rgba(70, 45, 25, 0.38);
+}
+
+.explore-btn {
+  min-width: 170px;
+
+  padding: 12px 34px;
+
+  border: 3px solid #f4b243;
+  border-radius: 30px;
+
+  background: #d63a90;
+  color: white;
+
+  box-shadow: 0 5px 0 #932b62;
+
+  font-size: 19px;
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   PARK CATEGORY PANEL
+========================================================= */
+
+#park-category-view {
+  position: absolute;
+  inset: 0;
+
+  z-index: 90;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 78px 24px 32px;
+
+  background: rgba(57, 65, 16, 0.28);
+}
+
+.park-category-panel {
+  width: min(760px, 90vw);
+  max-height: min(650px, 78vh);
+  overflow-y: auto;
+
+  padding: 34px;
+
+  border-radius: 34px;
+
+  background: rgba(247, 221, 84, 0.94);
+
+  color: #71334a;
+
+  box-shadow:
+    0 14px 35px rgba(69, 49, 15, 0.22);
+}
+
+.park-category-title {
+  margin-bottom: 8px;
+
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 900;
+}
+
+.park-category-subtitle {
+  margin-bottom: 24px;
+
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.park-activity-list {
+  display: grid;
+  gap: 14px;
+}
+
+.park-activity-item {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 18px 20px;
+
+  border: 0;
+  border-radius: 20px;
+
+  background: #b8d50d;
+  color: #66304a;
+
+  text-align: left;
+
+  box-shadow:
+    0 5px 0 rgba(100, 126, 0, 0.35);
+}
+
+.park-activity-item:hover {
+  transform: translateY(-2px);
+}
+
+.park-activity-item strong {
+  display: block;
+
+  margin-bottom: 5px;
+
+  font-size: 18px;
+}
+
+.park-activity-item span {
+  font-size: 13px;
+  opacity: 0.86;
+}
+
+.park-activity-arrow {
+  flex: 0 0 auto;
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 3px solid #f4b243;
+  border-radius: 50%;
+
+  background: #d63a90;
+  color: white;
+
+  font-size: 25px;
+  font-weight: 900;
+
+  box-shadow: 0 4px 0 #932b62;
+}
+
+
+/* =========================================================
+   PARK ACTIVITY DETAIL
+========================================================= */
+
+#park-activity-view {
+  position: absolute;
+  inset: 0;
+
+  z-index: 100;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 78px 24px 32px;
+
+  background: rgba(57, 65, 16, 0.28);
+}
+
+.park-activity-panel {
+  width: min(620px, 90vw);
+
+  padding: 32px;
+
+  border-radius: 32px;
+
+  background: #ffbd29;
+  color: #71334a;
+
+  box-shadow:
+    0 14px 35px rgba(69, 49, 15, 0.22);
+}
+
+.park-activity-panel h2 {
+  margin-bottom: 10px;
+
+  font-size: clamp(27px, 4vw, 42px);
+}
+
+.park-activity-panel p {
+  margin-bottom: 10px;
+
+  line-height: 1.45;
+}
+
+.park-duration {
+  display: block;
+
+  margin: 12px 0 20px;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   AUDIO PLAYER
+========================================================= */
+
+#audio-player {
+  display: none;
+
+  margin-top: 20px;
+}
+
+.audio-controls {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  margin-bottom: 14px;
+}
+
+#audio-play-button {
+  width: 58px;
+  height: 58px;
+
+  flex: 0 0 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 3px solid #f4b243;
+  border-radius: 50%;
+
+  background: #d63a90;
+  color: white;
+
+  font-size: 23px;
+  font-weight: 900;
+
+  box-shadow: 0 4px 0 #932b62;
+}
+
+.audio-time {
+  min-width: 92px;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#audio-progress {
+  width: 100%;
+
+  accent-color: #d63a90;
+}
+
+.audio-label {
+  margin-top: 10px;
+
+  font-size: 13px;
+
+  opacity: 0.75;
+}
+
+.back-btn {
+  margin-top: 22px;
+
+  padding: 10px 24px;
+
+  border: 0;
+  border-radius: 22px;
+
+  background: #d63a90;
+  color: white;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   PARK RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .park-top-controls {
+    top: 14px;
+    right: 14px;
+  }
+
+  .round-btn {
+    width: 45px;
+    height: 45px;
+
+    border-width: 3px;
+
+    font-size: 24px;
+  }
+
+  #park-recorder {
+    left: 29%;
+    top: 58%;
+    width: clamp(70px, 16vw, 112px);
+  }
+
+  #park-headphones {
+    left: 43%;
+    top: 68%;
+    width: clamp(76px, 17vw, 120px);
+  }
+
+  #park-binoculars {
+    left: 59%;
+    top: 68%;
+    width: clamp(78px, 18vw, 128px);
+  }
+
+  #park-fidget {
+    left: 72%;
+    top: 58%;
+    width: clamp(68px, 15vw, 105px);
+  }
+
+  #park-intro-overlay {
+    padding:
+      70px 18px 45px;
+  }
+
+  .park-category-panel,
+  .park-activity-panel {
+    padding: 24px;
+    border-radius: 26px;
+  }
+
+}
+
+
+@media (max-width: 480px) {
+
+  #park-screen {
+    background-position: center;
+  }
+
+  #park-recorder {
+    left: 24%;
+    top: 59%;
+  }
+
+  #park-headphones {
+    left: 42%;
+    top: 69%;
+  }
+
+  #park-binoculars {
+    left: 61%;
+    top: 69%;
+  }
+
+  #park-fidget {
+    left: 79%;
+    top: 59%;
+  }
+
+  .park-description {
+    font-size: 16px;
+  }
+
+  .park-activity-item {
+    padding: 15px;
+  }
+
+}
+
+/* =========================================================
+   TABLET + MOBILE
+========================================================= */
+
+@media
+(pointer: coarse),
+(max-width: 768px) {
+
+  #menu-wrapper {
+    bottom: 7px;
+  }
+
+  #menu-toggle {
+    width: 48px;
+    height: 36px;
+
+    font-size: 18px;
+  }
+
+  #bottom-menu {
+    bottom: 42px;
+
+    width:
+      min(
+        94vw,
+        450px
+      );
+
+    min-height: 78px;
+
+    gap: 10px;
+
+    padding:
+      10px 15px;
+  }
+
+  .menu-icon-button {
+    width:
+      min(
+        19vw,
+        70px
+      );
+
+    height: 62px;
+  }
+
+  #dpad {
+    display: block;
+
+    bottom: 18px;
+  }
+
+  .location-prompt {
+    display:
+      none !important;
+  }
+
+  .mobile-enter-button {
+    bottom: 25px;
+  }
+
+  .park-view {
+    min-height: 100%;
+
+    padding:
+      75px 18px 30px;
+  }
+
+  .park-top-controls {
+    top: 15px;
+    right: 15px;
+
+    gap: 8px;
+  }
+
+  .round-btn {
+    width: 45px;
+    height: 45px;
+
+    font-size: 24px;
+
+    border-width: 3px;
+  }
+
+  .park-panel {
+    width: 100%;
+
+    min-height: auto;
+
+    padding:
+      55px 25px;
+
+    border-radius: 40px;
+  }
+
+  .park-logo {
+    width:
+      min(
+        240px,
+        70%
+      );
+
+    margin-bottom: 45px;
+  }
+
+  .park-description {
+    margin-bottom: 40px;
+
+    font-size: 16px;
+  }
+
+  .menu-panel {
+    width: 100%;
+
+    margin-top: 30px;
+
+    padding:
+      45px 18px 28px;
+
+    border-radius: 35px;
+  }
+
+  .menu-logo {
+    width:
+      min(
+        220px,
+        70%
+      );
+
+    margin:
+      -75px auto 25px;
+  }
+
+  .activity-grid {
+    grid-template-columns:
+      1fr;
+
+    gap: 13px;
+  }
+
+  .activity-card {
+    grid-template-columns:
+      105px 1fr;
+
+    min-height: 120px;
+
+    gap: 14px;
+
+    padding: 11px;
+  }
+
+  .activity-card img {
+    width: 105px;
+  }
+
+  .activity-detail-panel {
+    width: 100%;
+
+    grid-template-columns:
+      1fr;
+
+    padding: 25px;
+
+    border-radius: 30px;
+  }
+
+  .activity-detail-panel > img {
+    max-width: 300px;
+
+    margin: 0 auto;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+  #menu-toggle {
+    width: 44px;
+    height: 33px;
+
+    font-size: 17px;
+  }
+
+  #bottom-menu {
+    bottom: 39px;
+
+    width: 96vw;
+
+    min-height: 72px;
+
+    gap: 4px;
+
+    padding:
+      8px 8px;
+  }
+
+  .menu-icon-button {
+    width: 21vw;
+
+    max-width: 64px;
+
+    height: 56px;
+  }
+
+  #dpad {
+    left: 12px;
+    bottom: 14px;
+
+    transform:
+      scale(0.78);
+
+    transform-origin:
+      bottom left;
+  }
+
+  .mobile-enter-button {
+    right: 12px;
+    bottom: 18px;
+  }
+
+}
+
+
+
+/* The name field must behave like a normal text field. */
+.player-name-input {
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: manipulation;
+}
+
+
+
+/* =========================================================
+   INTRO TRANSITIONS + TYPEWRITER
+========================================================= */
+
+.intro-dialogue-panel {
+  opacity: 0;
+  transform: translate(-50%, -47%) scale(0.985);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease;
+}
+
+.intro-dialogue-panel.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.intro-meli {
+  opacity: 0;
+  transform:
+    translateX(-50%)
+    translateY(14px)
+    scale(0.985);
+
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+
+.intro-meli.show {
+  opacity: 1;
+  transform:
+    translateX(-50%)
+    translateY(0)
+    scale(1);
+}
+
+.intro-step {
+  opacity: 0;
+  transform: translateY(8px);
+
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.intro-step.active {
+  display: block;
+}
+
+.intro-step.step-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.intro-step .game-pink-button,
+.intro-step .player-name-input {
+  opacity: 0;
+  transform: translateY(6px);
+
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease;
+}
+
+.intro-step.controls-visible .game-pink-button,
+.intro-step.controls-visible .player-name-input {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.typewriter-line {
+  min-height: 1.2em;
+}
+
+.typewriter-cursor::after {
+  content: "▌";
+  display: inline-block;
+  margin-left: 2px;
+  animation: typewriterBlink 0.75s steps(1) infinite;
+}
+
+@keyframes typewriterBlink {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: 0; }
+}
+
+
+
+/* =========================================================
+   MAP EXIT BUTTON
+========================================================= */
+
+#map-exit-button {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+
+  z-index: 760;
+
+  width: 54px;
+  height: 54px;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  border: 4px solid #f5b444;
+  border-radius: 50%;
+
+  background: #d83a8f;
+  color: white;
+
+  font-size: 28px;
+  font-weight: 900;
+
+  box-shadow: 0 4px 0 #98305e;
+}
+
+#map-exit-button:hover {
+  transform: scale(1.05);
+}
+
+
+/* =========================================================
+   MODALS / COMING SOON
+========================================================= */
+
+.game-modal {
+  position: fixed;
+  inset: 0;
+
+  z-index: 12000;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(35, 26, 30, 0.42);
+
+  opacity: 0;
+
+  transition: opacity 0.25s ease;
+}
+
+.game-modal.visible {
+  display: flex;
+  opacity: 1;
+}
+
+.game-modal-card {
+  width: min(440px, 90vw);
+
+  padding: 30px 28px;
+
+  border-radius: 30px;
+
+  background: #f6a31b;
+  color: white;
+
+  text-align: center;
+
+  box-shadow: 0 14px 35px rgba(77, 47, 18, 0.25);
+
+  transform: translateY(10px) scale(0.98);
+
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.game-modal.visible .game-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.game-modal-card h3 {
+  margin-bottom: 12px;
+
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 900;
+}
+
+.game-modal-card p {
+  margin-bottom: 22px;
+
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+
+  flex-wrap: wrap;
+}
+
+.modal-secondary-button {
+  min-width: 120px;
+
+  padding: 11px 22px;
+
+  border: 3px solid rgba(255,255,255,0.72);
+  border-radius: 24px;
+
+  background: rgba(255,255,255,0.16);
+  color: white;
+
+  font-size: 16px;
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   SCREEN TRANSITION
+========================================================= */
+
+#screen-transition {
+  position: fixed;
+  inset: 0;
+
+  z-index: 11900;
+
+  pointer-events: none;
+
+  background: #f6a31b;
+
+  opacity: 0;
+
+  transition: opacity 0.32s ease;
+}
+
+#screen-transition.active {
+  opacity: 1;
+}
+
+
+/* =========================================================
+   PARK ENTRANCE TRANSITION
+========================================================= */
+
+#park-screen {
+  opacity: 0;
+
+  transition: opacity 0.42s ease;
+}
+
+#park-screen.park-visible {
+  opacity: 1;
+}
+
+#park-intro-overlay {
+  opacity: 0;
+
+  transition: opacity 0.35s ease;
+}
+
+#park-intro-overlay.visible {
+  opacity: 1;
+}
+
+.park-description.typewriter-cursor::after {
+  content: "▌";
+  display: inline-block;
+  margin-left: 2px;
+  animation: typewriterBlink 0.75s steps(1) infinite;
+}
+
+
+/* =========================================================
+   EXTRA LOCATION PROMPTS
+========================================================= */
+
+@media (max-width: 768px) {
+  #map-exit-button {
+    top: 14px;
+    right: 14px;
+
+    width: 45px;
+    height: 45px;
+
+    border-width: 3px;
+
+    font-size: 24px;
+  }
+}
+
+
+/* =========================================================
+   AUDIO SETTINGS
+========================================================= */
+
+#audio-settings-button {
+  position: fixed;
+  top: 24px;
+  right: 94px;
+  z-index: 761;
+  width: 54px;
+  height: 54px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid #f5b444;
+  border-radius: 50%;
+  background: #d83a8f;
+  color: white;
+  font-size: 25px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #98305e;
+}
+
+#audio-settings-button:hover { transform: scale(1.05); }
+
+@media (max-width: 768px) {
+  #audio-settings-button {
+    top: 16px;
+    right: 76px;
+    width: 46px;
+    height: 46px;
+    border-width: 3px;
+    font-size: 22px;
+  }
+}
+
+#audio-settings-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 13000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(35, 26, 30, 0.46);
+}
+
+#audio-settings-modal.visible { display: flex; }
+
+.audio-settings-card {
+  width: min(420px, 90vw);
+  padding: 30px 28px 26px;
+  border: 4px solid #f5b444;
+  border-radius: 28px;
+  background: #fff7e8;
+  color: #5b3347;
+  text-align: center;
+  box-shadow: 0 14px 35px rgba(77, 47, 18, 0.25);
+}
+
+.audio-settings-card h3 {
+  margin: 0 0 22px;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.audio-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: white;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+#audio-toggle-button {
+  min-width: 92px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #62b84f;
+  color: white;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+#audio-toggle-button.muted { background: #a7a7a7; }
+
+#audio-settings-close {
+  padding: 11px 24px;
+  border: 3px solid #f5b444;
+  border-radius: 999px;
+  background: #d83a8f;
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+
+
+/* =========================================================
+   COVER — SUBTLE ANIMATIONS (heart, clock, logo)
+
+   The heart and clock sit on a layer that reproduces the
+   background's "cover" scaling (same crop/anchor as the
+   background image), so they stay exactly where they were
+   placed on the artwork at every screen size. Only
+   transform/translate are animated (GPU friendly).
+========================================================= */
+
+#cover-screen {
+  container-type: size;
+}
+
+.cover-art-layer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  width: max(100vw, calc(100vh * 1920 / 1080));
+  aspect-ratio: 1920 / 1080;
+
+  pointer-events: none;
+  z-index: 2;
+}
+
+@supports (width: 1cqw) {
+  .cover-art-layer {
+    width: max(100cqw, calc(100cqh * 1920 / 1080));
+  }
+}
+
+.cover-deco {
+  position: absolute;
+  height: auto;
+  translate: -50% -50%;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 8px 6px rgba(97, 46, 18, 0.18));
+  will-change: transform;
+}
+
+.cover-heart {
+  left: 72.1%;
+  top: 41%;
+  width: 6.9%;
+  transform-origin: 50% 55%;
+  animation: coverHeartbeat 1.8s ease-in-out infinite;
+}
+
+.cover-clock {
+  left: 23.6%;
+  top: 40.6%;
+  width: 7%;
+  transform-origin: 50% 18%;
+  animation: coverClockSway 4.2s ease-in-out infinite;
+}
+
+.cover-logo {
+  animation: coverLogoFloat 5.5s ease-in-out infinite;
+  will-change: translate;
+}
+
+@keyframes coverHeartbeat {
+  0%, 100% { transform: scale(1); }
+  12%      { transform: scale(1.07); }
+  24%      { transform: scale(1); }
+  36%      { transform: scale(1.045); }
+  52%      { transform: scale(1); }
+}
+
+@keyframes coverClockSway {
+  0%, 100% { transform: rotate(-2.5deg) translateY(0); }
+  50%      { transform: rotate(2.5deg) translateY(-4px); }
+}
+
+/* uses the individual "translate" property so it never fights with
+   the logo's own transform (centering on portrait screens) */
+@keyframes coverLogoFloat {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -6px; }
+}
+
+@media (orientation: portrait) {
+
+  .cover-art-layer {
+    top: 0;
+    transform: translateX(-50%);
+
+    width: max(100vw, calc(100vh * 402 / 818));
+    aspect-ratio: 402 / 818;
+  }
+
+  @supports (width: 1cqw) {
+    .cover-art-layer {
+      width: max(100cqw, calc(100cqh * 402 / 818));
     }
+  }
 
-    p strong {
-      color: #c23172;
-    }
+  .cover-heart {
+    left: 82.1%;
+    top: 33.4%;
+    width: 17.2%;
+  }
 
+  .cover-clock {
+    left: 17.2%;
+    top: 29.9%;
+    width: 16.5%;
+  }
+}
 
-    /* =====================================================
-       BUTTON ROW
-    ===================================================== */
+@media (prefers-reduced-motion: reduce) {
 
-    .step-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: clamp(10px, 2vw, 16px);
+  .cover-heart,
+  .cover-clock,
+  .cover-logo {
+    animation: none;
+  }
+}
 
-      margin-top: clamp(22px, 3.5vw, 32px);
-    }
+/* =========================================================
+   CUSTOM UI ICONS (SVG) + CONTROL STYLE
+   Same pink body + yellow border as the other game buttons.
+========================================================= */
 
+.ui-icon {
+  width: 52%;
+  height: 52%;
 
-    /* =====================================================
-       PRIMARY BUTTON (Siguiente / ¡Comencemos!)
-    ===================================================== */
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 
-    .play-button {
-      padding: clamp(12px, 1.8vw, 15px) clamp(32px, 5vw, 44px);
+  pointer-events: none;
+  overflow: visible;
+}
 
-      border: 3px solid #f5c451;
-      border-radius: 30px;
+#cover-settings,
+#map-exit-button,
+#audio-settings-button {
+  padding: 0;
+  line-height: 0;
+}
 
-      background: #d63f93;
-      color: white;
+#cover-settings .ui-icon,
+#map-exit-button .ui-icon,
+#audio-settings-button .ui-icon {
+  width: 50%;
+  height: 50%;
+}
 
-      font-size: clamp(17px, 2.2vw, 21px);
-      font-weight: bold;
+#map-exit-button .ui-icon {
+  width: 46%;
+  height: 46%;
+}
 
-      cursor: pointer;
+#menu-toggle {
+  padding: 0;
+  line-height: 0;
+}
 
-      box-shadow: 0 6px 0 #4f1a40;
+#menu-toggle .ui-icon {
+  width: 42%;
+  height: 52%;
+  transition: transform 0.2s ease;
+}
 
-      transition:
-        transform 0.15s ease;
-    }
+#menu-toggle.is-open .ui-icon {
+  transform: rotate(180deg);
+}
 
+/* ----- D-pad ----- */
 
-    .play-button:hover {
-      transform: scale(1.05);
-    }
+#dpad {
+  width: 168px;
+  height: 168px;
 
+  opacity: 0.92;
+}
 
-    .play-button:active {
-      transform: scale(0.96) translateY(2px);
-      box-shadow: 0 3px 0 #4f1a40;
-    }
+#dpad .btn {
+  width: 54px;
+  height: 54px;
 
+  background: #d83a8f;
+  color: #fff;
 
-    /* =====================================================
-       SECONDARY BUTTON (← Atrás)
-    ===================================================== */
+  border: 3px solid #f7b83c;
+  border-radius: 16px;
 
-    .back-step-button {
-      padding: clamp(12px, 1.8vw, 15px) clamp(24px, 4vw, 34px);
+  box-shadow: 0 4px 0 #98305e;
 
-      border: 3px solid #d63f93;
-      border-radius: 30px;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 
-      background: transparent;
-      color: #d63f93;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
 
-      font-size: clamp(16px, 2vw, 19px);
-      font-weight: bold;
+#dpad .btn .ui-icon {
+  width: 52%;
+  height: 52%;
+}
 
-      cursor: pointer;
+#dpad .btn.pressed {
+  transform: scale(0.9);
+  background: #d83a8f;
+  box-shadow: 0 1px 0 #98305e;
+}
 
-      transition:
-        transform 0.15s ease,
-        background 0.15s ease;
-    }
+#btn-up    { top: 0;     left: 57px; }
+#btn-down  { bottom: 0;  left: 57px; }
+#btn-left  { top: 57px;  left: 0; }
+#btn-right { top: 57px;  right: 0; }
 
+@media (max-width: 420px) {
+  #dpad {
+    transform: scale(0.86);
+  }
+}
 
-    .back-step-button:hover {
-      background: rgba(214, 63, 147, 0.08);
-      transform: scale(1.03);
-    }
+#btn-down  .ui-icon { transform: rotate(180deg); }
+#btn-left  .ui-icon { transform: rotate(-90deg); }
+#btn-right .ui-icon { transform: rotate(90deg); }
 
+/* =========================================================
+   INTRO REDESIGN — same visual identity as Bakery Delivery
+   Fonts are self-hosted in /Fonts so they work offline.
+========================================================= */
 
-    .back-step-button:active {
-      transform: scale(0.96);
-    }
+@font-face {
+  font-family: "Baloo 2";
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/baloo-2-latin-500-normal.woff2") format("woff2");
+}
 
+@font-face {
+  font-family: "Baloo 2";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/baloo-2-latin-700-normal.woff2") format("woff2");
+}
 
-    /* =====================================================
-       RESPONSIVE
-    ===================================================== */
+@font-face {
+  font-family: "Baloo 2";
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/baloo-2-latin-800-normal.woff2") format("woff2");
+}
 
-    /* tablet / small laptop */
-    @media (max-width: 900px) {
+@font-face {
+  font-family: "Quicksand";
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/quicksand-latin-500-normal.woff2") format("woff2");
+}
 
-      .panel {
-        width: min(560px, 94vw);
-      }
+@font-face {
+  font-family: "Quicksand";
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/quicksand-latin-600-normal.woff2") format("woff2");
+}
 
-    }
+@font-face {
+  font-family: "Quicksand";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/quicksand-latin-700-normal.woff2") format("woff2");
+}
 
+:root {
+  --boc-pink: #FF4F9A;
+  --boc-pink-dark: #D92D78;
+  --boc-pink-light: #FFC4DE;
+  --boc-orange: #FF9A3D;
+  --boc-yellow: #FFCF4D;
+  --boc-cream: #FFF3DF;
+  --boc-burgundy: #6B2A1F;
+  --boc-burgundy-dark: #4A1A12;
 
-    /* mobile portrait + narrow mobile landscape
-       — shrink the card, not the text */
-    @media (max-width: 700px) {
+  --boc-font-display: "Baloo 2", "Fredoka", system-ui, sans-serif;
+  --boc-font-body: "Quicksand", system-ui, sans-serif;
+}
 
-      .panel {
-        width: 94vw;
+#intro-screen .intro-dialogue-panel {
+  background:
+    linear-gradient(180deg, var(--boc-burgundy) 0%, var(--boc-burgundy-dark) 100%);
 
-        min-height: clamp(280px, 50vh, 380px);
+  border: 4px solid var(--boc-orange);
+  border-radius: 34px;
 
-        padding: 26px 20px;
+  color: var(--boc-cream);
 
-        border-radius: 26px;
+  box-shadow:
+    0 10px 0 rgba(0, 0, 0, 0.18),
+    0 18px 30px rgba(74, 26, 18, 0.4),
+    inset 0 0 0 3px rgba(255, 207, 77, 0.25);
 
-        margin-top: clamp(56px, 14vh, 80px);
-      }
+  font-family: var(--boc-font-body);
+}
 
+#intro-screen .intro-step h2 {
+  font-family: var(--boc-font-display);
+  font-weight: 800;
+  line-height: 1.04;
 
-      p {
-        font-size: clamp(16px, 4vw, 18px);
-      }
+  color: #fff;
 
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
 
-      .exit-button {
-        width: 46px;
-        height: 46px;
+  overflow-wrap: break-word;
+}
 
-        border-width: 3px;
+#intro-screen .intro-step p {
+  font-family: var(--boc-font-body);
+  font-weight: 700;
+  line-height: 1.4;
 
-        font-size: 24px;
-      }
+  color: var(--boc-cream);
 
-    }
+  overflow-wrap: break-word;
+}
 
+#intro-screen .intro-step p strong {
+  font-weight: 700;
 
-    /* short / landscape phones: keep the card reachable without clipping */
-    @media (max-height: 480px) {
+  color: var(--boc-yellow);
+}
 
-      body {
-        align-items: flex-start;
-      }
+#intro-screen .player-name-input {
+  font-family: var(--boc-font-body);
+  font-weight: 700;
 
-      .panel {
-        margin-top: 70px;
-        max-height: calc(100dvh - 90px);
-        min-height: 0;
-      }
+  border: 4px solid var(--boc-yellow);
+  border-radius: 20px;
 
-    }
+  background: var(--boc-cream);
 
-  </style>
+  color: var(--boc-burgundy-dark);
+
+  box-shadow:
+    0 5px 0 rgba(0, 0, 0, 0.22),
+    inset 0 2px 4px rgba(74, 26, 18, 0.12);
+}
+
+#intro-screen .player-name-input::placeholder {
+  color: rgba(107, 42, 31, 0.55);
+
+  font-weight: 600;
+}
+
+#intro-screen .player-name-input:focus {
+  border-color: var(--boc-pink);
+}
+
+#intro-screen .game-pink-button {
+  font-family: var(--boc-font-display);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+
+  border: 3px solid var(--boc-yellow);
+  border-radius: 999px;
+
+  background:
+    linear-gradient(180deg, #ff6bad 0%, var(--boc-pink) 55%, var(--boc-pink-dark) 100%);
+
+  color: #fff;
+
+  box-shadow:
+    0 6px 0 var(--boc-pink-dark),
+    0 10px 16px rgba(74, 26, 18, 0.35);
+}
+
+#intro-screen .game-pink-button.game-pink-button-secondary {
+  background: rgba(255, 255, 255, 0.12);
+
+  border: 2px solid rgba(255, 207, 77, 0.5);
+
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+#intro-screen .intro-step.controls-visible .game-pink-button:active {
+  transform: translateY(2px) scale(0.97);
+}
+
+#intro-screen .intro-skip {
+  font-size: 15px;
+
+  padding: 10px 22px;
+
+  min-width: 0;
+}
+
+#intro-screen .game-pink-button:focus-visible,
+#intro-screen .player-name-input:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 768px) {
+
+  #intro-screen .intro-dialogue-panel {
+    border-radius: 28px;
+  }
+
+}
+
+/* =========================================================
+   INTRO CHARACTERS (animated sprite sheets)
+   The canvas is placed so the character body keeps exactly the
+   size and position of the previous static image.
+========================================================= */
+
+.intro-meli {
+  aspect-ratio: 227 / 285;
+
+  background:
+    url("Intro/Meli_intro.png") center / 100% 100% no-repeat;
+}
+
+.intro-meli.has-sprite {
+  background: none;
+}
+
+.intro-meli canvas {
+  position: absolute;
+
+  left: -6.39%;
+  top: 11.23%;
+
+  width: 99.8%;
+  height: 78%;
+
+  pointer-events: none;
+}
+
+.intro-anxi {
+  position: relative;
+
+  aspect-ratio: 1 / 1;
+}
+
+.intro-anxi canvas {
+  position: absolute;
+
+  left: 0.16%;
+  top: 1.22%;
+
+  width: 104.1%;
+  height: 88.3%;
+
+  pointer-events: none;
+}
+
+/* Short landscape screens (phones): text panel on the left, Meli and
+   Anxi side by side in the free column on the right, still at the bottom,
+   so they never cover the buttons. */
+@media (orientation: landscape) and (max-height: 560px) {
+
+  #intro-screen .intro-logo {
+    top: 10px;
+    left: 12px;
+
+    width: 96px;
+  }
+
+  #intro-screen .intro-dialogue-panel {
+    left: 3vw;
+    top: 50%;
+
+    width: 61vw;
+    min-height: 0;
+    max-height: 90vh;
+
+    padding: 18px 26px 20px;
+
+    border-radius: 26px;
+
+    overflow-y: auto;
+
+    transform: translate(0, -47%) scale(0.985);
+  }
+
+  #intro-screen .intro-dialogue-panel.show {
+    transform: translate(0, -50%) scale(1);
+  }
+
+  #intro-screen .intro-step h2 {
+    margin-bottom: 10px;
+
+    font-size: clamp(20px, 6vh, 30px);
+  }
+
+  #intro-screen .intro-step p {
+    margin-bottom: 8px;
+
+    font-size: clamp(12px, 3.6vh, 15px);
+    line-height: 1.3;
+  }
+
+  #intro-screen .player-name-input {
+    height: 42px;
+
+    margin: 4px auto 12px;
+  }
+
+  #intro-screen .intro-nav-row {
+    margin-top: 4px;
+  }
+
+  #intro-screen .game-pink-button {
+    padding: 8px 20px;
+
+    font-size: 15px;
+  }
+
+  #intro-screen .intro-final-button {
+    margin-top: 0;
+  }
+
+  #intro-screen .intro-meli {
+    left: auto;
+    right: 20vw;
+    bottom: 58px;
+
+    height: clamp(120px, 40vh, 190px);
+
+    transform: translateY(14px) scale(0.985);
+  }
+
+  #intro-screen .intro-meli.show {
+    transform: translateY(0) scale(1);
+  }
+
+  #intro-screen .intro-anxi-wrap {
+    left: auto;
+    right: 4vw;
+    bottom: 62px;
+
+    transform: none;
+  }
+
+  #intro-screen .intro-anxi-wrap.intro-anxi-visible {
+    animation: none;
+  }
+
+  #intro-screen .intro-anxi {
+    height: clamp(88px, 28vh, 135px);
+  }
+
+  #intro-screen .intro-skip {
+    right: 14px;
+    bottom: 10px;
+
+    padding: 7px 18px;
+  }
+}
+
+/* small portrait phones: lower the characters a little so they never
+   cover the buttons */
+@media (max-width: 480px) and (orientation: portrait) and (max-height: 700px) {
+
+  #intro-screen .intro-meli {
+    bottom: 82px;
+  }
+
+  #intro-screen .intro-anxi-wrap {
+    bottom: 62px;
+  }
+
+}
+
+@media (max-width: 480px) and (orientation: portrait) and (max-height: 600px) {
+
+  #intro-screen .intro-meli {
+    bottom: 64px;
+
+    height: 112px;
+  }
+
+  #intro-screen .intro-anxi-wrap {
+    bottom: 64px;
+  }
+
+  #intro-screen .intro-anxi {
+    height: 80px;
+  }
+
+  #intro-screen .intro-dialogue-panel {
+    min-height: 0;
+
+    padding: 30px 20px 100px;
+  }
+
+  #intro-screen .intro-step h2 {
+    margin-bottom: 12px;
+
+    font-size: 22px;
+  }
+
+  #intro-screen .intro-step p {
+    margin-bottom: 12px;
+
+    font-size: 13px;
+  }
+
+}
+
+</style>
 
 </head>
 
 
 <body>
 
+<!-- ======================================================
+     UI ICONS (SVG)
+====================================================== -->
 
-  <!-- ===================================================
-       BACKGROUND — interior de la pastelería
-  ==================================================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ic-arrow" viewBox="0 0 24 24">
+    <path d="M12 20V5M5.5 11.5L12 5l6.5 6.5"/>
+  </symbol>
+  <symbol id="ic-chevron" viewBox="0 0 24 24">
+    <path d="M4.5 15.5L12 8l7.5 7.5"/>
+  </symbol>
+  <symbol id="ic-close" viewBox="0 0 24 24">
+    <path d="M6 6l12 12M18 6L6 18"/>
+  </symbol>
+  <symbol id="ic-gear" viewBox="0 0 24 24">
+    <path d="M9.75 4.64 L10.49 1.91 L13.51 1.91 L14.25 4.64 L15.61 5.20 L18.07 3.80 L20.20 5.93 L18.80 8.39 L19.36 9.75 L22.09 10.49 L22.09 13.51 L19.36 14.25 L18.80 15.61 L20.20 18.07 L18.07 20.20 L15.61 18.80 L14.25 19.36 L13.51 22.09 L10.49 22.09 L9.75 19.36 L8.39 18.80 L5.93 20.20 L3.80 18.07 L5.20 15.61 L4.64 14.25 L1.91 13.51 L1.91 10.49 L4.64 9.75 L5.20 8.39 L3.80 5.93 L5.93 3.80 L8.39 5.20Z M8.7 12a3.3 3.3 0 1 0 6.6 0a3.3 3.3 0 1 0 -6.6 0Z" fill="#fff" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" fill-rule="evenodd"/>
+  </symbol>
+</svg>
 
-  <div class="bakery-bg" aria-hidden="true"></div>
 
 
-  <!-- ===================================================
-       EXIT BAKERY → MAP
-  ==================================================== -->
+<!-- ======================================================
+     LOADING
+====================================================== -->
+
+<div id="loading">
+
+  <img
+    src="Intro/Logo_BOC.png"
+    class="loading-logo"
+    alt="Bites of Control">
+
+  <div class="loading-title">
+    LOADING...
+  </div>
+
+  <div
+    class="loading-dots"
+    aria-label="Loading">
+
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+
+  </div>
+
+</div>
+
+
+<!-- ======================================================
+     COVER
+====================================================== -->
+
+<section id="cover-screen">
+
+  <div class="cover-art-layer" aria-hidden="true">
+
+    <img
+      src="Intro/Cover_clock.png"
+      class="cover-deco cover-clock"
+      alt=""
+      draggable="false">
+
+    <img
+      src="Intro/Cover_heart.png"
+      class="cover-deco cover-heart"
+      alt=""
+      draggable="false">
+
+  </div>
+
+  <img
+    src="Intro/Logo_BOC.png"
+    class="cover-logo"
+    alt="Bites of Control">
 
   <button
-    class="exit-button"
+    id="cover-settings"
     type="button"
-    onclick="exitBakery()"
-    aria-label="Salir de Bakery"
-  >
+    class="cover-settings"
+    aria-label="Configuración">
 
-    ×
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-gear"/></svg>
 
   </button>
 
+  <div class="cover-actions">
 
-  <!-- ===================================================
-       BAKERY INTRO — una sola tarjeta, contenido en 2 pasos
-  ==================================================== -->
+    <button
+      id="new-game-button"
+      type="button"
+      class="game-pink-button">
 
-  <div class="panel">
+      Nuevo Juego
 
-    <div class="step-content" id="stepContent">
-      <!-- el contenido del paso actual se inserta aquí vía JS -->
+    </button>
+
+    <button
+      id="resume-game-button"
+      type="button"
+      class="game-pink-button">
+
+      Continuar
+
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ======================================================
+     MELI INTRO
+====================================================== -->
+
+<section id="intro-screen">
+
+  <img
+    src="Intro/Logo_BOC.png"
+    class="intro-logo"
+    alt="Bites of Control">
+
+  
+<div class="intro-dialogue-panel">
+
+    <!-- STEP 1 -->
+    <div
+      id="intro-step-1"
+      class="intro-step active">
+
+      <h2>
+        ¡Qué alegría verte por aquí!
+      </h2>
+
+      <p>
+        Me llamo Meli, pero antes de empezar y
+        contarte sobre mi aventura...
+      </p>
+
+      <p>
+        Dime, ¿cómo te llamas?
+      </p>
+
+      <input
+        id="player-name-input"
+        class="player-name-input"
+        type="text"
+        maxlength="24"
+        autocomplete="off"
+        placeholder="Escribe tu nombre para continuar">
+
+      <button
+        id="intro-continue-button"
+        type="button"
+        class="game-pink-button">
+
+        CONTINUAR
+
+      </button>
+
+    </div>
+
+
+    <!-- STEP 2 -->
+    <div
+      id="intro-step-2"
+      class="intro-step">
+
+      <h2 id="intro-greeting">
+        ¡Mucho gusto!
+      </h2>
+
+      <p>
+        Tengo un gran sueño:
+        <strong>abrir mi propia pastelería.</strong> 🧁
+      </p>
+
+      <p>
+        Al fin encontré el lugar perfecto y tengo
+        muchísimas ganas de lograrlo...
+      </p>
+
+      <p>
+        aunque a veces las dudas se interponen en el camino.
+      </p>
+
+      <div class="intro-nav-row">
+
+        <button
+          id="intro-back-2-button"
+          type="button"
+          class="game-pink-button game-pink-button-secondary">
+
+          ATRÁS
+
+        </button>
+
+        <button
+          id="intro-next-button"
+          type="button"
+          class="game-pink-button">
+
+          SIGUIENTE
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- STEP 3 -->
+    <div
+      id="intro-step-3"
+      class="intro-step">
+
+      <h2>
+        Y hablando de dudas... te presento a Anxi.
+      </h2>
+
+      <p>
+       Siempre está conmigo y trata de protegerme cuando algo parece incierto o peligroso.
+      </p>
+
+      <p>
+        No es malo, solo que a veces se preocupa un poquito de más.
+      </p>
+
+      <div class="intro-nav-row">
+
+        <button
+          id="intro-back-3-button"
+          type="button"
+          class="game-pink-button game-pink-button-secondary">
+
+          ATRÁS
+
+        </button>
+
+        <button
+          id="intro-next-3-button"
+          type="button"
+          class="game-pink-button">
+
+          SIGUIENTE
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- STEP 4 -->
+    <div
+      id="intro-step-4"
+      class="intro-step">
+
+      <h2>
+        Estoy aprendiendo a escuchar a Anxi sin dejar que decida todo por mí.
+      </h2>
+
+      <p>
+        Para cumplir mi sueño, tendremos que explorar este mundo,
+        superar retos y aprender cuándo seguir adelante,
+        aunque no todo se sienta completamente seguro.
+      </p>
+
+      <p>
+        <strong>¿Quieres acompañarme?</strong>
+      </p>
+
+      <div class="intro-nav-row">
+
+        <button
+          id="intro-back-4-button"
+          type="button"
+          class="game-pink-button game-pink-button-secondary">
+
+          ATRÁS
+
+        </button>
+
+        <button
+          id="start-adventure-button"
+          type="button"
+          class="game-pink-button intro-final-button">
+
+          INICIAR AVENTURA
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div
+    class="intro-meli"
+    role="img"
+    aria-label="Meli">
+
+    <canvas id="intro-meli-canvas"></canvas>
+
+  </div>
+
+  <div
+    id="intro-anxi-wrap"
+    class="intro-anxi-wrap">
+
+    <div
+      id="intro-anxi-img"
+      class="intro-anxi"
+      role="img"
+      aria-label="Anxi">
+
+      <canvas id="intro-anxi-canvas"></canvas>
+
     </div>
 
   </div>
 
 
-  <script>
+  <button
+    id="skip-intro-button"
+    type="button"
+    class="game-pink-button intro-skip">
 
-    /* =====================================================
-       PASOS DE LA BIENVENIDA
-       -----------------------------------------------------
-       Un solo panel, el contenido se sustituye con un
-       pequeño fade — nunca hay dos pasos en pantalla a la
-       vez. El comportamiento de CUÁNDO se muestra esta
-       bienvenida no cambió: sigue apareciendo siempre al
-       cargar index.html.
-    ===================================================== */
+    Saltarse Intro
 
-    const STEPS = [
-      {
-        indicator: "1 de 2",
-        title: "¡TE PRESENTO LA GRAN PASTELERÍA!",
-        paragraphs: [
-          "Pero antes de la <strong>gran inauguración</strong>, todavía hay mucho por hacer.",
-          "Juntos tendremos que preparar recetas, organizar pedidos y enfrentar desafíos inesperados en el camino."
-        ]
-      },
-      {
-        indicator: "2 de 2",
-        title: "¡UN PASO A LA VEZ!",
-        paragraphs: [
-          "Recuerda: <strong>no todo tiene que salir perfecto ni necesitamos tener todas las respuestas para seguir avanzando.</strong>",
-          "<strong>¡Hagamos realidad este sueño!</strong>"
-        ]
+  </button>
+
+</section>
+
+
+<!-- ======================================================
+     MAP
+====================================================== -->
+
+<canvas id="game-canvas"></canvas>
+
+
+<!-- ======================================================
+     MAP EXIT
+====================================================== -->
+
+<button
+  id="map-exit-button"
+  type="button"
+  aria-label="Exit game">
+
+  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-close"/></svg>
+
+</button>
+
+
+
+<!-- ======================================================
+     AUDIO SETTINGS
+====================================================== -->
+
+<button
+  id="audio-settings-button"
+  type="button"
+  aria-label="Configuración de sonido">
+  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-gear"/></svg>
+</button>
+
+<div id="audio-settings-modal" role="dialog" aria-modal="true" aria-labelledby="audio-settings-title">
+  <div class="audio-settings-card">
+    <h3 id="audio-settings-title">Configuración</h3>
+    <div class="audio-setting-row">
+      <span>🔊 Sonido</span>
+      <button id="audio-toggle-button" type="button" aria-pressed="true">ON</button>
+    </div>
+    <button id="audio-settings-close" type="button">Cerrar</button>
+  </div>
+</div>
+
+<audio id="world-music" src="Audio/World.wav" loop preload="auto"></audio>
+<audio id="birds-audio" src="Audio/Birds.wav" loop preload="auto"></audio>
+
+
+<!-- ======================================================
+     SCREEN TRANSITION
+====================================================== -->
+
+<div id="screen-transition"></div>
+
+
+
+<!-- ======================================================
+     LOCATION PROMPTS
+====================================================== -->
+
+<div
+  id="park-prompt"
+  class="location-prompt">
+
+  Presiona
+
+  <span class="key">
+    E
+  </span>
+
+  para entrar
+
+</div>
+
+
+<div
+  id="bakery-prompt"
+  class="location-prompt">
+
+  Presiona
+
+  <span class="key">
+    E
+  </span>
+
+  para entrar
+
+</div>
+
+
+<div
+  id="library-prompt"
+  class="location-prompt">
+
+  Presiona
+
+  <span class="key">
+    E
+  </span>
+
+  para entrar 
+
+</div>
+
+
+<!-- ======================================================
+     MOBILE LOCATION BUTTONS
+====================================================== -->
+
+<button
+  id="mobile-enter-park"
+  class="mobile-enter-button"
+  type="button">
+
+  Entrar
+
+</button>
+
+
+<button
+  id="mobile-enter-bakery"
+  class="mobile-enter-button"
+  type="button">
+
+  Entrar
+
+</button>
+
+
+<button
+  id="mobile-enter-library"
+  class="mobile-enter-button"
+  type="button">
+
+  Entrar
+
+</button>
+
+
+<button
+  id="mobile-enter-clinic"
+  class="mobile-enter-button"
+  type="button">
+
+  Entrar
+
+</button>
+
+
+<button
+  id="mobile-enter-workshop"
+  class="mobile-enter-button"
+  type="button">
+
+  Entrar
+
+</button>
+
+
+<!-- ======================================================
+     D-PAD
+====================================================== -->
+
+<div id="dpad">
+
+  <div
+    class="btn"
+    id="btn-up"
+    role="button"
+    aria-label="Arriba">
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
+  </div>
+
+  <div
+    class="btn"
+    id="btn-down"
+    role="button"
+    aria-label="Abajo">
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
+  </div>
+
+  <div
+    class="btn"
+    id="btn-left"
+    role="button"
+    aria-label="Izquierda">
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
+  </div>
+
+  <div
+    class="btn"
+    id="btn-right"
+    role="button"
+    aria-label="Derecha">
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
+  </div>
+
+</div>
+
+
+<div
+  id="clinic-prompt"
+  class="location-prompt">
+
+  Presiona
+
+  <span class="key">
+    E
+  </span>
+
+  para entrar
+
+</div>
+
+
+<div
+  id="workshop-prompt"
+  class="location-prompt">
+
+  Presiona
+
+  <span class="key">
+    E
+  </span>
+
+  para entrar
+
+</div>
+
+
+<!-- ======================================================
+     COLLAPSIBLE BOTTOM MENU
+====================================================== -->
+
+<div id="menu-wrapper">
+
+
+  <!-- MENU CONTENT -->
+
+  <nav
+    id="bottom-menu"
+    class="menu-closed"
+    aria-label="Game menu">
+
+
+    <!-- MAP -->
+
+    <button
+      id="menu-map"
+      class="menu-icon-button"
+      type="button"
+      aria-label="Map">
+
+      <img
+        src="Menu/icon_map.png"
+        alt="Map">
+
+    </button>
+
+
+    <!-- NOTIFICATIONS -->
+
+    <button
+      id="menu-notification"
+      class="menu-icon-button"
+      type="button"
+      aria-label="Notifications">
+
+      <img
+        src="Menu/icon_notification.png"
+        alt="Notifications">
+
+    </button>
+
+
+    <!-- CHARACTER -->
+
+    <button
+      id="menu-character"
+      class="menu-icon-button"
+      type="button"
+      aria-label="Character">
+
+      <img
+        src="Menu/icon_mask.png"
+        alt="Character">
+
+    </button>
+
+
+    <!-- TROPHY -->
+
+    <button
+      id="menu-trophy"
+      class="menu-icon-button"
+      type="button"
+      aria-label="Trophies">
+
+      <img
+        src="Menu/icon_trophy.png"
+        alt="Trophies">
+
+    </button>
+
+
+  </nav>
+
+
+  <!-- OPEN / CLOSE -->
+
+  <button
+    id="menu-toggle"
+    type="button"
+    aria-label="Open menu">
+
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-chevron"/></svg>
+
+  </button>
+
+
+</div>
+
+
+<!-- ======================================================
+     PARK
+====================================================== -->
+
+<section id="park-screen">
+
+
+  <!-- TOP CONTROLS -->
+
+  <div class="park-top-controls">
+
+    <button
+      id="exit-park"
+      type="button"
+      class="round-btn"
+      aria-label="Exit Park">
+
+      ×
+
+    </button>
+
+  </div>
+
+
+  <!-- ====================================================
+       MAIN PARK SCENE
+  ===================================================== -->
+
+  <div id="park-scene">
+
+
+    <button
+      id="park-recorder"
+      class="park-object"
+      type="button"
+      data-category="recordings"
+      aria-label="Open recordings">
+
+      <img
+        src="park/recorder.png"
+        alt="Recorder">
+
+    </button>
+
+
+    <button
+      id="park-headphones"
+      class="park-object"
+      type="button"
+      data-category="audio"
+      aria-label="Open audio activities">
+
+      <img
+        src="park/headphones.png"
+        alt="Headphones">
+
+    </button>
+
+
+    <button
+      id="park-binoculars"
+      class="park-object"
+      type="button"
+      data-category="observation"
+      aria-label="Open observation activities">
+
+      <img
+        src="park/binoculars.png"
+        alt="Binoculars">
+
+    </button>
+
+
+    <button
+      id="park-fidget"
+      class="park-object"
+      type="button"
+      data-category="fidget"
+      aria-label="Open fidget activities">
+
+      <img
+        src="park/fidget.png"
+        alt="Fidget">
+
+    </button>
+
+
+  </div>
+
+
+  <!-- ====================================================
+       INTRO
+  ===================================================== -->
+
+  <div id="park-intro-overlay">
+
+    <div class="park-intro-content">
+
+      <p class="park-description">
+
+        Explore simple activities designed to help you slow down, be present, and take a moment for yourself.
+Choose what feels right for you.
+
+        <br>
+
+        There’s no rush, just relax and enjoy the moment.
+
+      </p>
+
+
+      <button
+        id="explore-park"
+        type="button"
+        class="explore-btn">
+
+        Explore
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ====================================================
+       CATEGORY VIEW
+  ===================================================== -->
+
+  <div id="park-category-view">
+
+    <div class="park-category-panel">
+
+      <h2
+        id="park-category-title"
+        class="park-category-title">
+      </h2>
+
+      <p
+        id="park-category-subtitle"
+        class="park-category-subtitle">
+      </p>
+
+      <div
+        id="park-activity-list"
+        class="park-activity-list">
+      </div>
+
+      <button
+        id="back-to-park-scene"
+        type="button"
+        class="back-btn">
+
+        ← Back to Park
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ====================================================
+       ACTIVITY DETAIL
+  ===================================================== -->
+
+  <div id="park-activity-view">
+
+    <div class="park-activity-panel">
+
+      <h2 id="activity-heading"></h2>
+
+      <p id="activity-text"></p>
+
+      <span
+        id="activity-duration"
+        class="park-duration">
+      </span>
+
+
+      <!-- AUDIO PLAYER -->
+
+      <div id="audio-player">
+
+        <div class="audio-controls">
+
+          <button
+            id="audio-play-button"
+            type="button">
+
+            ▶
+
+          </button>
+
+          <span
+            id="audio-time"
+            class="audio-time">
+
+            0:00 / 0:00
+
+          </span>
+
+        </div>
+
+
+        <input
+          id="audio-progress"
+          type="range"
+          min="0"
+          max="100"
+          value="0"
+          step="0.1">
+
+
+        <div class="audio-label">
+
+          Take your time.
+          You can pause whenever you need.
+
+        </div>
+
+
+        <audio
+          id="park-audio"
+          preload="metadata">
+        </audio>
+
+      </div>
+
+
+      <button
+        id="back-to-category"
+        type="button"
+        class="back-btn">
+
+        ← Back
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+</section>
+
+
+
+
+<!-- ======================================================
+     EXIT CONFIRMATION
+====================================================== -->
+
+<div
+  id="exit-confirm-modal"
+  class="game-modal"
+  role="dialog"
+  aria-modal="true">
+
+  <div class="game-modal-card">
+
+    <h3>
+      ¿Deseas salir?
+    </h3>
+
+    <p>
+      Tu progreso quedará guardado y podrás continuar después.
+    </p>
+
+    <div class="modal-actions">
+
+      <button
+        id="cancel-exit-button"
+        type="button"
+        class="modal-secondary-button">
+
+        Cancelar
+
+      </button>
+
+      <button
+        id="confirm-exit-button"
+        type="button"
+        class="game-pink-button">
+
+        Sí, salir
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ======================================================
+     COMING SOON / IN PROGRESS
+====================================================== -->
+
+<div
+  id="status-modal"
+  class="game-modal"
+  role="dialog"
+  aria-modal="true">
+
+  <div class="game-modal-card">
+
+    <h3 id="status-modal-title">
+      Próximamente
+    </h3>
+
+    <p id="status-modal-text">
+      Esta función estará disponible muy pronto.
+    </p>
+
+    <button
+      id="status-modal-close"
+      type="button"
+      class="game-pink-button">
+
+      Entendido
+
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+
+(function () {
+
+
+/* =========================================================
+   INTRO / SAVE SYSTEM
+========================================================= */
+
+const loadingScreen =
+  document.getElementById(
+    "loading"
+  );
+
+const coverScreen =
+  document.getElementById(
+    "cover-screen"
+  );
+
+const introScreen =
+  document.getElementById(
+    "intro-screen"
+  );
+
+const newGameButton =
+  document.getElementById(
+    "new-game-button"
+  );
+
+const resumeGameButton =
+  document.getElementById(
+    "resume-game-button"
+  );
+
+const playerNameInput =
+  document.getElementById(
+    "player-name-input"
+  );
+
+const introGreeting =
+  document.getElementById(
+    "intro-greeting"
+  );
+
+const introStep1 =
+  document.getElementById(
+    "intro-step-1"
+  );
+
+const introStep2 =
+  document.getElementById(
+    "intro-step-2"
+  );
+
+const introStep3 =
+  document.getElementById(
+    "intro-step-3"
+  );
+
+const introStep4 =
+  document.getElementById(
+    "intro-step-4"
+  );
+
+
+const introDialoguePanel =
+  document.querySelector(
+    ".intro-dialogue-panel"
+  );
+
+const introMeliImage =
+  document.querySelector(
+    ".intro-meli"
+  );
+
+
+let activeTypingTimer =
+  null;
+
+let typewriterRunning =
+  false;
+
+let typewriterSkipRequested =
+  false;
+
+
+/* =========================================================
+   INTRO TYPEWRITER
+========================================================= */
+
+function clearTypewriterTimer() {
+
+  if (
+    activeTypingTimer
+  ) {
+
+    clearTimeout(
+      activeTypingTimer
+    );
+
+    activeTypingTimer =
+      null;
+
+  }
+
+}
+
+
+function wait(
+  milliseconds
+) {
+
+  return new Promise(
+    function (
+      resolve
+    ) {
+
+      activeTypingTimer =
+        setTimeout(
+          resolve,
+          milliseconds
+        );
+
+    }
+  );
+
+}
+
+
+async function typeIntoElement(
+  element,
+  text,
+  speed = 24
+) {
+
+  if (
+    !element
+  ) {
+
+    return;
+
+  }
+
+
+  element.textContent =
+    "";
+
+  element.classList.add(
+    "typewriter-line"
+  );
+
+  element.classList.add(
+    "typewriter-cursor"
+  );
+
+
+  for (
+    let index = 0;
+    index < text.length;
+    index++
+  ) {
+
+    if (
+      typewriterSkipRequested
+    ) {
+
+      element.textContent =
+        text;
+
+      break;
+
+    }
+
+
+    element.textContent +=
+      text.charAt(
+        index
+      );
+
+
+    await wait(
+      speed
+    );
+
+  }
+
+
+  element.classList.remove(
+    "typewriter-cursor"
+  );
+
+}
+
+
+function revealControls(
+  step
+) {
+
+  step.classList.add(
+    "controls-visible"
+  );
+
+}
+
+
+async function animateIntroStep(
+  step
+) {
+
+  clearTypewriterTimer();
+
+  typewriterRunning =
+    true;
+
+  typewriterSkipRequested =
+    false;
+
+
+  step.classList.remove(
+    "controls-visible"
+  );
+
+  step.classList.remove(
+    "step-visible"
+  );
+
+
+  const title =
+    step.querySelector(
+      "h2"
+    );
+
+
+  const paragraphs =
+    Array.from(
+      step.querySelectorAll(
+        "p"
+      )
+    );
+
+
+  const titleText =
+    title
+    ?
+    title.dataset.fullText
+      ||
+      title.textContent.trim()
+    :
+    "";
+
+
+  if (
+    title
+  ) {
+
+    title.dataset.fullText =
+      titleText;
+
+    title.textContent =
+      "";
+
+  }
+
+
+  const paragraphTexts =
+    paragraphs.map(
+      function (
+        paragraph
+      ) {
+
+        const fullText =
+          paragraph.dataset.fullText
+          ||
+          paragraph.textContent
+            .replace(/\s+/g, " ")
+            .trim();
+
+
+        paragraph.dataset.fullText =
+          fullText;
+
+        paragraph.textContent =
+          "";
+
+
+        return fullText;
+
       }
+    );
+
+
+  requestAnimationFrame(
+    function () {
+
+      step.classList.add(
+        "step-visible"
+      );
+
+    }
+  );
+
+
+  await wait(
+    180
+  );
+
+
+  if (
+    title
+  ) {
+
+    await typeIntoElement(
+      title,
+      titleText,
+      22
+    );
+
+    await wait(
+      100
+    );
+
+  }
+
+
+  for (
+    let index = 0;
+    index < paragraphs.length;
+    index++
+  ) {
+
+    await typeIntoElement(
+      paragraphs[index],
+      paragraphTexts[index],
+      16
+    );
+
+    await wait(
+      90
+    );
+
+  }
+
+
+  typewriterRunning =
+    false;
+
+
+  revealControls(
+    step
+  );
+
+}
+
+function completeCurrentTyping() {
+
+  if (
+    !typewriterRunning
+  ) {
+
+    return;
+
+  }
+
+
+  typewriterSkipRequested =
+    true;
+
+}
+
+
+introDialoguePanel.addEventListener(
+  "click",
+  function (
+    event
+  ) {
+
+    const clickedInteractiveElement =
+      event.target.closest(
+        "button, input"
+      );
+
+
+    if (
+      clickedInteractiveElement
+    ) {
+
+      return;
+
+    }
+
+
+    completeCurrentTyping();
+
+  }
+);
+
+const SAVE_KEYS = {
+
+  hasSave:
+    "boc_has_save",
+
+  playerName:
+    "boc_player_name",
+
+  meliX:
+    "boc_meli_x",
+
+  meliY:
+    "boc_meli_y"
+
+};
+
+
+const SESSION_KEYS = {
+
+  bootSeen:
+    "boc_boot_seen",
+
+  gameActive:
+    "boc_game_active"
+
+};
+
+let introFlowActive =
+  true;
+
+let gameStarted =
+  false;
+
+let restoreSavedPosition =
+  false;
+
+
+const introAnxiImage =
+  document.getElementById(
+    "intro-anxi-img"
+  );
+
+const introAnxiWrap =
+  document.getElementById(
+    "intro-anxi-wrap"
+  );
+
+const ANXI_ENTRANCE_CLASS =
+  "anxi-entrance-play";
+
+const ANXI_VISIBLE_CLASS =
+  "intro-anxi-visible";
+
+function playAnxiIntroAnimation() {
+
+  if (
+    !introAnxiImage
+  ) {
+
+    return;
+
+  }
+
+
+  // The wrapper lives outside the dialogue panel (as a sibling of
+  // Meli, so both share the same bottom-of-screen coordinate space),
+  // so it stays hidden by default and is only shown while Screen 3 is
+  // actually active — see setIntroStep()'s else-branch below.
+  if (
+    introAnxiWrap
+  ) {
+
+    introAnxiWrap.classList.add(
+      ANXI_VISIBLE_CLASS
+    );
+
+  }
+
+
+  // Restart the CSS entrance animation from scratch every time this
+  // runs (fresh Screen 3 entry, or ATRÁS back into it): remove the
+  // triggering class, force a reflow so the browser forgets the
+  // animation ever played, then re-add it.
+  introAnxiImage.classList.remove(
+    ANXI_ENTRANCE_CLASS
+  );
+
+  void introAnxiImage.offsetWidth;
+
+  introAnxiImage.classList.add(
+    ANXI_ENTRANCE_CLASS
+  );
+
+}
+
+
+function setIntroStep(
+  stepNumber
+) {
+
+  clearTypewriterTimer();
+
+
+  [
+    introStep1,
+    introStep2,
+    introStep3,
+    introStep4
+  ].forEach(
+    function (
+      step
+    ) {
+
+      step.classList.remove(
+        "active"
+      );
+
+      step.classList.remove(
+        "step-visible"
+      );
+
+      step.classList.remove(
+        "controls-visible"
+      );
+
+    }
+  );
+
+
+  const steps = {
+    1: introStep1,
+    2: introStep2,
+    3: introStep3,
+    4: introStep4
+  };
+
+
+  const nextStep =
+    steps[
+      stepNumber
     ];
 
-    let currentStepIndex = 0;
+
+  if (
+    nextStep
+  ) {
+
+    nextStep.classList.add(
+      "active"
+    );
 
 
-    function buildStepButtons(stepIndex) {
+    applyIntroSpriteStep(
+      stepNumber
+    );
 
-      const wrap = document.createElement("div");
-      wrap.className = "step-buttons";
 
-      if (stepIndex === 1) {
+    if (
+      stepNumber === 3
+    ) {
 
-        const back = document.createElement("button");
-        back.type = "button";
-        back.className = "back-step-button";
-        back.textContent = "← Atrás";
-        back.onclick = function () { goToStep(0); };
-        wrap.appendChild(back);
+      playAnxiIntroAnimation();
 
-        const start = document.createElement("button");
-        start.type = "button";
-        start.className = "play-button";
-        start.textContent = "¡Comencemos!";
-        start.onclick = goToLevels;
-        wrap.appendChild(start);
+    } else if (
+      introAnxiWrap
+    ) {
 
-      } else {
+      introAnxiWrap.classList.remove(
+        ANXI_VISIBLE_CLASS
+      );
 
-        const next = document.createElement("button");
-        next.type = "button";
-        next.className = "play-button";
-        next.textContent = "Siguiente →";
-        next.onclick = function () { goToStep(1); };
-        wrap.appendChild(next);
+    }
+
+
+    requestAnimationFrame(
+      function () {
+
+        setTimeout(
+          function () {
+
+            animateIntroStep(
+              nextStep
+            );
+
+          },
+          110
+        );
 
       }
+    );
 
-      return wrap;
+  }
+
+}
+
+
+function hasSavedGame() {
+
+  return (
+    localStorage.getItem(
+      SAVE_KEYS.hasSave
+    )
+    ===
+    "true"
+  );
+
+}
+
+
+function refreshResumeButton() {
+
+  resumeGameButton.disabled =
+    !hasSavedGame();
+
+}
+
+
+function showCover() {
+
+  loadingScreen.style.display =
+    "none";
+
+  introScreen.style.display =
+    "none";
+
+  coverScreen.style.display =
+    "block";
+
+  introFlowActive =
+    true;
+
+  gameStarted =
+    false;
+
+  mapExitButton.style.display =
+    "none";
+
+  if (typeof audioSettingsButton !== "undefined") {
+    audioSettingsButton.style.display = "none";
+  }
+
+  // The same ambient music used on the map plays from the cover.
+  // Only the map-only birds are paused; the music is never restarted.
+  birdsAudio.pause();
+  startIntroMusic();
+
+  refreshResumeButton();
+
+}
+
+
+function showIntro() {
+
+  coverScreen.style.display =
+    "none";
+
+  loadingScreen.style.display =
+    "none";
+
+  introScreen.style.display =
+    "block";
+
+  introFlowActive =
+    true;
+
+  gameStarted =
+    false;
+
+  introDialoguePanel.classList.remove(
+    "show"
+  );
+
+  introMeliImage.classList.remove(
+    "show"
+  );
+
+
+  setTimeout(
+    function () {
+
+      introDialoguePanel.classList.add(
+        "show"
+      );
+
+    },
+    100
+  );
+
+
+  setTimeout(
+    function () {
+
+      introMeliImage.classList.add(
+        "show"
+      );
+
+    },
+    260
+  );
+
+
+  introSpriteState.meliIntent =
+    null;
+
+  setIntroStep(
+    1
+  );
+
+  /* hold the neutral pose while Meli fades in, then greet */
+  introSpriteState.meliTime =
+    -0.35;
+
+  playerNameInput.value =
+    "";
+
+  setTimeout(
+    function () {
+
+      playerNameInput.focus();
+
+    },
+    1500
+  );
+
+}
+
+
+function saveCurrentGame() {
+
+  if (
+    !gameStarted
+  ) {
+
+    return;
+
+  }
+
+  localStorage.setItem(
+    SAVE_KEYS.hasSave,
+    "true"
+  );
+
+  localStorage.setItem(
+    SAVE_KEYS.meliX,
+    String(
+      meli.x
+    )
+  );
+
+  localStorage.setItem(
+    SAVE_KEYS.meliY,
+    String(
+      meli.y
+    )
+  );
+
+}
+
+
+function beginMapGame(
+  useSavedPosition
+) {
+
+  introFlowActive =
+    false;
+
+  gameStarted =
+    true;
+
+  restoreSavedPosition =
+    useSavedPosition;
+
+  loadingScreen.style.display =
+    "none";
+
+  coverScreen.style.display =
+    "none";
+
+  introScreen.style.display =
+    "none";
+
+  localStorage.setItem(
+    SAVE_KEYS.hasSave,
+    "true"
+  );
+
+
+  sessionStorage.setItem(
+    SESSION_KEYS.bootSeen,
+    "true"
+  );
+
+
+  sessionStorage.setItem(
+    SESSION_KEYS.gameActive,
+    "true"
+  );
+
+
+  if (
+    useSavedPosition
+  ) {
+
+    const savedX =
+      Number(
+        localStorage.getItem(
+          SAVE_KEYS.meliX
+        )
+      );
+
+    const savedY =
+      Number(
+        localStorage.getItem(
+          SAVE_KEYS.meliY
+        )
+      );
+
+
+    if (
+      Number.isFinite(
+        savedX
+      )
+      &&
+      Number.isFinite(
+        savedY
+      )
+      &&
+      savedX >
+      0
+      &&
+      savedY >
+      0
+    ) {
+
+      meli.x =
+        savedX;
+
+      meli.y =
+        savedY;
+
+      camera.x =
+        savedX;
+
+      camera.y =
+        savedY;
 
     }
 
+  }
 
-    function renderStep(stepIndex) {
+  closeBottomMenu();
 
-      const container = document.getElementById("stepContent");
-      const step = STEPS[stepIndex];
 
-      container.innerHTML = "";
+  mapExitButton.style.display =
+    "flex";
 
-      const indicator = document.createElement("span");
-      indicator.className = "step-indicator";
-      indicator.textContent = step.indicator;
-      container.appendChild(indicator);
+  audioSettingsButton.style.display =
+    "flex";
 
-      const h1 = document.createElement("h1");
-      h1.textContent = step.title;
-      container.appendChild(h1);
+  startWorldAudio();
 
-      step.paragraphs.forEach(function (html) {
-        const p = document.createElement("p");
-        p.innerHTML = html;
-        container.appendChild(p);
-      });
+}
 
-      container.appendChild(buildStepButtons(stepIndex));
+
+function finishNewGameIntro() {
+
+  localStorage.setItem(
+    SAVE_KEYS.hasSave,
+    "true"
+  );
+
+  localStorage.setItem(
+    SAVE_KEYS.meliX,
+    String(
+      mapW *
+      0.50
+    )
+  );
+
+  localStorage.setItem(
+    SAVE_KEYS.meliY,
+    String(
+      mapH *
+      0.67
+    )
+  );
+
+  beginMapGame(
+    false
+  );
+
+}
+
+
+newGameButton.addEventListener(
+  "click",
+  function () {
+
+    // The New Game click is a user interaction, so browsers
+    // allow the main world music to begin here.
+    startIntroMusic();
+    showIntro();
+
+  }
+);
+
+
+resumeGameButton.addEventListener(
+  "click",
+  function () {
+
+    if (
+      !hasSavedGame()
+    ) {
+
+      return;
 
     }
 
+    beginMapGame(
+      true
+    );
 
-    function goToStep(stepIndex) {
+  }
+);
 
-      if (stepIndex === currentStepIndex) {
+
+document
+  .getElementById(
+    "cover-settings"
+  )
+  .addEventListener(
+    "click",
+    function () {
+      document.getElementById("audio-settings-modal").classList.add("visible");
+    }
+  );
+
+
+document
+  .getElementById(
+    "intro-continue-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      const playerName =
+        playerNameInput.value.trim();
+
+
+      if (
+        !playerName
+      ) {
+
+        playerNameInput.focus();
+
+        playerNameInput.placeholder =
+          "Escribe tu nombre para continuar";
+
         return;
+
       }
 
-      const container = document.getElementById("stepContent");
 
-      container.classList.add("step-transitioning");
+      localStorage.setItem(
+        SAVE_KEYS.playerName,
+        playerName
+      );
 
-      window.setTimeout(function () {
-        currentStepIndex = stepIndex;
-        renderStep(currentStepIndex);
-        // forzar reflow antes de quitar la clase, para que la
-        // transición de entrada se reproduzca
-        void container.offsetWidth;
-        container.classList.remove("step-transitioning");
-      }, 220);
+
+      introGreeting.textContent =
+        "¡Mucho gusto, "
+        +
+        playerName
+        +
+        "!";
+
+
+      setIntroStep(
+        2
+      );
+
+    }
+  );
+
+
+playerNameInput.addEventListener(
+  "keydown",
+  function (
+    event
+  ) {
+
+    event.stopPropagation();
+
+
+    if (
+      event.key ===
+      "Enter"
+    ) {
+
+      event.preventDefault();
+
+      document
+        .getElementById(
+          "intro-continue-button"
+        )
+        .click();
 
     }
 
+  }
+);
 
-    renderStep(currentStepIndex);
+
+document
+  .getElementById(
+    "intro-next-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      setIntroStep(
+        3
+      );
+
+    }
+  );
 
 
-    /* =====================================================
-       COMENZAR → BAKERY LEVELS
-       (comportamiento sin cambios: siempre navega a
-       levels.html; no hay lógica de progreso/almacenamiento
-       que condicione cuándo se muestra esta bienvenida)
-    ===================================================== */
+document
+  .getElementById(
+    "intro-back-2-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
 
-    function goToLevels() {
+      setIntroStep(
+        1
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "intro-next-3-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      setIntroStep(
+        4
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "intro-back-3-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      setIntroStep(
+        2
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "intro-back-4-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      setIntroStep(
+        3
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "start-adventure-button"
+  )
+  .addEventListener(
+    "click",
+    finishNewGameIntro
+  );
+
+
+document
+  .getElementById(
+    "skip-intro-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      const currentName =
+        playerNameInput.value.trim();
+
+
+      if (
+        currentName
+      ) {
+
+        localStorage.setItem(
+          SAVE_KEYS.playerName,
+          currentName
+        );
+
+      }
+
+
+      finishNewGameIntro();
+
+    }
+  );
+
+
+window.addEventListener(
+  "beforeunload",
+  saveCurrentGame
+);
+
+
+
+
+/* =========================================================
+   GLOBAL UI REFERENCES
+========================================================= */
+
+const mapExitButton =
+  document.getElementById(
+    "map-exit-button"
+  );
+
+const exitConfirmModal =
+  document.getElementById(
+    "exit-confirm-modal"
+  );
+
+const statusModal =
+  document.getElementById(
+    "status-modal"
+  );
+
+const statusModalTitle =
+  document.getElementById(
+    "status-modal-title"
+  );
+
+const statusModalText =
+  document.getElementById(
+    "status-modal-text"
+  );
+
+const screenTransition =
+  document.getElementById(
+    "screen-transition"
+  );
+
+
+/* =========================================================
+   AUDIO
+========================================================= */
+
+const AUDIO_MUTED_KEY = "bocAudioMuted";
+
+const audioSettingsButton = document.getElementById("audio-settings-button");
+const audioSettingsModal = document.getElementById("audio-settings-modal");
+const audioToggleButton = document.getElementById("audio-toggle-button");
+const audioSettingsClose = document.getElementById("audio-settings-close");
+const worldMusic = document.getElementById("world-music");
+const birdsAudio = document.getElementById("birds-audio");
+
+worldMusic.volume = 0.38;
+birdsAudio.volume = 0.20;
+
+let audioMuted = localStorage.getItem(AUDIO_MUTED_KEY) === "true";
+
+function updateAudioControls() {
+  audioToggleButton.textContent = audioMuted ? "OFF" : "ON";
+  audioToggleButton.classList.toggle("muted", audioMuted);
+  audioToggleButton.setAttribute("aria-pressed", String(!audioMuted));
+  worldMusic.muted = audioMuted;
+  birdsAudio.muted = audioMuted;
+}
+
+function safePlay(audio) {
+  if (audioMuted) return;
+  const playPromise = audio.play();
+  if (playPromise && typeof playPromise.catch === "function") {
+    playPromise.catch(function () {});
+  }
+}
+
+function startIntroMusic() {
+  safePlay(worldMusic);
+}
+
+function startWorldAudio() {
+  safePlay(worldMusic);
+  safePlay(birdsAudio);
+}
+
+function stopWorldAudio() {
+  worldMusic.pause();
+  birdsAudio.pause();
+}
+
+function setAudioMuted(value) {
+  audioMuted = value;
+  localStorage.setItem(AUDIO_MUTED_KEY, String(audioMuted));
+  updateAudioControls();
+  if (!audioMuted) {
+    if (gameStarted) startWorldAudio();
+    else startIntroMusic();
+  }
+}
+
+updateAudioControls();
+
+/*
+  Music from the cover screen.
+  Browsers may block autoplay, so we try right away and, if blocked,
+  start on the person's first interaction (tap, click or key).
+  The listeners remove themselves as soon as the music is really
+  playing, so there is never a second start or a second audio.
+*/
+const AUDIO_UNLOCK_EVENTS = ["pointerdown", "touchend", "click", "keydown"];
+
+function unlockAudioOnInteraction() {
+  if (audioMuted) return;
+  if (gameStarted) startWorldAudio();
+  else startIntroMusic();
+}
+
+function removeAudioUnlockListeners() {
+  AUDIO_UNLOCK_EVENTS.forEach(function (name) {
+    document.removeEventListener(name, unlockAudioOnInteraction, true);
+  });
+}
+
+AUDIO_UNLOCK_EVENTS.forEach(function (name) {
+  document.addEventListener(name, unlockAudioOnInteraction, true);
+});
+
+worldMusic.addEventListener("playing", removeAudioUnlockListeners);
+
+startIntroMusic();
+
+audioSettingsButton.addEventListener("click", function () {
+  audioSettingsModal.classList.add("visible");
+});
+
+audioSettingsClose.addEventListener("click", function () {
+  audioSettingsModal.classList.remove("visible");
+});
+
+audioSettingsModal.addEventListener("click", function (event) {
+  if (event.target === audioSettingsModal) {
+    audioSettingsModal.classList.remove("visible");
+  }
+});
+
+audioToggleButton.addEventListener("click", function () {
+  setAudioMuted(!audioMuted);
+});
+
+
+function showModal(
+  modal
+) {
+
+  modal.classList.add(
+    "visible"
+  );
+
+}
+
+
+function hideModal(
+  modal
+) {
+
+  modal.classList.remove(
+    "visible"
+  );
+
+}
+
+
+function showStatusModal(
+  title,
+  text
+) {
+
+  statusModalTitle.textContent =
+    title;
+
+  statusModalText.textContent =
+    text;
+
+  showModal(
+    statusModal
+  );
+
+}
+
+
+function navigateWithTransition(
+  url
+) {
+
+  stopWorldAudio();
+
+  screenTransition.classList.add(
+    "active"
+  );
+
+  setTimeout(
+    function () {
 
       window.location.href =
-        "levels.html";
+        url;
+
+    },
+    320
+  );
+
+}
+
+
+/* =========================================================
+   MAP EXIT
+========================================================= */
+
+mapExitButton.addEventListener(
+  "click",
+  function () {
+
+    saveCurrentGame();
+
+    showModal(
+      exitConfirmModal
+    );
+
+  }
+);
+
+
+document
+  .getElementById(
+    "cancel-exit-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      hideModal(
+        exitConfirmModal
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "confirm-exit-button"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      saveCurrentGame();
+
+      hideModal(
+        exitConfirmModal
+      );
+
+      sessionStorage.setItem(
+        SESSION_KEYS.gameActive,
+        "false"
+      );
+
+      mapExitButton.style.display =
+        "none";
+
+      showCover();
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "status-modal-close"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      hideModal(
+        statusModal
+      );
+
+    }
+  );
+
+
+exitConfirmModal.addEventListener(
+  "click",
+  function (
+    event
+  ) {
+
+    if (
+      event.target ===
+      exitConfirmModal
+    ) {
+
+      hideModal(
+        exitConfirmModal
+      );
+
+    }
+
+  }
+);
+
+
+statusModal.addEventListener(
+  "click",
+  function (
+    event
+  ) {
+
+    if (
+      event.target ===
+      statusModal
+    ) {
+
+      hideModal(
+        statusModal
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   CONFIG
+========================================================= */
+
+const MOVE_SPEED =
+  3.2;
+
+const ANIM_FPS =
+  9;
+
+const MELI_SCALE =
+  0.65;
+
+const CAMERA_LERP =
+  0.08;
+
+
+/* =========================================================
+   ASSETS
+========================================================= */
+
+const assetPaths = {
+
+  map:
+    "map.png",
+
+  idle_01:
+    "Idle_01.png",
+
+  down_01:
+    "down_01.png",
+
+  down_02:
+    "down_02.png",
+
+  down_03:
+    "down_03.png",
+
+  down_04:
+    "down_04.png",
+
+  up_01:
+    "up_01.png",
+
+  up_02:
+    "up_02.png",
+
+  up_03:
+    "up_03.png",
+
+  up_04:
+    "up_04.png",
+
+  right_01:
+    "right_01.png",
+
+  right_02:
+    "right_02.png",
+
+  right_03:
+    "right_03.png",
+
+  right_04:
+    "right_04.png"
+
+};
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+const canvas =
+  document.getElementById(
+    "game-canvas"
+  );
+
+
+const ctx =
+  canvas.getContext(
+    "2d"
+  );
+
+
+function resize() {
+
+  canvas.width =
+    window.innerWidth;
+
+
+  canvas.height =
+    window.innerHeight;
+
+}
+
+
+window.addEventListener(
+  "resize",
+  resize
+);
+
+
+resize();
+
+
+/* =========================================================
+   LOAD IMAGES
+========================================================= */
+
+const images = {};
+
+let loaded = 0;
+
+const total =
+  Object.keys(
+    assetPaths
+  ).length;
+
+
+function loadAssets(
+  callback
+) {
+
+  for (
+    const [key, path]
+    of Object.entries(
+      assetPaths
+    )
+  ) {
+
+    const img =
+      new Image();
+
+
+    img.onload =
+      function () {
+
+        loaded++;
+
+
+        if (
+          loaded === total
+        ) {
+
+          callback();
+
+        }
+
+      };
+
+
+    img.onerror =
+      function () {
+
+        console.error(
+          "Missing:",
+          path
+        );
+
+
+        loaded++;
+
+
+        if (
+          loaded === total
+        ) {
+
+          callback();
+
+        }
+
+      };
+
+
+    img.src =
+      path;
+
+
+    images[key] =
+      img;
+
+  }
+
+}
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let gameMode =
+  "map";
+
+
+let mapW =
+  0;
+
+
+let mapH =
+  0;
+
+
+const meli = {
+
+  x: 0,
+
+  y: 0,
+
+  width: 0,
+
+  height: 0,
+
+  direction:
+    "idle",
+
+  frame: 0,
+
+  animTimer: 0
+
+};
+
+
+const camera = {
+
+  x: 0,
+
+  y: 0
+
+};
+
+
+/*
+  Manual camera exploration (drag).
+  exploring = true  -> automatic follow is paused
+  The follow resumes when Meli starts walking again.
+*/
+const cameraExplore = {
+
+  exploring: false,
+
+  dragging: false,
+
+  pointerId: null,
+
+  startX: 0,
+
+  startY: 0,
+
+  lastX: 0,
+
+  lastY: 0,
+
+  lastT: 0,
+
+  moved: false,
+
+  vx: 0,
+
+  vy: 0,
+
+  wasMoving: false,
+
+  suppressClick: false
+
+};
+
+
+/* =========================================================
+   TRIGGERS
+========================================================= */
+
+const PARK_TRIGGER = {
+
+  x: 0.218,
+
+  y: 0.218,
+
+  radius: 0.045
+
+};
+
+
+const BAKERY_TRIGGER = {
+
+  x: 0.520,
+
+  y: 0.350,
+
+  radius: 0.045
+
+};
+
+
+const LIBRARY_TRIGGER = {
+
+  x: 0.185,
+
+  y: 0.480,
+
+  radius: 0.045
+
+};
+
+const CLINIC_TRIGGER = {
+
+  x: 0.864,
+
+  y: 0.145,
+
+  radius: 0.045
+
+};
+
+
+const WORKSHOP_TRIGGER = {
+
+  x: 0.736,
+
+  y: 0.418,
+
+  radius: 0.045
+
+};
+
+
+let nearPark =
+  false;
+
+
+let nearBakery =
+  false;
+
+
+let nearLibrary =
+  false;
+
+
+let nearClinic =
+  false;
+
+
+let nearWorkshop =
+  false;
+
+
+/* =========================================================
+   AUTO WALK
+========================================================= */
+
+const autoWalk = {
+
+  active:
+    false,
+
+  targetX:
+    0,
+
+  targetY:
+    0,
+
+  location:
+    null
+
+};
+
+
+function startAutoWalk(
+  trigger,
+  location
+) {
+
+  autoWalk.active =
+    true;
+
+
+  autoWalk.targetX =
+    trigger.x *
+    mapW;
+
+
+  autoWalk.targetY =
+    trigger.y *
+    mapH;
+
+
+  autoWalk.location =
+    location;
+
+
+  cameraExplore.exploring =
+    false;
+
+  cameraExplore.vx =
+    0;
+
+  cameraExplore.vy =
+    0;
+
+
+  closeBottomMenu();
+
+}
+
+
+function cancelAutoWalk() {
+
+  autoWalk.active =
+    false;
+
+
+  autoWalk.location =
+    null;
+
+}
+
+
+function finishAutoWalk() {
+
+  const location =
+    autoWalk.location;
+
+
+  autoWalk.active =
+    false;
+
+
+  autoWalk.location =
+    null;
+
+
+  meli.direction =
+    "idle";
+
+
+  meli.frame =
+    0;
+
+
+  if (
+    location ===
+    "park"
+  ) {
+
+    enterPark();
+
+  }
+
+
+  else if (
+    location ===
+    "bakery"
+  ) {
+
+    enterBakery();
+
+  }
+
+
+  else if (
+    location ===
+    "library"
+  ) {
+
+    enterLibrary();
+
+  }
+
+
+  else if (
+    location ===
+    "clinic"
+  ) {
+
+    showStatusModal(
+      "En progreso",
+      "La Clínica estará disponible próximamente."
+    );
+
+  }
+
+
+  else if (
+    location ===
+    "workshop"
+  ) {
+
+    enterWorkshop();
+
+  }
+
+}
+
+
+/* =========================================================
+   HOUSE COLLISIONS
+========================================================= */
+
+const houseZones = [
+
+  {
+    x: 0.150,
+    y: 0.295,
+    w: 0.075,
+    h: 0.18
+  },
+
+  {
+    x: 0.445,
+    y: 0.105,
+    w: 0.13,
+    h: 0.225
+  },
+
+  {
+    x: 0.704,
+    y: 0.265,
+    w: 0.078,
+    h: 0.135
+  },
+
+  {
+    x: 0.815,
+    y: 0.05,
+    w: 0.085,
+    h: 0.185
+  }
+
+];
+
+
+function getHouseColliders() {
+
+  return houseZones.map(
+
+    zone => ({
+
+      x:
+        zone.x *
+        mapW,
+
+      y:
+        zone.y *
+        mapH,
+
+      w:
+        zone.w *
+        mapW,
+
+      h:
+        zone.h *
+        mapH
+
+    })
+
+  );
+
+}
+
+
+/* =========================================================
+   ENVIRONMENT COLLISIONS (trees, signposts, the swing set,
+   and the few bushes that sit on path edges acting as
+   boundaries). Same fractional-zone pattern as houseZones,
+   sized to each object's small base/footprint rather than
+   its full visible sprite, so Meli can still stand in front
+   of a tree canopy or a sign's wide arms without being
+   blocked by the whole drawing.
+========================================================= */
+
+const environmentZones = [
+
+  /* swing set (legs/base only, not the swing's overhead arc) */
+  { x: 0.118, y: 0.245, w: 0.085, h: 0.045 },
+
+  /* standalone tree, left side of map (trunk base only) */
+  { x: 0.074, y: 0.535, w: 0.024, h: 0.028 },
+
+  /* tree near the Clinic / Creative Workshop signpost (trunk base only) */
+  { x: 0.615, y: 0.355, w: 0.025, h: 0.03 },
+
+  /* tree bottom-right of the map (trunk base only) */
+  { x: 0.893, y: 0.618, w: 0.022, h: 0.026 },
+
+  /* "OPENING SOON" signpost in front of the Bakery */
+  { x: 0.415, y: 0.30, w: 0.05, h: 0.085 },
+
+  /* "CLINIC / Creative workshop" signpost near the Library */
+  { x: 0.253, y: 0.40, w: 0.035, h: 0.075 },
+
+  /* "CLINIC / Creative workshop" signpost near the Creative Workshop */
+  { x: 0.596, y: 0.40, w: 0.032, h: 0.09 },
+
+  /* "CALMWOOD / LIBRARY" signpost, center of the map */
+  { x: 0.352, y: 0.665, w: 0.026, h: 0.032 },
+
+  /* "CALMWOOD / LIBRARY" signpost, right side of the map */
+  { x: 0.790, y: 0.51, w: 0.045, h: 0.075 },
+
+  /* bush beside the Bakery that marks the edge of its front path */
+  { x: 0.404, y: 0.245, w: 0.042, h: 0.03 },
+
+  /* small bush directly in front of the Bakery, right of the sign */
+  { x: 0.498, y: 0.345, w: 0.026, h: 0.022 },
+
+  /* bush marking the path bend on the right side of the map */
+  { x: 0.698, y: 0.635, w: 0.042, h: 0.032 }
+
+];
+
+
+function getEnvironmentColliders() {
+
+  return environmentZones.map(
+
+    zone => ({
+
+      x:
+        zone.x *
+        mapW,
+
+      y:
+        zone.y *
+        mapH,
+
+      w:
+        zone.w *
+        mapW,
+
+      h:
+        zone.h *
+        mapH
+
+    })
+
+  );
+
+}
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+const keys = {};
+
+
+window.addEventListener(
+  "keydown",
+  function (
+    event
+  ) {
+
+    const key =
+      event.key.toLowerCase();
+
+
+    /*
+      Do not control Meli while loading, cover, or intro is active.
+      This also prevents typing a name from moving the character.
+    */
+    if (
+      !gameStarted
+      ||
+      introFlowActive
+    ) {
+
+      return;
 
     }
 
 
-    /* =====================================================
-       SALIR → MAPA PRINCIPAL
-    ===================================================== */
+    keys[key] =
+      true;
 
-    function exitBakery() {
 
-      window.location.href =
-        "../index.html";
+    if (
+      autoWalk.active
+      &&
+      [
+        "arrowup",
+        "arrowdown",
+        "arrowleft",
+        "arrowright",
+        "w",
+        "a",
+        "s",
+        "d"
+      ].includes(
+        key
+      )
+    ) {
+
+      cancelAutoWalk();
 
     }
 
-  </script>
+
+    if (
+      key === "e"
+      &&
+      gameMode ===
+      "map"
+    ) {
+
+      if (
+        nearPark
+      ) {
+
+        enterPark();
+
+      }
+
+
+      else if (
+        nearBakery
+      ) {
+
+        enterBakery();
+
+      }
+
+
+      else if (
+        nearLibrary
+      ) {
+
+        enterLibrary();
+
+      }
+
+
+      else if (
+        nearClinic
+      ) {
+
+        showStatusModal(
+          "En progreso",
+          "La Clínica estará disponible próximamente."
+        );
+
+      }
+
+
+      else if (
+        nearWorkshop
+      ) {
+
+        enterWorkshop();
+
+      }
+
+    }
+
+
+    if (
+      [
+        "arrowup",
+        "arrowdown",
+        "arrowleft",
+        "arrowright",
+        "w",
+        "a",
+        "s",
+        "d",
+        "e"
+      ].includes(
+        key
+      )
+    ) {
+
+      event.preventDefault();
+
+    }
+
+  }
+);
+
+
+window.addEventListener(
+  "keyup",
+  function (
+    event
+  ) {
+
+    keys[
+      event.key.toLowerCase()
+    ] =
+      false;
+
+  }
+);
+
+
+/* =========================================================
+   TOUCH D-PAD
+========================================================= */
+
+const touch = {
+
+  up:
+    false,
+
+  down:
+    false,
+
+  left:
+    false,
+
+  right:
+    false
+
+};
+
+
+function setupDpad() {
+
+  const controls = {
+
+    "btn-up":
+      "up",
+
+    "btn-down":
+      "down",
+
+    "btn-left":
+      "left",
+
+    "btn-right":
+      "right"
+
+  };
+
+
+  for (
+    const [id, dir]
+    of Object.entries(
+      controls
+    )
+  ) {
+
+    const button =
+      document.getElementById(
+        id
+      );
+
+
+    function start(
+      event
+    ) {
+
+      event.preventDefault();
+
+
+      cancelAutoWalk();
+
+
+      closeBottomMenu();
+
+
+      touch[dir] =
+        true;
+
+
+      button.classList.add(
+        "pressed"
+      );
+
+    }
+
+
+    function end(
+      event
+    ) {
+
+      if (
+        event
+      ) {
+
+        event.preventDefault();
+
+      }
+
+
+      touch[dir] =
+        false;
+
+
+      button.classList.remove(
+        "pressed"
+      );
+
+    }
+
+
+    button.addEventListener(
+      "touchstart",
+      start,
+      {
+        passive: false
+      }
+    );
+
+
+    button.addEventListener(
+      "touchend",
+      end
+    );
+
+
+    button.addEventListener(
+      "touchcancel",
+      end
+    );
+
+
+    button.addEventListener(
+      "mousedown",
+      start
+    );
+
+
+    button.addEventListener(
+      "mouseup",
+      end
+    );
+
+
+    button.addEventListener(
+      "mouseleave",
+      end
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+const animations = {
+
+  idle: [
+    "idle_01"
+  ],
+
+  down: [
+    "down_01",
+    "down_02",
+    "down_03",
+    "down_04"
+  ],
+
+  up: [
+    "up_01",
+    "up_02",
+    "up_03",
+    "up_04"
+  ],
+
+  right: [
+    "right_01",
+    "right_02",
+    "right_03",
+    "right_04"
+  ],
+
+  left: [
+    "right_01",
+    "right_02",
+    "right_03",
+    "right_04"
+  ]
+
+};
+
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function getMeliHitbox(
+  x,
+  y
+) {
+
+  const width =
+    meli.width *
+    0.32;
+
+
+  const height =
+    meli.height *
+    0.18;
+
+
+  return {
+
+    x:
+      x -
+      width /
+      2,
+
+    y:
+      y +
+      meli.height *
+      0.25,
+
+    w:
+      width,
+
+    h:
+      height
+
+  };
+
+}
+
+
+function rectanglesOverlap(
+  a,
+  b
+) {
+
+  return (
+
+    a.x <
+    b.x + b.w
+
+    &&
+
+    a.x + a.w >
+    b.x
+
+    &&
+
+    a.y <
+    b.y + b.h
+
+    &&
+
+    a.y + a.h >
+    b.y
+
+  );
+
+}
+
+
+function collidesWithHouse(
+  x,
+  y
+) {
+
+  const player =
+    getMeliHitbox(
+      x,
+      y
+    );
+
+
+  for (
+    const house
+    of getHouseColliders()
+  ) {
+
+    if (
+      rectanglesOverlap(
+        player,
+        house
+      )
+    ) {
+
+      return true;
+
+    }
+
+  }
+
+
+  /* Same per-axis check, now also against trees, signposts,
+     the swing set, and boundary bushes — kept inside
+     collidesWithHouse() so the existing movement-resolution
+     call sites (X then Y) do not need to change at all. */
+  for (
+    const obstacle
+    of getEnvironmentColliders()
+  ) {
+
+    if (
+      rectanglesOverlap(
+        player,
+        obstacle
+      )
+    ) {
+
+      return true;
+
+    }
+
+  }
+
+
+  return false;
+
+}
+
+
+/* =========================================================
+   LOCATION TRIGGERS
+========================================================= */
+
+function getDistanceToTrigger(
+  trigger
+) {
+
+  const triggerX =
+    trigger.x *
+    mapW;
+
+
+  const triggerY =
+    trigger.y *
+    mapH;
+
+
+  const dx =
+    meli.x -
+    triggerX;
+
+
+  const dy =
+    meli.y -
+    triggerY;
+
+
+  return Math.sqrt(
+    dx * dx +
+    dy * dy
+  );
+
+}
+
+
+function isNearTrigger(
+  trigger
+) {
+
+  const radius =
+    trigger.radius *
+    Math.min(
+      mapW,
+      mapH
+    );
+
+
+  return (
+    getDistanceToTrigger(
+      trigger
+    )
+    <
+    radius
+  );
+
+}
+
+
+function isMobileDevice() {
+
+  return (
+
+    window.innerWidth <=
+    768
+
+    ||
+
+    window.matchMedia(
+      "(pointer: coarse)"
+    ).matches
+
+  );
+
+}
+
+
+function updateLocationTriggers() {
+
+  nearPark =
+    isNearTrigger(
+      PARK_TRIGGER
+    );
+
+
+  nearBakery =
+    isNearTrigger(
+      BAKERY_TRIGGER
+    );
+
+
+  nearLibrary =
+    isNearTrigger(
+      LIBRARY_TRIGGER
+    );
+
+
+  nearClinic =
+    isNearTrigger(
+      CLINIC_TRIGGER
+    );
+
+
+  nearWorkshop =
+    isNearTrigger(
+      WORKSHOP_TRIGGER
+    );
+
+
+  const parkPrompt =
+    document.getElementById(
+      "park-prompt"
+    );
+
+
+  const bakeryPrompt =
+    document.getElementById(
+      "bakery-prompt"
+    );
+
+
+  const libraryPrompt =
+    document.getElementById(
+      "library-prompt"
+    );
+
+
+  const mobilePark =
+    document.getElementById(
+      "mobile-enter-park"
+    );
+
+
+  const mobileBakery =
+    document.getElementById(
+      "mobile-enter-bakery"
+    );
+
+
+  const mobileLibrary =
+    document.getElementById(
+      "mobile-enter-library"
+    );
+
+
+  const clinicPrompt =
+    document.getElementById(
+      "clinic-prompt"
+    );
+
+
+  const workshopPrompt =
+    document.getElementById(
+      "workshop-prompt"
+    );
+
+
+  const mobileClinic =
+    document.getElementById(
+      "mobile-enter-clinic"
+    );
+
+
+  const mobileWorkshop =
+    document.getElementById(
+      "mobile-enter-workshop"
+    );
+
+
+  parkPrompt.style.display =
+    "none";
+
+
+  bakeryPrompt.style.display =
+    "none";
+
+
+  libraryPrompt.style.display =
+    "none";
+
+
+  clinicPrompt.style.display =
+    "none";
+
+
+  workshopPrompt.style.display =
+    "none";
+
+
+  mobileClinic.style.display =
+    "none";
+
+
+  mobileWorkshop.style.display =
+    "none";
+
+
+  mobilePark.style.display =
+    "none";
+
+
+  mobileBakery.style.display =
+    "none";
+
+
+  mobileLibrary.style.display =
+    "none";
+
+
+  if (
+    gameMode !==
+    "map"
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    nearPark
+  ) {
+
+    if (
+      isMobileDevice()
+    ) {
+
+      mobilePark.style.display =
+        "block";
+
+    }
+
+    else {
+
+      parkPrompt.style.display =
+        "block";
+
+    }
+
+  }
+
+
+  else if (
+    nearBakery
+  ) {
+
+    if (
+      isMobileDevice()
+    ) {
+
+      mobileBakery.style.display =
+        "block";
+
+    }
+
+    else {
+
+      bakeryPrompt.style.display =
+        "block";
+
+    }
+
+  }
+
+
+  else if (
+    nearLibrary
+  ) {
+
+    if (
+      isMobileDevice()
+    ) {
+
+      mobileLibrary.style.display =
+        "block";
+
+    }
+
+    else {
+
+      libraryPrompt.style.display =
+        "block";
+
+    }
+
+  }
+
+
+
+  else if (
+    nearClinic
+  ) {
+
+    if (
+      isMobileDevice()
+    ) {
+
+      mobileClinic.style.display =
+        "block";
+
+    }
+
+    else {
+
+      clinicPrompt.style.display =
+        "block";
+
+    }
+
+  }
+
+
+  else if (
+    nearWorkshop
+  ) {
+
+    if (
+      isMobileDevice()
+    ) {
+
+      mobileWorkshop.style.display =
+        "block";
+
+    }
+
+    else {
+
+      workshopPrompt.style.display =
+        "block";
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   BAKERY / LIBRARY
+========================================================= */
+
+function enterBakery() {
+
+  saveCurrentGame();
+
+  navigateWithTransition(
+    "Bakery/index.html"
+  );
+
+}
+
+
+function enterLibrary() {
+
+  saveCurrentGame();
+
+  navigateWithTransition(
+    "Library/index.html"
+  );
+
+}
+
+
+function enterWorkshop() {
+
+  saveCurrentGame();
+
+  navigateWithTransition(
+    "Workshop/index.html"
+  );
+
+}
+
+
+/* NOTE: these two mobile button listeners used to be registered
+   INSIDE enterBakery() (only wired up once the player had already
+   entered the Bakery, and moot even then since that function
+   immediately navigates away) — moved here so the Enter Workshop /
+   Enter Clinic mobile buttons work from the very start, exactly like
+   every other mobile-enter-* button. No behavior for Bakery/Library
+   changed. */
+
+document
+  .getElementById(
+    "mobile-enter-clinic"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      showStatusModal(
+        "En progreso",
+        "La Clínica estará disponible próximamente."
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "mobile-enter-workshop"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      enterWorkshop();
+
+    }
+  );
+
+
+/* =========================================================
+   COLLAPSIBLE MENU
+========================================================= */
+
+const menuWrapper =
+  document.getElementById(
+    "menu-wrapper"
+  );
+
+
+const bottomMenu =
+  document.getElementById(
+    "bottom-menu"
+  );
+
+
+const menuToggle =
+  document.getElementById(
+    "menu-toggle"
+  );
+
+
+let menuOpen =
+  false;
+
+
+function openBottomMenu() {
+
+  menuOpen =
+    true;
+
+
+  bottomMenu.classList.remove(
+    "menu-closed"
+  );
+
+
+  bottomMenu.classList.add(
+    "menu-open"
+  );
+
+
+  menuToggle.classList.add(
+    "is-open"
+  );
+
+
+  menuToggle.setAttribute(
+    "aria-label",
+    "Close menu"
+  );
+
+}
+
+
+function closeBottomMenu() {
+
+  menuOpen =
+    false;
+
+
+  bottomMenu.classList.remove(
+    "menu-open"
+  );
+
+
+  bottomMenu.classList.add(
+    "menu-closed"
+  );
+
+
+  menuToggle.classList.remove(
+    "is-open"
+  );
+
+
+  menuToggle.setAttribute(
+    "aria-label",
+    "Open menu"
+  );
+
+}
+
+
+menuToggle.addEventListener(
+  "click",
+  function () {
+
+    if (
+      menuOpen
+    ) {
+
+      closeBottomMenu();
+
+    }
+
+    else {
+
+      openBottomMenu();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   MENU ICONS
+========================================================= */
+
+document
+  .getElementById(
+    "menu-map"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      closeBottomMenu();
+
+      showStatusModal(
+        "Próximamente",
+        "La vista de mapa estará disponible muy pronto."
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "menu-notification"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      showStatusModal(
+        "Próximamente",
+        "Las notificaciones estarán disponibles muy pronto."
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "menu-character"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      saveCurrentGame();
+
+      navigateWithTransition(
+        "Character/index.html"
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "menu-trophy"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      showStatusModal(
+        "Próximamente",
+        "Los trofeos estarán disponibles muy pronto."
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   PARK
+========================================================= */
+
+const parkScreen =
+  document.getElementById(
+    "park-screen"
+  );
+
+
+const parkIntroOverlay =
+  document.getElementById(
+    "park-intro-overlay"
+  );
+
+
+const parkScene =
+  document.getElementById(
+    "park-scene"
+  );
+
+
+const parkCategoryView =
+  document.getElementById(
+    "park-category-view"
+  );
+
+
+const parkActivityView =
+  document.getElementById(
+    "park-activity-view"
+  );
+
+
+const parkCategoryTitle =
+  document.getElementById(
+    "park-category-title"
+  );
+
+
+const parkCategorySubtitle =
+  document.getElementById(
+    "park-category-subtitle"
+  );
+
+
+const parkActivityList =
+  document.getElementById(
+    "park-activity-list"
+  );
+
+
+const activityHeading =
+  document.getElementById(
+    "activity-heading"
+  );
+
+
+const activityText =
+  document.getElementById(
+    "activity-text"
+  );
+
+
+const activityDuration =
+  document.getElementById(
+    "activity-duration"
+  );
+
+
+let activeParkCategory =
+  null;
+
+
+/* =========================================================
+   PARK DATA
+========================================================= */
+
+/*
+  THIS IS THE PART YOU WILL CHANGE LATER
+  when you add more activities.
+
+  Each object has a category.
+  Each category can contain as many activities as you want.
+*/
+
+const parkCategories = {
+
+  recordings: {
+
+    title:
+      "Recordings",
+
+    subtitle:
+      "Choose a recording and take a quiet moment for yourself.",
+
+    activities: [
+
+      {
+        id:
+          "pause-choose",
+
+        title:
+          "Pause & Choose",
+
+        description:
+          "Slow down, notice what you’re feeling, and choose what feels right for you.",
+
+        duration:
+          "8 minutes",
+
+        type:
+          "audio",
+
+        audio: 
+        "park/Permitiryelegir_audio.mp3"
+      }
+
+    ]
+
+  },
+
+
+  audio: {
+
+    title:
+      "Listen & Unwind",
+
+    subtitle:
+      "Put on your headphones and choose something calming to listen to.",
+
+    activities: [
+
+      {
+        id:
+          "headphones-coming-soon",
+
+        title:
+          "New audio coming soon",
+
+        description:
+          "This space is ready for music, sounds, or another guided audio activity.",
+
+        duration:
+          "",
+
+        type:
+          "message"
+      }
+
+    ]
+
+  },
+
+
+  observation: {
+
+    title:
+      "Look Around",
+
+    subtitle:
+      "Slow down and notice the little things around you.",
+
+    activities: [
+
+      {
+        id:
+          "notice-five",
+
+        title:
+          "Notice Five Things",
+
+        description:
+          "Look around slowly and notice five things that catch your attention.",
+
+        duration:
+          "2–3 minutes",
+
+        type:
+          "message"
+      }
+
+    ]
+
+  },
+
+
+  fidget: {
+
+    title:
+      "Fidget Break",
+
+    subtitle:
+      "Give your hands something simple to do while your mind slows down.",
+
+    activities: [
+
+      {
+        id:
+          "fidget-break",
+
+        title:
+          "Take a Fidget Break",
+
+        description:
+          "Use this moment to pause, press, play, and let your attention settle.",
+
+        duration:
+          "2 minutes",
+
+        type:
+          "message"
+      }
+
+    ]
+
+  }
+
+};
+
+
+/* =========================================================
+   PARK AUDIO
+========================================================= */
+
+const parkAudio =
+  document.getElementById(
+    "park-audio"
+  );
+
+
+const audioPlayer =
+  document.getElementById(
+    "audio-player"
+  );
+
+
+const audioPlayButton =
+  document.getElementById(
+    "audio-play-button"
+  );
+
+
+const audioProgress =
+  document.getElementById(
+    "audio-progress"
+  );
+
+
+const audioTime =
+  document.getElementById(
+    "audio-time"
+  );
+
+
+function formatTime(
+  seconds
+) {
+
+  if (
+    !Number.isFinite(
+      seconds
+    )
+  ) {
+
+    return "0:00";
+
+  }
+
+
+  const minutes =
+    Math.floor(
+      seconds /
+      60
+    );
+
+
+  const remainingSeconds =
+    Math.floor(
+      seconds %
+      60
+    )
+    .toString()
+    .padStart(
+      2,
+      "0"
+    );
+
+
+  return (
+    minutes
+    +
+    ":"
+    +
+    remainingSeconds
+  );
+
+}
+
+
+function stopParkAudio() {
+
+  parkAudio.pause();
+
+
+  try {
+
+    parkAudio.currentTime =
+      0;
+
+  }
+
+  catch (
+    error
+  ) {
+
+    /*
+      Audio might not have loaded yet.
+    */
+
+  }
+
+
+  audioPlayButton.textContent =
+    "▶";
+
+
+  audioProgress.value =
+    0;
+
+}
+
+
+/* =========================================================
+   PARK VIEWS
+========================================================= */
+
+function showParkIntro() {
+
+  stopParkAudio();
+
+
+  parkIntroOverlay.style.display =
+    "flex";
+
+
+  parkIntroOverlay.classList.remove(
+    "visible"
+  );
+
+
+  parkCategoryView.style.display =
+    "none";
+
+
+  parkActivityView.style.display =
+    "none";
+
+
+  parkScene.style.display =
+    "block";
+
+
+  const parkDescription =
+    parkIntroOverlay.querySelector(
+      ".park-description"
+    );
+
+
+  const exploreButton =
+    document.getElementById(
+      "explore-park"
+    );
+
+
+  const fullText =
+    parkDescription.dataset.fullText
+    ||
+    parkDescription.textContent
+      .replace(/\s+/g, " ")
+      .trim();
+
+
+  parkDescription.dataset.fullText =
+    fullText;
+
+
+  parkDescription.textContent =
+    "";
+
+
+  exploreButton.style.opacity =
+    "0";
+
+
+  exploreButton.style.pointerEvents =
+    "none";
+
+
+  setTimeout(
+    function () {
+
+      parkIntroOverlay.classList.add(
+        "visible"
+      );
+
+    },
+    80
+  );
+
+
+  setTimeout(
+    async function () {
+
+      parkDescription.classList.add(
+        "typewriter-cursor"
+      );
+
+
+      for (
+        let index = 0;
+        index < fullText.length;
+        index++
+      ) {
+
+        parkDescription.textContent +=
+          fullText.charAt(
+            index
+          );
+
+
+        await new Promise(
+          function (
+            resolve
+          ) {
+
+            setTimeout(
+              resolve,
+              14
+            );
+
+          }
+        );
+
+      }
+
+
+      parkDescription.classList.remove(
+        "typewriter-cursor"
+      );
+
+
+      exploreButton.style.transition =
+        "opacity 0.28s ease";
+
+
+      exploreButton.style.opacity =
+        "1";
+
+
+      exploreButton.style.pointerEvents =
+        "auto";
+
+    },
+    260
+  );
+
+}
+
+
+function showParkScene() {
+
+  stopParkAudio();
+
+
+  parkIntroOverlay.style.display =
+    "none";
+
+
+  parkCategoryView.style.display =
+    "none";
+
+
+  parkActivityView.style.display =
+    "none";
+
+
+  parkScene.style.display =
+    "block";
+
+}
+
+
+function openParkCategory(
+  categoryKey
+) {
+
+  const category =
+    parkCategories[
+      categoryKey
+    ];
+
+
+  if (
+    !category
+  ) {
+
+    return;
+
+  }
+
+
+  activeParkCategory =
+    categoryKey;
+
+
+  stopParkAudio();
+
+
+  parkCategoryTitle.textContent =
+    category.title;
+
+
+  parkCategorySubtitle.textContent =
+    category.subtitle;
+
+
+  parkActivityList.innerHTML =
+    "";
+
+
+  category.activities.forEach(
+    function (
+      activity
+    ) {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+
+      button.type =
+        "button";
+
+
+      button.className =
+        "park-activity-item";
+
+
+      button.innerHTML =
+        `
+          <span>
+            <strong>${activity.title}</strong>
+            <span>${activity.description}</span>
+          </span>
+
+          <span class="park-activity-arrow">
+            ›
+          </span>
+        `;
+
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          openParkActivity(
+            activity
+          );
+
+        }
+      );
+
+
+      parkActivityList.appendChild(
+        button
+      );
+
+    }
+  );
+
+
+  parkIntroOverlay.style.display =
+    "none";
+
+
+  parkActivityView.style.display =
+    "none";
+
+
+  parkCategoryView.style.display =
+    "flex";
+
+}
+
+
+function openParkActivity(
+  activity
+) {
+
+  stopParkAudio();
+
+
+  activityHeading.textContent =
+    activity.title;
+
+
+  activityText.textContent =
+    activity.description;
+
+
+  activityDuration.textContent =
+    activity.duration || "";
+
+
+  if (
+    activity.type ===
+    "audio"
+    &&
+    activity.audio
+  ) {
+
+    audioPlayer.style.display =
+      "block";
+
+
+    parkAudio.src =
+      activity.audio;
+
+
+    parkAudio.load();
+
+  }
+
+  else {
+
+    audioPlayer.style.display =
+      "none";
+
+
+    parkAudio.removeAttribute(
+      "src"
+    );
+
+
+    parkAudio.load();
+
+  }
+
+
+  parkCategoryView.style.display =
+    "none";
+
+
+  parkActivityView.style.display =
+    "flex";
+
+}
+
+
+/* =========================================================
+   ENTER / EXIT PARK
+========================================================= */
+
+function enterPark() {
+
+  cancelAutoWalk();
+
+
+  closeBottomMenu();
+
+
+  gameMode =
+    "park";
+
+
+  touch.up =
+    false;
+
+
+  touch.down =
+    false;
+
+
+  touch.left =
+    false;
+
+
+  touch.right =
+    false;
+
+
+  document.getElementById(
+    "dpad"
+  ).style.display =
+    "none";
+
+
+  menuWrapper.style.display =
+    "none";
+
+
+  document.getElementById(
+    "park-prompt"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "bakery-prompt"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "library-prompt"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "mobile-enter-park"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "mobile-enter-bakery"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "mobile-enter-library"
+  ).style.display =
+    "none";
+
+
+  mapExitButton.style.display =
+    "none";
+
+
+  parkScreen.classList.remove(
+    "park-visible"
+  );
+
+
+  parkScreen.style.display =
+    "block";
+
+
+  requestAnimationFrame(
+    function () {
+
+      parkScreen.classList.add(
+        "park-visible"
+      );
+
+    }
+  );
+
+
+  showParkIntro();
+
+}
+
+
+function exitPark() {
+
+  stopParkAudio();
+
+
+  activeParkCategory =
+    null;
+
+
+  parkScreen.classList.remove(
+    "park-visible"
+  );
+
+
+  setTimeout(
+    function () {
+
+      gameMode =
+        "map";
+
+
+      parkScreen.style.display =
+        "none";
+
+
+      menuWrapper.style.display =
+        "flex";
+
+
+      closeBottomMenu();
+
+
+      if (
+        gameStarted
+      ) {
+
+        mapExitButton.style.display =
+          "flex";
+
+      }
+
+
+      if (
+        isMobileDevice()
+      ) {
+
+        document.getElementById(
+          "dpad"
+        ).style.display =
+          "block";
+
+      }
+
+    },
+    360
+  );
+
+}
+
+
+/* =========================================================
+   MOBILE LOCATION BUTTONS
+========================================================= */
+
+document
+  .getElementById(
+    "mobile-enter-park"
+  )
+  .addEventListener(
+    "click",
+    enterPark
+  );
+
+
+document
+  .getElementById(
+    "mobile-enter-bakery"
+  )
+  .addEventListener(
+    "click",
+    enterBakery
+  );
+
+
+document
+  .getElementById(
+    "mobile-enter-library"
+  )
+  .addEventListener(
+    "click",
+    enterLibrary
+  );
+
+
+/* =========================================================
+   PARK BUTTONS
+========================================================= */
+
+document
+  .getElementById(
+    "exit-park"
+  )
+  .addEventListener(
+    "click",
+    exitPark
+  );
+
+
+document
+  .getElementById(
+    "explore-park"
+  )
+  .addEventListener(
+    "click",
+    showParkScene
+  );
+
+
+document
+  .getElementById(
+    "back-to-park-scene"
+  )
+  .addEventListener(
+    "click",
+    showParkScene
+  );
+
+
+document
+  .getElementById(
+    "back-to-category"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      stopParkAudio();
+
+
+      if (
+        activeParkCategory
+      ) {
+
+        openParkCategory(
+          activeParkCategory
+        );
+
+      }
+
+      else {
+
+        showParkScene();
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   CLICKABLE PARK OBJECTS
+========================================================= */
+
+document
+  .querySelectorAll(
+    ".park-object"
+  )
+  .forEach(
+    function (
+      objectButton
+    ) {
+
+      objectButton.addEventListener(
+        "click",
+        function () {
+
+          openParkCategory(
+            objectButton.dataset.category
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   AUDIO PLAYER EVENTS
+========================================================= */
+
+audioPlayButton.addEventListener(
+  "click",
+  async function () {
+
+    if (
+      parkAudio.paused
+    ) {
+
+      try {
+
+        await parkAudio.play();
+
+
+        audioPlayButton.textContent =
+          "❚❚";
+
+      }
+
+      catch (
+        error
+      ) {
+
+        console.error(
+          "Audio could not play:",
+          error
+        );
+
+      }
+
+    }
+
+    else {
+
+      parkAudio.pause();
+
+
+      audioPlayButton.textContent =
+        "▶";
+
+    }
+
+  }
+);
+
+
+parkAudio.addEventListener(
+  "loadedmetadata",
+  function () {
+
+    audioTime.textContent =
+      "0:00 / "
+      +
+      formatTime(
+        parkAudio.duration
+      );
+
+  }
+);
+
+
+parkAudio.addEventListener(
+  "timeupdate",
+  function () {
+
+    if (
+      Number.isFinite(
+        parkAudio.duration
+      )
+      &&
+      parkAudio.duration >
+      0
+    ) {
+
+      const percentage =
+        (
+          parkAudio.currentTime
+          /
+          parkAudio.duration
+        )
+        *
+        100;
+
+
+      audioProgress.value =
+        percentage;
+
+
+      audioTime.textContent =
+        formatTime(
+          parkAudio.currentTime
+        )
+        +
+        " / "
+        +
+        formatTime(
+          parkAudio.duration
+        );
+
+    }
+
+  }
+);
+
+
+audioProgress.addEventListener(
+  "input",
+  function () {
+
+    if (
+      Number.isFinite(
+        parkAudio.duration
+      )
+    ) {
+
+      parkAudio.currentTime =
+        (
+          Number(
+            audioProgress.value
+          )
+          /
+          100
+        )
+        *
+        parkAudio.duration;
+
+    }
+
+  }
+);
+
+
+parkAudio.addEventListener(
+  "ended",
+  function () {
+
+    audioPlayButton.textContent =
+      "▶";
+
+
+    audioProgress.value =
+      0;
+
+  }
+);
+
+
+/* =========================================================
+   INIT
+========================================================= */
+
+let lastTime =
+  0;
+
+
+function init() {
+
+
+  mapW =
+    images.map.naturalWidth;
+
+
+  mapH =
+    images.map.naturalHeight;
+
+
+  meli.width =
+    images.idle_01
+      .naturalWidth
+    *
+    MELI_SCALE;
+
+
+  meli.height =
+    images.idle_01
+      .naturalHeight
+    *
+    MELI_SCALE;
+
+
+  meli.x =
+    mapW *
+    0.50;
+
+
+  meli.y =
+    mapH *
+    0.67;
+
+
+  camera.x =
+    meli.x;
+
+
+  camera.y =
+    meli.y;
+
+
+  setupDpad();
+
+
+  closeBottomMenu();
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+
+  /*
+    Loading is shown only on the first visit in this browser tab/session.
+
+    If the player returns from Bakery, Library, Character, etc.,
+    the game goes straight back to the map instead of showing
+    Loading and Cover again.
+  */
+
+  const alreadyBooted =
+    sessionStorage.getItem(
+      SESSION_KEYS.bootSeen
+    )
+    ===
+    "true";
+
+
+  const activeSession =
+    sessionStorage.getItem(
+      SESSION_KEYS.gameActive
+    )
+    ===
+    "true";
+
+
+  if (
+    alreadyBooted
+    &&
+    activeSession
+  ) {
+
+    loadingScreen.style.display =
+      "none";
+
+    coverScreen.style.display =
+      "none";
+
+    introScreen.style.display =
+      "none";
+
+    beginMapGame(
+      true
+    );
+
+  }
+
+  else {
+
+    sessionStorage.setItem(
+      SESSION_KEYS.bootSeen,
+      "true"
+    );
+
+
+    const minimumLoadingTime =
+      3500;
+
+
+    setTimeout(
+      showCover,
+      minimumLoadingTime
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   LOOP
+========================================================= */
+
+function gameLoop(
+  timestamp
+) {
+
+  const dt =
+    timestamp -
+    lastTime;
+
+
+  lastTime =
+    timestamp;
+
+
+  if (
+    dt >
+    0
+    &&
+    dt <
+    200
+  ) {
+
+    if (
+      gameMode ===
+      "map"
+      &&
+      gameStarted
+      &&
+      !introFlowActive
+    ) {
+
+      update(
+        dt
+      );
+
+      updateAnxi(
+        dt
+      );
+
+      updateMeliIdle(
+        dt
+      );
+
+    }
+
+
+    render();
+
+  }
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+}
+
+
+/* =========================================================
+   UPDATE
+========================================================= */
+
+function update(
+  dt
+) {
+
+  let dx =
+    0;
+
+
+  let dy =
+    0;
+
+
+  /* =====================================================
+     AUTO WALK
+  ===================================================== */
+
+  if (
+    autoWalk.active
+  ) {
+
+    const differenceX =
+      autoWalk.targetX -
+      meli.x;
+
+
+    const differenceY =
+      autoWalk.targetY -
+      meli.y;
+
+
+    const distance =
+      Math.sqrt(
+
+        differenceX *
+        differenceX
+
+        +
+
+        differenceY *
+        differenceY
+
+      );
+
+
+    if (
+      distance <
+      15
+    ) {
+
+      meli.x =
+        autoWalk.targetX;
+
+
+      meli.y =
+        autoWalk.targetY;
+
+
+      finishAutoWalk();
+
+
+      return;
+
+    }
+
+
+    dx =
+      differenceX /
+      distance;
+
+
+    dy =
+      differenceY /
+      distance;
+
+  }
+
+
+  /* =====================================================
+     MANUAL
+  ===================================================== */
+
+  else {
+
+    const up =
+      keys["w"]
+      ||
+      keys["arrowup"]
+      ||
+      touch.up;
+
+
+    const down =
+      keys["s"]
+      ||
+      keys["arrowdown"]
+      ||
+      touch.down;
+
+
+    const left =
+      keys["a"]
+      ||
+      keys["arrowleft"]
+      ||
+      touch.left;
+
+
+    const right =
+      keys["d"]
+      ||
+      keys["arrowright"]
+      ||
+      touch.right;
+
+
+    if (
+      up
+    ) {
+
+      dy -=
+        1;
+
+    }
+
+
+    if (
+      down
+    ) {
+
+      dy +=
+        1;
+
+    }
+
+
+    if (
+      left
+    ) {
+
+      dx -=
+        1;
+
+    }
+
+
+    if (
+      right
+    ) {
+
+      dx +=
+        1;
+
+    }
+
+  }
+
+
+  if (
+    dx !==
+    0
+    &&
+    dy !==
+    0
+    &&
+    !autoWalk.active
+  ) {
+
+    dx /=
+      Math.SQRT2;
+
+
+    dy /=
+      Math.SQRT2;
+
+  }
+
+
+  const speedFactor =
+    dt /
+    16.67;
+
+
+  const movementX =
+    dx *
+    MOVE_SPEED *
+    speedFactor;
+
+
+  const movementY =
+    dy *
+    MOVE_SPEED *
+    speedFactor;
+
+
+  /* MOVE X */
+
+  const nextX =
+    meli.x +
+    movementX;
+
+
+  if (
+    !collidesWithHouse(
+      nextX,
+      meli.y
+    )
+  ) {
+
+    meli.x =
+      nextX;
+
+  }
+
+
+  /* MOVE Y */
+
+  const nextY =
+    meli.y +
+    movementY;
+
+
+  if (
+    !collidesWithHouse(
+      meli.x,
+      nextY
+    )
+  ) {
+
+    meli.y =
+      nextY;
+
+  }
+
+
+  /* =====================================================
+     MAP LIMITS
+  ===================================================== */
+
+  meli.x =
+    Math.max(
+
+      meli.width /
+      2,
+
+      Math.min(
+
+        mapW -
+        meli.width /
+        2,
+
+        meli.x
+
+      )
+
+    );
+
+
+  meli.y =
+    Math.max(
+
+      meli.height /
+      2,
+
+      Math.min(
+
+        mapH -
+        meli.height /
+        2,
+
+        meli.y
+
+      )
+
+    );
+
+
+  /* =====================================================
+     DIRECTION
+  ===================================================== */
+
+  let direction =
+    "idle";
+
+
+  if (
+    dx ===
+    0
+    &&
+    dy ===
+    0
+  ) {
+
+    direction =
+      "idle";
+
+  }
+
+
+  else if (
+    Math.abs(
+      dx
+    )
+    >
+    Math.abs(
+      dy
+    )
+  ) {
+
+    direction =
+      dx >
+      0
+      ?
+      "right"
+      :
+      "left";
+
+  }
+
+
+  else {
+
+    direction =
+      dy >
+      0
+      ?
+      "down"
+      :
+      "up";
+
+  }
+
+
+  if (
+    direction !==
+    "idle"
+  ) {
+
+    meli.facing =
+      direction;
+
+  }
+
+
+  if (
+    direction !==
+    meli.direction
+  ) {
+
+    meli.direction =
+      direction;
+
+
+    meli.frame =
+      0;
+
+
+    meli.animTimer =
+      0;
+
+  }
+
+
+  /* =====================================================
+     ANIMATION
+  ===================================================== */
+
+  if (
+    meli.direction !==
+    "idle"
+  ) {
+
+    meli.animTimer +=
+      dt;
+
+
+    const interval =
+      1000 /
+      ANIM_FPS;
+
+
+    if (
+      meli.animTimer >=
+      interval
+    ) {
+
+      meli.animTimer -=
+        interval;
+
+
+      meli.frame =
+        (
+          meli.frame +
+          1
+        )
+        %
+        animations[
+          meli.direction
+        ].length;
+
+    }
+
+  }
+
+  else {
+
+    meli.frame =
+      0;
+
+
+    meli.animTimer =
+      0;
+
+  }
+
+
+  /* =====================================================
+     CAMERA
+  ===================================================== */
+
+  /*
+    Follow resumes when Meli starts walking (keys, D-pad or a
+    destination). While the person explores, no follow happens.
+  */
+  const meliMoving =
+    dx !== 0
+    ||
+    dy !== 0;
+
+  if (
+    meliMoving
+    &&
+    !cameraExplore.wasMoving
+    &&
+    !cameraExplore.dragging
+  ) {
+
+    cameraExplore.exploring =
+      false;
+
+    cameraExplore.vx =
+      0;
+
+    cameraExplore.vy =
+      0;
+
+  }
+
+  cameraExplore.wasMoving =
+    meliMoving;
+
+
+  if (
+    !cameraExplore.exploring
+  ) {
+
+    camera.x +=
+      (
+        meli.x -
+        camera.x
+      )
+      *
+      CAMERA_LERP;
+
+
+    camera.y +=
+      (
+        meli.y -
+        camera.y
+      )
+      *
+      CAMERA_LERP;
+
+  }
+
+  else if (
+    !cameraExplore.dragging
+  ) {
+
+    /* light inertia after releasing the drag */
+
+    const decay =
+      Math.pow(
+        0.9,
+        dt / 16.67
+      );
+
+    camera.x +=
+      cameraExplore.vx *
+      (dt / 16.67);
+
+    camera.y +=
+      cameraExplore.vy *
+      (dt / 16.67);
+
+    cameraExplore.vx *=
+      decay;
+
+    cameraExplore.vy *=
+      decay;
+
+    if (
+      Math.abs(cameraExplore.vx) < 0.3
+    ) {
+      cameraExplore.vx = 0;
+    }
+
+    if (
+      Math.abs(cameraExplore.vy) < 0.3
+    ) {
+      cameraExplore.vy = 0;
+    }
+
+  }
+
+
+  const halfW =
+    canvas.width /
+    2;
+
+
+  const halfH =
+    canvas.height /
+    2;
+
+
+  if (
+    canvas.width <
+    mapW
+  ) {
+
+    camera.x =
+      Math.max(
+
+        halfW,
+
+        Math.min(
+
+          mapW -
+          halfW,
+
+          camera.x
+
+        )
+
+      );
+
+  }
+
+  else {
+
+    camera.x =
+      mapW /
+      2;
+
+  }
+
+
+  if (
+    canvas.height <
+    mapH
+  ) {
+
+    camera.y =
+      Math.max(
+
+        halfH,
+
+        Math.min(
+
+          mapH -
+          halfH,
+
+          camera.y
+
+        )
+
+      );
+
+  }
+
+  else {
+
+    camera.y =
+      mapH /
+      2;
+
+  }
+
+
+  updateLocationTriggers();
+
+
+  /*
+    Light autosave while playing.
+  */
+
+  if (
+    gameStarted
+  ) {
+
+    const now =
+      performance.now();
+
+
+    if (
+      !update.lastSave
+      ||
+      now -
+      update.lastSave >
+      2500
+    ) {
+
+      update.lastSave =
+        now;
+
+      saveCurrentGame();
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   MELI + ANXI SPRITE SHEETS
+   One sheet per animation (32 frames, same crop and same ground
+   anchor, so the body never shifts between animations).
+========================================================= */
+
+const MELI_SHEET_PATH =
+  "Meli/sheets/";
+
+const MELI_FRAME_W =
+  316;
+
+const MELI_FRAME_H =
+  310;
+
+const MELI_ANCHOR_X =
+  177.8;
+
+const MELI_ANCHOR_Y =
+  304;
+
+const MELI_COLS =
+  8;
+
+/* playback speeds: calm, never rushed */
+const MELI_ANIMS = {
+
+  wave: {
+    file: "idle-wave-greeting-1313", frames: 32, fps: 18
+  },
+
+  breathe: {
+    file: "idle-character-breathe-1322", frames: 32, fps: 12
+  },
+
+  nervous: {
+    file: "meli-nervous-idle-1327", frames: 32, fps: 14
+  },
+
+  worried: {
+    file: "character-worried-idle-1333", frames: 32, fps: 14
+  }
+
+};
+
+const meliSheets =
+  {};
+
+for (
+  const key
+  of Object.keys(
+    MELI_ANIMS
+  )
+) {
+
+  const image =
+    new Image();
+
+  image.onload =
+    function () {
+
+      meliSheets[key] =
+        image;
+
+    };
+
+  image.src =
+    MELI_SHEET_PATH +
+    MELI_ANIMS[key].file +
+    ".png";
+
+}
+
+
+/* lighter sheets (smaller frames) used on the map */
+const MELI_MAP_FRAME_W =
+  174;
+
+const MELI_MAP_FRAME_H =
+  170;
+
+const MELI_MAP_ANCHOR_X =
+  97.8;
+
+const MELI_MAP_ANCHOR_Y =
+  167.2;
+
+const MELI_MAP_BODY_H =
+  164.1;
+
+const meliMapSheets =
+  {};
+
+for (
+  const key
+  of [
+    "wave",
+    "breathe"
+  ]
+) {
+
+  const image =
+    new Image();
+
+  image.onload =
+    function () {
+
+      meliMapSheets[key] =
+        image;
+
+    };
+
+  image.src =
+    MELI_SHEET_PATH +
+    "map_" +
+    MELI_ANIMS[key].file +
+    ".png";
+
+}
+
+
+const reducedMotionQuery =
+  window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  );
+
+function prefersReducedMotion() {
+
+  return reducedMotionQuery.matches;
+
+}
+
+
+/* =========================================================
+   INTRO ANIMATIONS (Meli + Anxi)
+   A single requestAnimationFrame loop drives both characters
+   independently. It only runs while the intro is on screen, and
+   typing never touches it, so nothing restarts.
+========================================================= */
+
+const INTRO_ANXI_FPS =
+  10.8;
+
+const INTRO_ANXI_FRAMES =
+  32;
+
+const introMeliCanvas =
+  document.getElementById(
+    "intro-meli-canvas"
+  );
+
+const introAnxiCanvas =
+  document.getElementById(
+    "intro-anxi-canvas"
+  );
+
+const introSpriteState = {
+
+  meliIntent: null,
+
+  meliName: "wave",
+
+  meliThen: null,
+
+  meliTime: 0,
+
+  anxiOn: false,
+
+  anxiTime: 0,
+
+  last: 0,
+
+  tickId: 0
+
+};
+
+
+function applyIntroSpriteStep(
+  stepNumber
+) {
+
+  const intents = {
+    1: { name: "wave", then: "breathe" },
+    2: { name: "nervous", then: null },
+    3: { name: "worried", then: null },
+    4: { name: "breathe", then: null }
+  };
+
+  const intent =
+    intents[stepNumber];
+
+  /* same animation as before: keep playing, never restart */
+  if (
+    intent
+    &&
+    introSpriteState.meliIntent !==
+    stepNumber
+  ) {
+
+    introSpriteState.meliIntent =
+      stepNumber;
+
+    introSpriteState.meliName =
+      intent.name;
+
+    introSpriteState.meliThen =
+      intent.then;
+
+    introSpriteState.meliTime =
+      0;
+
+  }
+
+  if (
+    stepNumber === 3
+  ) {
+
+    if (
+      !introSpriteState.anxiOn
+    ) {
+
+      introSpriteState.anxiTime =
+        0;
+
+    }
+
+    introSpriteState.anxiOn =
+      true;
+
+  }
+
+  else {
+
+    introSpriteState.anxiOn =
+      false;
+
+  }
+
+  startIntroSpriteLoop();
+
+}
+
+
+function fitIntroCanvas(
+  canvas
+) {
+
+  const ratio =
+    Math.min(
+      window.devicePixelRatio || 1,
+      2
+    );
+
+  const w =
+    Math.max(
+      1,
+      Math.round(
+        canvas.offsetWidth * ratio
+      )
+    );
+
+  const h =
+    Math.max(
+      1,
+      Math.round(
+        canvas.offsetHeight * ratio
+      )
+    );
+
+  if (
+    canvas.width !== w
+    ||
+    canvas.height !== h
+  ) {
+
+    canvas.width =
+      w;
+
+    canvas.height =
+      h;
+
+  }
+
+}
+
+
+function drawIntroFrame(
+  canvas,
+  sheet,
+  frame,
+  frameW,
+  frameH
+) {
+
+  if (
+    !sheet
+    ||
+    !canvas.offsetWidth
+  ) {
+
+    return false;
+
+  }
+
+  fitIntroCanvas(
+    canvas
+  );
+
+  const c =
+    canvas.getContext(
+      "2d"
+    );
+
+  c.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  c.imageSmoothingEnabled =
+    true;
+
+  c.imageSmoothingQuality =
+    "high";
+
+  c.drawImage(
+    sheet,
+    (frame % MELI_COLS) *
+    frameW,
+    Math.floor(
+      frame /
+      MELI_COLS
+    ) *
+    frameH,
+    frameW,
+    frameH,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  return true;
+
+}
+
+
+function renderIntroSprites() {
+
+  const state =
+    introSpriteState;
+
+  /* Meli */
+  const def =
+    MELI_ANIMS[
+      state.meliName
+    ];
+
+  const frame =
+    prefersReducedMotion()
+    ?
+    0
+    :
+    Math.max(
+      0,
+      Math.min(
+        def.frames - 1,
+        Math.floor(
+          state.meliTime *
+          def.fps
+        )
+      )
+    );
+
+  if (
+    drawIntroFrame(
+      introMeliCanvas,
+      meliSheets[
+        state.meliName
+      ],
+      frame,
+      MELI_FRAME_W,
+      MELI_FRAME_H
+    )
+  ) {
+
+    introMeliImage.classList.add(
+      "has-sprite"
+    );
+
+  }
+
+  /* Anxi (screen 3) */
+  if (
+    state.anxiOn
+  ) {
+
+    const anxiSheet =
+      anxi.sheets[
+        "idle-nervous-anxi-1007"
+      ];
+
+    const anxiFrame =
+      prefersReducedMotion()
+      ?
+      0
+      :
+      Math.floor(
+        state.anxiTime *
+        INTRO_ANXI_FPS
+      ) %
+      INTRO_ANXI_FRAMES;
+
+    drawIntroFrame(
+      introAnxiCanvas,
+      anxiSheet,
+      anxiFrame,
+      ANXI_FRAME_W,
+      ANXI_FRAME_H
+    );
+
+  }
+
+}
+
+
+function introSpriteTick(
+  now
+) {
+
+  const state =
+    introSpriteState;
+
+  state.tickId =
+    0;
+
+  /* stop as soon as the intro is not on screen */
+  if (
+    introScreen.style.display !==
+    "block"
+  ) {
+
+    return;
+
+  }
+
+  const dt =
+    Math.min(
+      (now - state.last) / 1000,
+      0.1
+    );
+
+  state.last =
+    now;
+
+  if (
+    !prefersReducedMotion()
+  ) {
+
+    state.meliTime +=
+      dt;
+
+    state.anxiTime +=
+      dt;
+
+    const def =
+      MELI_ANIMS[
+        state.meliName
+      ];
+
+    const duration =
+      def.frames /
+      def.fps;
+
+    if (
+      state.meliTime >=
+      duration
+    ) {
+
+      if (
+        state.meliThen
+      ) {
+
+        /* greeting finished: settle into breathing */
+        state.meliName =
+          state.meliThen;
+
+        state.meliThen =
+          null;
+
+        state.meliTime =
+          0;
+
+      }
+
+      else {
+
+        state.meliTime %=
+          duration;
+
+      }
+
+    }
+
+  }
+
+  renderIntroSprites();
+
+  state.tickId =
+    requestAnimationFrame(
+      introSpriteTick
+    );
+
+}
+
+
+/* only one loop can exist at any time */
+function startIntroSpriteLoop() {
+
+  if (
+    introSpriteState.tickId
+  ) {
+
+    return;
+
+  }
+
+  introSpriteState.last =
+    performance.now();
+
+  introSpriteState.tickId =
+    requestAnimationFrame(
+      introSpriteTick
+    );
+
+}
+
+
+/* =========================================================
+   MELI IDLE ON THE MAP
+   Standing still: keeps the last facing pose for a moment, fades
+   into the greeting, waves with small pauses, and after 15-20 s
+   without moving breathes once before greeting again. Any
+   movement interrupts it immediately.
+========================================================= */
+
+const MELI_IDLE_HOLD_MS =
+  1100;
+
+const MELI_IDLE_FADE_MS =
+  350;
+
+const MELI_IDLE_PAUSE_MIN_MS =
+  2200;
+
+const MELI_IDLE_PAUSE_MAX_MS =
+  4500;
+
+const MELI_IDLE_BREATHE_MIN_MS =
+  15000;
+
+const MELI_IDLE_BREATHE_MAX_MS =
+  20000;
+
+const meliIdle = {
+
+  active: false,
+
+  phase: "hold",
+
+  phaseT: 0,
+
+  stillMs: 0,
+
+  pauseLen: 0,
+
+  nextBreatheAt: 0,
+
+  sourceKey: "idle_01",
+
+  sourceFlip: false
+
+};
+
+
+function randomBetween(
+  min,
+  max
+) {
+
+  return min +
+    Math.random() *
+    (max - min);
+
+}
+
+
+function startMeliIdle() {
+
+  const facing =
+    meli.facing || "down";
+
+  meliIdle.active =
+    true;
+
+  meliIdle.stillMs =
+    0;
+
+  meliIdle.phaseT =
+    0;
+
+  meliIdle.nextBreatheAt =
+    randomBetween(
+      MELI_IDLE_BREATHE_MIN_MS,
+      MELI_IDLE_BREATHE_MAX_MS
+    );
+
+  if (
+    facing === "down"
+  ) {
+
+    /* already looking at the player: go straight to the greeting */
+    meliIdle.sourceKey =
+      "idle_01";
+
+    meliIdle.sourceFlip =
+      false;
+
+    meliIdle.phase =
+      "fade";
+
+  }
+
+  else {
+
+    /* keep looking where she was going, then turn softly */
+    meliIdle.sourceKey =
+      animations[facing][0];
+
+    meliIdle.sourceFlip =
+      facing === "left";
+
+    meliIdle.phase =
+      "hold";
+
+  }
+
+}
+
+
+function updateMeliIdle(
+  dt
+) {
+
+  if (
+    meli.direction !== "idle"
+    ||
+    prefersReducedMotion()
+  ) {
+
+    meliIdle.active =
+      false;
+
+    return;
+
+  }
+
+  if (
+    !meliMapSheets.wave
+    ||
+    !meliMapSheets.breathe
+  ) {
+
+    return;
+
+  }
+
+  if (
+    !meliIdle.active
+  ) {
+
+    startMeliIdle();
+
+  }
+
+  meliIdle.stillMs +=
+    dt;
+
+  meliIdle.phaseT +=
+    dt;
+
+  const phase =
+    meliIdle.phase;
+
+  if (
+    phase === "hold"
+    &&
+    meliIdle.phaseT >=
+    MELI_IDLE_HOLD_MS
+  ) {
+
+    meliIdle.phase =
+      "fade";
+
+    meliIdle.phaseT =
+      0;
+
+  }
+
+  else if (
+    phase === "fade"
+    &&
+    meliIdle.phaseT >=
+    MELI_IDLE_FADE_MS
+  ) {
+
+    meliIdle.phase =
+      "wave";
+
+    meliIdle.phaseT =
+      0;
+
+  }
+
+  else if (
+    phase === "wave"
+    ||
+    phase === "breathe"
+  ) {
+
+    const def =
+      MELI_ANIMS[
+        phase
+      ];
+
+    if (
+      meliIdle.phaseT >=
+      def.frames /
+      def.fps *
+      1000
+    ) {
+
+      if (
+        phase === "breathe"
+      ) {
+
+        meliIdle.nextBreatheAt =
+          meliIdle.stillMs +
+          randomBetween(
+            MELI_IDLE_BREATHE_MIN_MS,
+            MELI_IDLE_BREATHE_MAX_MS
+          );
+
+      }
+
+      meliIdle.phase =
+        "pause";
+
+      meliIdle.phaseT =
+        0;
+
+      meliIdle.pauseLen =
+        randomBetween(
+          MELI_IDLE_PAUSE_MIN_MS,
+          MELI_IDLE_PAUSE_MAX_MS
+        );
+
+    }
+
+  }
+
+  else if (
+    phase === "pause"
+    &&
+    (
+      meliIdle.phaseT >=
+      meliIdle.pauseLen
+      ||
+      (
+        meliIdle.stillMs >=
+        meliIdle.nextBreatheAt
+        &&
+        meliIdle.phaseT >=
+        400
+      )
+    )
+  ) {
+
+    meliIdle.phase =
+      meliIdle.stillMs >=
+      meliIdle.nextBreatheAt
+      ?
+      "breathe"
+      :
+      "wave";
+
+    meliIdle.phaseT =
+      0;
+
+  }
+
+}
+
+
+function drawMeliSpriteKey(
+  key,
+  flip,
+  alpha,
+  screenX,
+  screenY
+) {
+
+  const sprite =
+    images[
+      key
+    ];
+
+  if (
+    !sprite
+  ) {
+
+    return;
+
+  }
+
+  ctx.save();
+
+  ctx.globalAlpha =
+    alpha;
+
+  if (
+    flip
+  ) {
+
+    ctx.translate(
+      screenX,
+      screenY
+    );
+
+    ctx.scale(
+      -1,
+      1
+    );
+
+    ctx.drawImage(
+      sprite,
+      -meli.width /
+      2,
+      -meli.height /
+      2,
+      meli.width,
+      meli.height
+    );
+
+  }
+
+  else {
+
+    ctx.drawImage(
+      sprite,
+      screenX -
+      meli.width /
+      2,
+      screenY -
+      meli.height /
+      2,
+      meli.width,
+      meli.height
+    );
+
+  }
+
+  ctx.restore();
+
+}
+
+
+function drawMeliSheetFrame(
+  key,
+  frame,
+  alpha,
+  screenX,
+  screenY
+) {
+
+  const sheet =
+    meliMapSheets[
+      key
+    ];
+
+  /* same body height and feet line as the standing sprite */
+  const k =
+    (
+      meli.height *
+      132 /
+      162
+    ) /
+    MELI_MAP_BODY_H;
+
+  const feet =
+    meli.height *
+    (147 - 81) /
+    162;
+
+  ctx.save();
+
+  ctx.globalAlpha =
+    alpha;
+
+  ctx.imageSmoothingEnabled =
+    true;
+
+  ctx.imageSmoothingQuality =
+    "high";
+
+  ctx.drawImage(
+    sheet,
+    (frame % MELI_COLS) *
+    MELI_MAP_FRAME_W,
+    Math.floor(
+      frame /
+      MELI_COLS
+    ) *
+    MELI_MAP_FRAME_H,
+    MELI_MAP_FRAME_W,
+    MELI_MAP_FRAME_H,
+    screenX -
+    MELI_MAP_ANCHOR_X * k,
+    screenY +
+    feet -
+    MELI_MAP_ANCHOR_Y * k,
+    MELI_MAP_FRAME_W * k,
+    MELI_MAP_FRAME_H * k
+  );
+
+  ctx.restore();
+
+}
+
+
+/* returns true when the idle animation drew Meli */
+function drawMeliIdle(
+  screenX,
+  screenY
+) {
+
+  if (
+    !meliIdle.active
+    ||
+    !meliMapSheets.wave
+    ||
+    !meliMapSheets.breathe
+  ) {
+
+    return false;
+
+  }
+
+  const phase =
+    meliIdle.phase;
+
+  if (
+    phase === "hold"
+  ) {
+
+    drawMeliSpriteKey(
+      meliIdle.sourceKey,
+      meliIdle.sourceFlip,
+      1,
+      screenX,
+      screenY
+    );
+
+    return true;
+
+  }
+
+  if (
+    phase === "fade"
+  ) {
+
+    const t =
+      Math.min(
+        1,
+        meliIdle.phaseT /
+        MELI_IDLE_FADE_MS
+      );
+
+    drawMeliSpriteKey(
+      meliIdle.sourceKey,
+      meliIdle.sourceFlip,
+      1 - t,
+      screenX,
+      screenY
+    );
+
+    drawMeliSheetFrame(
+      "wave",
+      0,
+      t,
+      screenX,
+      screenY
+    );
+
+    return true;
+
+  }
+
+  if (
+    phase === "pause"
+  ) {
+
+    drawMeliSheetFrame(
+      "wave",
+      0,
+      1,
+      screenX,
+      screenY
+    );
+
+    return true;
+
+  }
+
+  const def =
+    MELI_ANIMS[
+      phase
+    ];
+
+  drawMeliSheetFrame(
+    phase,
+    Math.min(
+      def.frames - 1,
+      Math.floor(
+        meliIdle.phaseT /
+        1000 *
+        def.fps
+      )
+    ),
+    1,
+    screenX,
+    screenY
+  );
+
+  return true;
+
+}
+
+
+/* =========================================================
+   PINK PADS — shrink when Meli stands on them
+   The pads are painted inside map.png, so map_pads.png carries,
+   for every pad, a clean background patch and the pad itself.
+   While a pad is at 100% nothing extra is drawn (the map shows
+   the original); while it shrinks the patch hides the original
+   and the pad is redrawn smaller from its own centre.
+========================================================= */
+
+const PAD_CELL_W =
+  64;
+
+const PAD_CELL_H =
+  48;
+
+const PAD_MIN_SCALE =
+  0.85;
+
+const PAD_TWEEN_MS =
+  250;
+
+/* Meli "on" the pad: inside this ellipse (map px) around the pad;
+   a larger one is used to release it, so it never flickers. */
+const PAD_ENTER_RX =
+  26;
+
+const PAD_ENTER_RY =
+  22;
+
+const PAD_LEAVE_FACTOR =
+  1.25;
+
+const padsImage =
+  new Image();
+
+let padsReady =
+  false;
+
+padsImage.onload =
+  function () {
+    padsReady = true;
+  };
+
+padsImage.src =
+  "map_pads.png";
+
+const MAP_PADS = [
+  { nx: 0.21736, ny: 0.27783, cell: 0, cx: 31.00, cy: 24.50, wx: 282, wy: 260 },
+  { nx: 0.18542, ny: 0.46729, cell: 1, cx: 34.00, cy: 23.50, wx: 233, wy: 455 },
+  { nx: 0.51076, ny: 0.35840, cell: 2, cx: 32.50, cy: 23.00, wx: 703, wy: 344 },
+  { nx: 0.73507, ny: 0.41162, cell: 3, cx: 33.50, cy: 23.50, wx: 1025, wy: 398 },
+  { nx: 0.85451, ny: 0.28223, cell: 4, cx: 32.50, cy: 24.00, wx: 1198, wy: 265 },
+  { nx: 0.75139, ny: 0.77783, cell: 5, cx: 33.00, cy: 25.50, wx: 1049, wy: 771 },
+  { nx: 0.49340, ny: 0.82520, cell: 6, cx: 32.50, cy: 24.00, wx: 678, wy: 821 }
+].map(
+  function (pad) {
+
+    pad.scale =
+      1;
+
+    pad.from =
+      1;
+
+    pad.to =
+      1;
+
+    pad.t0 =
+      0;
+
+    pad.active =
+      false;
+
+    return pad;
+
+  }
+);
+
+
+function easeInOut(
+  t
+) {
+
+  return t < 0.5
+    ?
+    2 * t * t
+    :
+    1 - Math.pow(-2 * t + 2, 2) / 2;
+
+}
+
+
+function updatePads(
+  now
+) {
+
+  for (
+    const pad
+    of MAP_PADS
+  ) {
+
+    const px =
+      pad.nx *
+      mapW;
+
+    const py =
+      pad.ny *
+      mapH;
+
+    const ex =
+      (meli.x - px) /
+      PAD_ENTER_RX;
+
+    const ey =
+      (meli.y - py) /
+      PAD_ENTER_RY;
+
+    const d =
+      Math.sqrt(
+        ex * ex +
+        ey * ey
+      );
+
+    const limit =
+      pad.active
+      ?
+      PAD_LEAVE_FACTOR
+      :
+      1;
+
+    const on =
+      d <=
+      limit;
+
+    if (
+      on !==
+      pad.active
+    ) {
+
+      pad.active =
+        on;
+
+      pad.from =
+        pad.scale;
+
+      pad.to =
+        on
+        ?
+        PAD_MIN_SCALE
+        :
+        1;
+
+      pad.t0 =
+        now;
+
+    }
+
+    if (
+      pad.scale !==
+      pad.to
+    ) {
+
+      const t =
+        Math.min(
+          1,
+          (now - pad.t0) /
+          PAD_TWEEN_MS
+        );
+
+      pad.scale =
+        pad.from +
+        (pad.to - pad.from) *
+        easeInOut(t);
+
+      if (
+        t >=
+        1
+      ) {
+
+        pad.scale =
+          pad.to;
+
+      }
+
+    }
+
+  }
+
+}
+
+
+function drawPads(
+  offsetX,
+  offsetY
+) {
+
+  if (
+    !padsReady
+  ) {
+
+    return;
+
+  }
+
+  for (
+    const pad
+    of MAP_PADS
+  ) {
+
+    if (
+      pad.scale >
+      0.9995
+    ) {
+
+      continue;
+
+    }
+
+    const sy =
+      pad.cell *
+      PAD_CELL_H;
+
+    const dx =
+      Math.round(
+        pad.wx + offsetX
+      );
+
+    const dy =
+      Math.round(
+        pad.wy + offsetY
+      );
+
+    /* clean background that hides the original pad */
+    ctx.drawImage(
+      padsImage,
+      0,
+      sy,
+      PAD_CELL_W,
+      PAD_CELL_H,
+      dx,
+      dy,
+      PAD_CELL_W,
+      PAD_CELL_H
+    );
+
+    /* the pad, scaled from its own centre */
+    const w =
+      PAD_CELL_W *
+      pad.scale;
+
+    const h =
+      PAD_CELL_H *
+      pad.scale;
+
+    ctx.drawImage(
+      padsImage,
+      PAD_CELL_W,
+      sy,
+      PAD_CELL_W,
+      PAD_CELL_H,
+      dx + pad.cx - pad.cx * pad.scale,
+      dy + pad.cy - pad.cy * pad.scale,
+      w,
+      h
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   ANXI — animated character standing on the free pad
+   (lower road, far right). It is part of the world: drawn on
+   the same canvas with the camera offset, never walks.
+   Each animation is one sprite sheet (32 frames, same crop and
+   same ground anchor, so the character never shifts between
+   animations).
+========================================================= */
+
+const ANXI_SHEET_PATH =
+  "Anxi/sheets/";
+
+const ANXI_FRAME_W =
+  211;
+
+const ANXI_FRAME_H =
+  179;
+
+const ANXI_ANCHOR_X =
+  105;
+
+const ANXI_ANCHOR_Y =
+  176.25;
+
+const ANXI_COLS =
+  8;
+
+/* body ~63 px tall on screen (25% smaller than before) */
+const ANXI_DRAW_SCALE =
+  0.39;
+
+/* feet on the pad centre */
+const ANXI_WORLD_X =
+  0.75139;
+
+const ANXI_WORLD_Y =
+  0.78174;
+
+const ANXI_ANIMS = {
+
+  "idle-nervous-anxi-1007": {
+    frames: 32, fps: 10.8, weight: 45, special: false
+  },
+
+  "idle-nervous-sway-1016": {
+    frames: 32, fps: 9.6, weight: 35, special: false
+  },
+
+  "anxi-startle-jump-1042": {
+    frames: 32, fps: 24, weight: 8, special: true
+  },
+
+  "idle-character-breathe-1034": {
+    frames: 32, fps: 16, weight: 7, special: true
+  },
+
+  "idle-nervous-shiver-1023": {
+    frames: 32, fps: 20, weight: 5, special: true
+  }
+
+};
+
+const anxi = {
+
+  sheets: {},
+
+  current: "idle-nervous-anxi-1007",
+
+  time: 0,
+
+  lastWasSpecial: false
+
+};
+
+for (
+  const name
+  of Object.keys(
+    ANXI_ANIMS
+  )
+) {
+
+  const image =
+    new Image();
+
+  image.onload =
+    function () {
+
+      anxi.sheets[name] =
+        image;
+
+    };
+
+  image.src =
+    ANXI_SHEET_PATH +
+    name +
+    ".png";
+
+}
+
+
+/*
+  Weighted random pick. Two specials never play back to back
+  (so the jump never repeats and the rare ones are spaced out),
+  and only animations that are already loaded are chosen.
+*/
+function pickNextAnxiAnimation() {
+
+  const names =
+    Object.keys(
+      ANXI_ANIMS
+    ).filter(
+      function (name) {
+
+        if (
+          !anxi.sheets[name]
+        ) {
+
+          return false;
+
+        }
+
+        return !(
+          anxi.lastWasSpecial
+          &&
+          ANXI_ANIMS[name].special
+        );
+
+      }
+    );
+
+  if (
+    !names.length
+  ) {
+
+    return anxi.current;
+
+  }
+
+  let total =
+    0;
+
+  for (
+    const name
+    of names
+  ) {
+
+    total +=
+      ANXI_ANIMS[name].weight;
+
+  }
+
+  let roll =
+    Math.random() *
+    total;
+
+  for (
+    const name
+    of names
+  ) {
+
+    roll -=
+      ANXI_ANIMS[name].weight;
+
+    if (
+      roll <
+      0
+    ) {
+
+      return name;
+
+    }
+
+  }
+
+  return names[
+    names.length - 1
+  ];
+
+}
+
+
+/* runs only while the map is visible (called from the game loop) */
+function updateAnxi(
+  dt
+) {
+
+  const def =
+    ANXI_ANIMS[
+      anxi.current
+    ];
+
+  anxi.time +=
+    dt / 1000;
+
+  const duration =
+    def.frames /
+    def.fps;
+
+  /* play the whole animation, then start the next one with no gap */
+  while (
+    anxi.time >=
+    duration
+  ) {
+
+    anxi.time -=
+      duration;
+
+    anxi.lastWasSpecial =
+      def.special;
+
+    anxi.current =
+      pickNextAnxiAnimation();
+
+    return updateAnxiCarry();
+
+  }
+
+}
+
+
+function updateAnxiCarry() {
+
+  const def =
+    ANXI_ANIMS[
+      anxi.current
+    ];
+
+  const duration =
+    def.frames /
+    def.fps;
+
+  if (
+    anxi.time >=
+    duration
+  ) {
+
+    anxi.time =
+      0;
+
+  }
+
+}
+
+
+function anxiFootY() {
+
+  return ANXI_WORLD_Y *
+    mapH;
+
+}
+
+
+function drawAnxi(
+  offsetX,
+  offsetY
+) {
+
+  const sheet =
+    anxi.sheets[
+      anxi.current
+    ];
+
+  if (
+    !sheet
+  ) {
+
+    return;
+
+  }
+
+  const def =
+    ANXI_ANIMS[
+      anxi.current
+    ];
+
+  const frame =
+    Math.min(
+      def.frames - 1,
+      Math.floor(
+        anxi.time *
+        def.fps
+      )
+    );
+
+  const w =
+    ANXI_FRAME_W *
+    ANXI_DRAW_SCALE;
+
+  const h =
+    ANXI_FRAME_H *
+    ANXI_DRAW_SCALE;
+
+  const x =
+    Math.round(
+      ANXI_WORLD_X *
+      mapW +
+      offsetX -
+      ANXI_ANCHOR_X *
+      ANXI_DRAW_SCALE
+    );
+
+  const y =
+    Math.round(
+      ANXI_WORLD_Y *
+      mapH +
+      offsetY -
+      ANXI_ANCHOR_Y *
+      ANXI_DRAW_SCALE
+    );
+
+  /* off screen: nothing to draw */
+  if (
+    x > canvas.width
+    ||
+    y > canvas.height
+    ||
+    x + w < 0
+    ||
+    y + h < 0
+  ) {
+
+    return;
+
+  }
+
+  ctx.drawImage(
+    sheet,
+    (frame % ANXI_COLS) *
+    ANXI_FRAME_W,
+    Math.floor(
+      frame /
+      ANXI_COLS
+    ) *
+    ANXI_FRAME_H,
+    ANXI_FRAME_W,
+    ANXI_FRAME_H,
+    x,
+    y,
+    w,
+    h
+  );
+
+}
+
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render() {
+
+  ctx.fillStyle =
+    "#000";
+
+
+  ctx.fillRect(
+
+    0,
+
+    0,
+
+    canvas.width,
+
+    canvas.height
+
+  );
+
+
+  const offsetX =
+    canvas.width /
+    2
+    -
+    camera.x;
+
+
+  const offsetY =
+    canvas.height /
+    2
+    -
+    camera.y;
+
+
+  ctx.drawImage(
+
+    images.map,
+
+    offsetX,
+
+    offsetY,
+
+    mapW,
+
+    mapH
+
+  );
+
+
+  updatePads(
+    performance.now()
+  );
+
+  drawPads(
+    offsetX,
+    offsetY
+  );
+
+
+  /* depth: whoever stands lower on the map is drawn in front */
+  const anxiInFront =
+    meli.y +
+    meli.height *
+    0.4
+    <
+    anxiFootY();
+
+  if (
+    !anxiInFront
+  ) {
+
+    drawAnxi(
+      offsetX,
+      offsetY
+    );
+
+  }
+
+
+  const spriteKey =
+    animations[
+      meli.direction
+    ][
+      meli.frame
+    ];
+
+
+  const sprite =
+    images[
+      spriteKey
+    ];
+
+
+  if (
+    meli.direction ===
+    "idle"
+    &&
+    drawMeliIdle(
+      meli.x + offsetX,
+      meli.y + offsetY
+    )
+  ) {
+
+    if (
+      anxiInFront
+    ) {
+
+      drawAnxi(
+        offsetX,
+        offsetY
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  if (
+    !sprite
+  ) {
+
+    if (
+      anxiInFront
+    ) {
+
+      drawAnxi(
+        offsetX,
+        offsetY
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  const screenX =
+    meli.x +
+    offsetX;
+
+
+  const screenY =
+    meli.y +
+    offsetY;
+
+
+  ctx.save();
+
+
+  if (
+    meli.direction ===
+    "left"
+  ) {
+
+    ctx.translate(
+      screenX,
+      screenY
+    );
+
+
+    ctx.scale(
+      -1,
+      1
+    );
+
+
+    ctx.drawImage(
+
+      sprite,
+
+      -meli.width /
+      2,
+
+      -meli.height /
+      2,
+
+      meli.width,
+
+      meli.height
+
+    );
+
+  }
+
+  else {
+
+    ctx.drawImage(
+
+      sprite,
+
+      screenX -
+      meli.width /
+      2,
+
+      screenY -
+      meli.height /
+      2,
+
+      meli.width,
+
+      meli.height
+
+    );
+
+  }
+
+
+  ctx.restore();
+
+
+  if (
+    anxiInFront
+  ) {
+
+    drawAnxi(
+      offsetX,
+      offsetY
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   CLICKABLE LOCATIONS
+========================================================= */
+
+function getClickedLocation(
+  event
+) {
+
+  if (
+    gameMode !==
+    "map"
+  ) {
+
+    return null;
+
+  }
+
+
+  const rect =
+    canvas.getBoundingClientRect();
+
+
+  const mouseX =
+    (
+      event.clientX -
+      rect.left
+    )
+    *
+    (
+      canvas.width /
+      rect.width
+    );
+
+
+  const mouseY =
+    (
+      event.clientY -
+      rect.top
+    )
+    *
+    (
+      canvas.height /
+      rect.height
+    );
+
+
+  const offsetX =
+    canvas.width /
+    2
+    -
+    camera.x;
+
+
+  const offsetY =
+    canvas.height /
+    2
+    -
+    camera.y;
+
+
+  const worldX =
+    mouseX -
+    offsetX;
+
+
+  const worldY =
+    mouseY -
+    offsetY;
+
+
+  const locations = [
+
+    {
+      name:
+        "park",
+
+      trigger:
+        PARK_TRIGGER
+    },
+
+    {
+      name:
+        "bakery",
+
+      trigger:
+        BAKERY_TRIGGER
+    },
+
+    {
+      name:
+        "library",
+
+      trigger:
+        LIBRARY_TRIGGER
+    },
+
+    {
+      name:
+        "clinic",
+
+      trigger:
+        CLINIC_TRIGGER
+    },
+
+    {
+      name:
+        "workshop",
+
+      trigger:
+        WORKSHOP_TRIGGER
+    }
+
+  ];
+
+
+  for (
+    const location
+    of locations
+  ) {
+
+    const triggerX =
+      location.trigger.x *
+      mapW;
+
+
+    const triggerY =
+      location.trigger.y *
+      mapH;
+
+
+    const radius =
+      location.trigger.radius
+      *
+      Math.min(
+        mapW,
+        mapH
+      )
+      *
+      1.6;
+
+
+    const dx =
+      worldX -
+      triggerX;
+
+
+    const dy =
+      worldY -
+      triggerY;
+
+
+    const distance =
+      Math.sqrt(
+        dx * dx +
+        dy * dy
+      );
+
+
+    if (
+      distance <=
+      radius
+    ) {
+
+      return location.name;
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+/* =========================================================
+   DRAG THE MAP (mouse, touch, pen)
+   A small movement threshold separates a click/tap from a drag.
+========================================================= */
+
+const DRAG_THRESHOLD =
+  8;
+
+function clampCameraToMap() {
+
+  if (
+    canvas.width <
+    mapW
+  ) {
+
+    camera.x =
+      Math.max(
+        canvas.width / 2,
+        Math.min(
+          mapW - canvas.width / 2,
+          camera.x
+        )
+      );
+
+  }
+
+  else {
+
+    camera.x =
+      mapW / 2;
+
+  }
+
+
+  if (
+    canvas.height <
+    mapH
+  ) {
+
+    camera.y =
+      Math.max(
+        canvas.height / 2,
+        Math.min(
+          mapH - canvas.height / 2,
+          camera.y
+        )
+      );
+
+  }
+
+  else {
+
+    camera.y =
+      mapH / 2;
+
+  }
+
+}
+
+
+function endMapDrag(
+  event
+) {
+
+  if (
+    !cameraExplore.dragging
+    ||
+    event.pointerId !==
+    cameraExplore.pointerId
+  ) {
+
+    return;
+
+  }
+
+  cameraExplore.dragging =
+    false;
+
+  cameraExplore.pointerId =
+    null;
+
+  canvas.classList.remove(
+    "dragging-map"
+  );
+
+  try {
+
+    canvas.releasePointerCapture(
+      event.pointerId
+    );
+
+  }
+
+  catch (error) {}
+
+
+  /* a stale velocity must not launch the map after a pause */
+  if (
+    performance.now() -
+    cameraExplore.lastT >
+    80
+  ) {
+
+    cameraExplore.vx =
+      0;
+
+    cameraExplore.vy =
+      0;
+
+  }
+
+}
+
+
+canvas.addEventListener(
+  "pointerdown",
+  function (
+    event
+  ) {
+
+    if (
+      gameMode !==
+      "map"
+      ||
+      cameraExplore.dragging
+      ||
+      (
+        event.pointerType ===
+        "mouse"
+        &&
+        event.button !==
+        0
+      )
+    ) {
+
+      return;
+
+    }
+
+    cameraExplore.dragging =
+      true;
+
+    cameraExplore.moved =
+      false;
+
+    cameraExplore.pointerId =
+      event.pointerId;
+
+    cameraExplore.startX =
+      event.clientX;
+
+    cameraExplore.startY =
+      event.clientY;
+
+    cameraExplore.lastX =
+      event.clientX;
+
+    cameraExplore.lastY =
+      event.clientY;
+
+    cameraExplore.lastT =
+      performance.now();
+
+    cameraExplore.vx =
+      0;
+
+    cameraExplore.vy =
+      0;
+
+  }
+);
+
+
+canvas.addEventListener(
+  "pointermove",
+  function (
+    event
+  ) {
+
+    if (
+      !cameraExplore.dragging
+      ||
+      event.pointerId !==
+      cameraExplore.pointerId
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      !cameraExplore.moved
+    ) {
+
+      const totalX =
+        event.clientX -
+        cameraExplore.startX;
+
+      const totalY =
+        event.clientY -
+        cameraExplore.startY;
+
+      if (
+        Math.sqrt(
+          totalX * totalX +
+          totalY * totalY
+        ) <
+        DRAG_THRESHOLD
+      ) {
+
+        return;
+
+      }
+
+      /* it is a drag, not a click */
+      cameraExplore.moved =
+        true;
+
+      cameraExplore.exploring =
+        true;
+
+      canvas.classList.add(
+        "dragging-map"
+      );
+
+      try {
+
+        canvas.setPointerCapture(
+          event.pointerId
+        );
+
+      }
+
+      catch (error) {}
+
+      /* continue from here so the map does not jump by the threshold */
+      cameraExplore.lastX =
+        event.clientX;
+
+      cameraExplore.lastY =
+        event.clientY;
+
+      cameraExplore.lastT =
+        performance.now();
+
+      return;
+
+    }
+
+
+    const rect =
+      canvas.getBoundingClientRect();
+
+    const scaleX =
+      canvas.width /
+      rect.width;
+
+    const scaleY =
+      canvas.height /
+      rect.height;
+
+    const moveX =
+      (
+        event.clientX -
+        cameraExplore.lastX
+      ) *
+      scaleX;
+
+    const moveY =
+      (
+        event.clientY -
+        cameraExplore.lastY
+      ) *
+      scaleY;
+
+    const now =
+      performance.now();
+
+    const elapsed =
+      Math.max(
+        now -
+        cameraExplore.lastT,
+        8
+      );
+
+    camera.x -=
+      moveX;
+
+    camera.y -=
+      moveY;
+
+    clampCameraToMap();
+
+    /* velocity in px per 16.67 ms frame, smoothed */
+    cameraExplore.vx =
+      cameraExplore.vx * 0.5
+      +
+      (-moveX / elapsed * 16.67) * 0.5;
+
+    cameraExplore.vy =
+      cameraExplore.vy * 0.5
+      +
+      (-moveY / elapsed * 16.67) * 0.5;
+
+    /* keep the glide gentle, never a launch */
+    cameraExplore.vx =
+      Math.max(-30, Math.min(30, cameraExplore.vx));
+
+    cameraExplore.vy =
+      Math.max(-30, Math.min(30, cameraExplore.vy));
+
+    cameraExplore.lastX =
+      event.clientX;
+
+    cameraExplore.lastY =
+      event.clientY;
+
+    cameraExplore.lastT =
+      now;
+
+    event.preventDefault();
+
+  }
+);
+
+
+canvas.addEventListener(
+  "pointerup",
+  function (
+    event
+  ) {
+
+    if (
+      cameraExplore.dragging
+      &&
+      event.pointerId ===
+      cameraExplore.pointerId
+      &&
+      cameraExplore.moved
+    ) {
+
+      /* swallow the click that follows a drag */
+      cameraExplore.suppressClick =
+        true;
+
+      setTimeout(
+        function () {
+          cameraExplore.suppressClick =
+            false;
+        },
+        60
+      );
+
+    }
+
+    endMapDrag(
+      event
+    );
+
+  }
+);
+
+
+canvas.addEventListener(
+  "pointercancel",
+  endMapDrag
+);
+
+
+canvas.addEventListener(
+  "lostpointercapture",
+  endMapDrag
+);
+
+
+canvas.addEventListener(
+  "click",
+  function (
+    event
+  ) {
+
+    if (
+      cameraExplore.suppressClick
+    ) {
+
+      event.stopImmediatePropagation();
+
+      event.preventDefault();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   CLICK → MELI WALKS
+========================================================= */
+
+canvas.addEventListener(
+  "click",
+  function (
+    event
+  ) {
+
+    const location =
+      getClickedLocation(
+        event
+      );
+
+
+    if (
+      !location
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      location ===
+      "park"
+    ) {
+
+      startAutoWalk(
+        PARK_TRIGGER,
+        "park"
+      );
+
+    }
+
+
+    else if (
+      location ===
+      "bakery"
+    ) {
+
+      startAutoWalk(
+        BAKERY_TRIGGER,
+        "bakery"
+      );
+
+    }
+
+
+    else if (
+      location ===
+      "library"
+    ) {
+
+      startAutoWalk(
+        LIBRARY_TRIGGER,
+        "library"
+      );
+
+    }
+
+
+    else if (
+      location ===
+      "clinic"
+    ) {
+
+      startAutoWalk(
+        CLINIC_TRIGGER,
+        "clinic"
+      );
+
+    }
+
+
+    else if (
+      location ===
+      "workshop"
+    ) {
+
+      startAutoWalk(
+        WORKSHOP_TRIGGER,
+        "workshop"
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   POINTER
+========================================================= */
+
+canvas.addEventListener(
+  "mousemove",
+  function (
+    event
+  ) {
+
+    if (
+      gameMode !==
+      "map"
+    ) {
+
+      canvas.style.cursor =
+        "default";
+
+      return;
+
+    }
+
+
+    const location =
+      getClickedLocation(
+        event
+      );
+
+
+    canvas.style.cursor =
+      location
+      ?
+      "pointer"
+      :
+      "default";
+
+  }
+);
+
+
+/* =========================================================
+   START
+========================================================= */
+
+loadAssets(
+  init
+);
+
+
+})();
+
+</script>
 
 
 </body>

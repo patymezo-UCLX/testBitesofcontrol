@@ -491,7 +491,7 @@ button {
   position: absolute;
   left: 44%;
   bottom: clamp(50px, 7vh, 90px);
-  transform: translateX(clamp(78px, 11vw, 128px));
+  transform: translateX(clamp(78px, 11vw, 150px));
 
   z-index: 4;
   pointer-events: none;
@@ -2441,12 +2441,533 @@ button {
   }
 }
 
+/* =========================================================
+   CUSTOM UI ICONS (SVG) + CONTROL STYLE
+   Same pink body + yellow border as the other game buttons.
+========================================================= */
+
+.ui-icon {
+  width: 52%;
+  height: 52%;
+
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  pointer-events: none;
+  overflow: visible;
+}
+
+#cover-settings,
+#map-exit-button,
+#audio-settings-button {
+  padding: 0;
+  line-height: 0;
+}
+
+#cover-settings .ui-icon,
+#map-exit-button .ui-icon,
+#audio-settings-button .ui-icon {
+  width: 50%;
+  height: 50%;
+}
+
+#map-exit-button .ui-icon {
+  width: 46%;
+  height: 46%;
+}
+
+#menu-toggle {
+  padding: 0;
+  line-height: 0;
+}
+
+#menu-toggle .ui-icon {
+  width: 42%;
+  height: 52%;
+  transition: transform 0.2s ease;
+}
+
+#menu-toggle.is-open .ui-icon {
+  transform: rotate(180deg);
+}
+
+/* ----- D-pad ----- */
+
+#dpad {
+  width: 168px;
+  height: 168px;
+
+  opacity: 0.92;
+}
+
+#dpad .btn {
+  width: 54px;
+  height: 54px;
+
+  background: #d83a8f;
+  color: #fff;
+
+  border: 3px solid #f7b83c;
+  border-radius: 16px;
+
+  box-shadow: 0 4px 0 #98305e;
+
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#dpad .btn .ui-icon {
+  width: 52%;
+  height: 52%;
+}
+
+#dpad .btn.pressed {
+  transform: scale(0.9);
+  background: #d83a8f;
+  box-shadow: 0 1px 0 #98305e;
+}
+
+#btn-up    { top: 0;     left: 57px; }
+#btn-down  { bottom: 0;  left: 57px; }
+#btn-left  { top: 57px;  left: 0; }
+#btn-right { top: 57px;  right: 0; }
+
+@media (max-width: 420px) {
+  #dpad {
+    transform: scale(0.86);
+  }
+}
+
+#btn-down  .ui-icon { transform: rotate(180deg); }
+#btn-left  .ui-icon { transform: rotate(-90deg); }
+#btn-right .ui-icon { transform: rotate(90deg); }
+
+/* =========================================================
+   INTRO REDESIGN — same visual identity as Bakery Delivery
+   Fonts are self-hosted in /Fonts so they work offline.
+========================================================= */
+
+@font-face {
+  font-family: "Baloo 2";
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/baloo-2-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Baloo 2";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/baloo-2-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Baloo 2";
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/baloo-2-latin-800-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Quicksand";
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/quicksand-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Quicksand";
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/quicksand-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Quicksand";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("Fonts/quicksand-latin-700-normal.woff2") format("woff2");
+}
+
+:root {
+  --boc-pink: #FF4F9A;
+  --boc-pink-dark: #D92D78;
+  --boc-pink-light: #FFC4DE;
+  --boc-orange: #FF9A3D;
+  --boc-yellow: #FFCF4D;
+  --boc-cream: #FFF3DF;
+  --boc-burgundy: #6B2A1F;
+  --boc-burgundy-dark: #4A1A12;
+
+  --boc-font-display: "Baloo 2", "Fredoka", system-ui, sans-serif;
+  --boc-font-body: "Quicksand", system-ui, sans-serif;
+}
+
+#intro-screen .intro-dialogue-panel {
+  background:
+    linear-gradient(180deg, var(--boc-burgundy) 0%, var(--boc-burgundy-dark) 100%);
+
+  border: 4px solid var(--boc-orange);
+  border-radius: 34px;
+
+  color: var(--boc-cream);
+
+  box-shadow:
+    0 10px 0 rgba(0, 0, 0, 0.18),
+    0 18px 30px rgba(74, 26, 18, 0.4),
+    inset 0 0 0 3px rgba(255, 207, 77, 0.25);
+
+  font-family: var(--boc-font-body);
+}
+
+#intro-screen .intro-step h2 {
+  font-family: var(--boc-font-display);
+  font-weight: 800;
+  line-height: 1.04;
+
+  color: #fff;
+
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+
+  overflow-wrap: break-word;
+}
+
+#intro-screen .intro-step p {
+  font-family: var(--boc-font-body);
+  font-weight: 700;
+  line-height: 1.4;
+
+  color: var(--boc-cream);
+
+  overflow-wrap: break-word;
+}
+
+#intro-screen .intro-step p strong {
+  font-weight: 700;
+
+  color: var(--boc-yellow);
+}
+
+#intro-screen .player-name-input {
+  font-family: var(--boc-font-body);
+  font-weight: 700;
+
+  border: 4px solid var(--boc-yellow);
+  border-radius: 20px;
+
+  background: var(--boc-cream);
+
+  color: var(--boc-burgundy-dark);
+
+  box-shadow:
+    0 5px 0 rgba(0, 0, 0, 0.22),
+    inset 0 2px 4px rgba(74, 26, 18, 0.12);
+}
+
+#intro-screen .player-name-input::placeholder {
+  color: rgba(107, 42, 31, 0.55);
+
+  font-weight: 600;
+}
+
+#intro-screen .player-name-input:focus {
+  border-color: var(--boc-pink);
+}
+
+#intro-screen .game-pink-button {
+  font-family: var(--boc-font-display);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+
+  border: 3px solid var(--boc-yellow);
+  border-radius: 999px;
+
+  background:
+    linear-gradient(180deg, #ff6bad 0%, var(--boc-pink) 55%, var(--boc-pink-dark) 100%);
+
+  color: #fff;
+
+  box-shadow:
+    0 6px 0 var(--boc-pink-dark),
+    0 10px 16px rgba(74, 26, 18, 0.35);
+}
+
+#intro-screen .game-pink-button.game-pink-button-secondary {
+  background: rgba(255, 255, 255, 0.12);
+
+  border: 2px solid rgba(255, 207, 77, 0.5);
+
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+#intro-screen .intro-step.controls-visible .game-pink-button:active {
+  transform: translateY(2px) scale(0.97);
+}
+
+#intro-screen .intro-skip {
+  font-size: 15px;
+
+  padding: 10px 22px;
+
+  min-width: 0;
+}
+
+#intro-screen .game-pink-button:focus-visible,
+#intro-screen .player-name-input:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 768px) {
+
+  #intro-screen .intro-dialogue-panel {
+    border-radius: 28px;
+  }
+
+}
+
+/* =========================================================
+   INTRO CHARACTERS (animated sprite sheets)
+   The canvas is placed so the character body keeps exactly the
+   size and position of the previous static image.
+========================================================= */
+
+.intro-meli {
+  aspect-ratio: 227 / 285;
+
+  background:
+    url("Intro/Meli_intro.png") center / 100% 100% no-repeat;
+}
+
+.intro-meli.has-sprite {
+  background: none;
+}
+
+.intro-meli canvas {
+  position: absolute;
+
+  left: -6.39%;
+  top: 11.23%;
+
+  width: 99.8%;
+  height: 78%;
+
+  pointer-events: none;
+}
+
+.intro-anxi {
+  position: relative;
+
+  aspect-ratio: 1 / 1;
+}
+
+.intro-anxi canvas {
+  position: absolute;
+
+  left: 0.16%;
+  top: 1.22%;
+
+  width: 104.1%;
+  height: 88.3%;
+
+  pointer-events: none;
+}
+
+/* Short landscape screens (phones): text panel on the left, Meli and
+   Anxi side by side in the free column on the right, still at the bottom,
+   so they never cover the buttons. */
+@media (orientation: landscape) and (max-height: 560px) {
+
+  #intro-screen .intro-logo {
+    top: 10px;
+    left: 12px;
+
+    width: 96px;
+  }
+
+  #intro-screen .intro-dialogue-panel {
+    left: 3vw;
+    top: 50%;
+
+    width: 61vw;
+    min-height: 0;
+    max-height: 90vh;
+
+    padding: 18px 26px 20px;
+
+    border-radius: 26px;
+
+    overflow-y: auto;
+
+    transform: translate(0, -47%) scale(0.985);
+  }
+
+  #intro-screen .intro-dialogue-panel.show {
+    transform: translate(0, -50%) scale(1);
+  }
+
+  #intro-screen .intro-step h2 {
+    margin-bottom: 10px;
+
+    font-size: clamp(20px, 6vh, 30px);
+  }
+
+  #intro-screen .intro-step p {
+    margin-bottom: 8px;
+
+    font-size: clamp(12px, 3.6vh, 15px);
+    line-height: 1.3;
+  }
+
+  #intro-screen .player-name-input {
+    height: 42px;
+
+    margin: 4px auto 12px;
+  }
+
+  #intro-screen .intro-nav-row {
+    margin-top: 4px;
+  }
+
+  #intro-screen .game-pink-button {
+    padding: 8px 20px;
+
+    font-size: 15px;
+  }
+
+  #intro-screen .intro-final-button {
+    margin-top: 0;
+  }
+
+  #intro-screen .intro-meli {
+    left: auto;
+    right: 20vw;
+    bottom: 58px;
+
+    height: clamp(120px, 40vh, 190px);
+
+    transform: translateY(14px) scale(0.985);
+  }
+
+  #intro-screen .intro-meli.show {
+    transform: translateY(0) scale(1);
+  }
+
+  #intro-screen .intro-anxi-wrap {
+    left: auto;
+    right: 4vw;
+    bottom: 62px;
+
+    transform: none;
+  }
+
+  #intro-screen .intro-anxi-wrap.intro-anxi-visible {
+    animation: none;
+  }
+
+  #intro-screen .intro-anxi {
+    height: clamp(88px, 28vh, 135px);
+  }
+
+  #intro-screen .intro-skip {
+    right: 14px;
+    bottom: 10px;
+
+    padding: 7px 18px;
+  }
+}
+
+/* small portrait phones: lower the characters a little so they never
+   cover the buttons */
+@media (max-width: 480px) and (orientation: portrait) and (max-height: 700px) {
+
+  #intro-screen .intro-meli {
+    bottom: 82px;
+  }
+
+  #intro-screen .intro-anxi-wrap {
+    bottom: 62px;
+  }
+
+}
+
+@media (max-width: 480px) and (orientation: portrait) and (max-height: 600px) {
+
+  #intro-screen .intro-meli {
+    bottom: 64px;
+
+    height: 112px;
+  }
+
+  #intro-screen .intro-anxi-wrap {
+    bottom: 64px;
+  }
+
+  #intro-screen .intro-anxi {
+    height: 80px;
+  }
+
+  #intro-screen .intro-dialogue-panel {
+    min-height: 0;
+
+    padding: 30px 20px 100px;
+  }
+
+  #intro-screen .intro-step h2 {
+    margin-bottom: 12px;
+
+    font-size: 22px;
+  }
+
+  #intro-screen .intro-step p {
+    margin-bottom: 12px;
+
+    font-size: 13px;
+  }
+
+}
+
 </style>
 
 </head>
 
 
 <body>
+
+<!-- ======================================================
+     UI ICONS (SVG)
+====================================================== -->
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ic-arrow" viewBox="0 0 24 24">
+    <path d="M12 20V5M5.5 11.5L12 5l6.5 6.5"/>
+  </symbol>
+  <symbol id="ic-chevron" viewBox="0 0 24 24">
+    <path d="M4.5 15.5L12 8l7.5 7.5"/>
+  </symbol>
+  <symbol id="ic-close" viewBox="0 0 24 24">
+    <path d="M6 6l12 12M18 6L6 18"/>
+  </symbol>
+  <symbol id="ic-gear" viewBox="0 0 24 24">
+    <path d="M9.75 4.64 L10.49 1.91 L13.51 1.91 L14.25 4.64 L15.61 5.20 L18.07 3.80 L20.20 5.93 L18.80 8.39 L19.36 9.75 L22.09 10.49 L22.09 13.51 L19.36 14.25 L18.80 15.61 L20.20 18.07 L18.07 20.20 L15.61 18.80 L14.25 19.36 L13.51 22.09 L10.49 22.09 L9.75 19.36 L8.39 18.80 L5.93 20.20 L3.80 18.07 L5.20 15.61 L4.64 14.25 L1.91 13.51 L1.91 10.49 L4.64 9.75 L5.20 8.39 L3.80 5.93 L5.93 3.80 L8.39 5.20Z M8.7 12a3.3 3.3 0 1 0 6.6 0a3.3 3.3 0 1 0 -6.6 0Z" fill="#fff" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" fill-rule="evenodd"/>
+  </symbol>
+</svg>
+
 
 
 <!-- ======================================================
@@ -2511,7 +3032,7 @@ button {
     class="cover-settings"
     aria-label="Configuración">
 
-    ⚙
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-gear"/></svg>
 
   </button>
 
@@ -2727,20 +3248,28 @@ button {
 
   </div>
 
-  <img
-    src="Intro/Meli_intro.png"
+  <div
     class="intro-meli"
-    alt="Meli">
+    role="img"
+    aria-label="Meli">
+
+    <canvas id="intro-meli-canvas"></canvas>
+
+  </div>
 
   <div
     id="intro-anxi-wrap"
     class="intro-anxi-wrap">
 
-    <img
+    <div
       id="intro-anxi-img"
       class="intro-anxi"
-      src="Intro/Anxi-sprite 2-04.png"
-      alt="Anxi">
+      role="img"
+      aria-label="Anxi">
+
+      <canvas id="intro-anxi-canvas"></canvas>
+
+    </div>
 
   </div>
 
@@ -2773,7 +3302,7 @@ button {
   type="button"
   aria-label="Exit game">
 
-  ×
+  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-close"/></svg>
 
 </button>
 
@@ -2787,7 +3316,7 @@ button {
   id="audio-settings-button"
   type="button"
   aria-label="Configuración de sonido">
-  ⚙
+  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-gear"/></svg>
 </button>
 
 <div id="audio-settings-modal" role="dialog" aria-modal="true" aria-labelledby="audio-settings-title">
@@ -2924,26 +3453,34 @@ button {
 
   <div
     class="btn"
-    id="btn-up">
-    ▲
+    id="btn-up"
+    role="button"
+    aria-label="Arriba">
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
   </div>
 
   <div
     class="btn"
-    id="btn-down">
-    ▼
+    id="btn-down"
+    role="button"
+    aria-label="Abajo">
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
   </div>
 
   <div
     class="btn"
-    id="btn-left">
-    ◀
+    id="btn-left"
+    role="button"
+    aria-label="Izquierda">
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
   </div>
 
   <div
     class="btn"
-    id="btn-right">
-    ▶
+    id="btn-right"
+    role="button"
+    aria-label="Derecha">
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
   </div>
 
 </div>
@@ -3064,7 +3601,7 @@ button {
     type="button"
     aria-label="Open menu">
 
-    ▲
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-chevron"/></svg>
 
   </button>
 
@@ -3949,6 +4486,11 @@ function setIntroStep(
     );
 
 
+    applyIntroSpriteStep(
+      stepNumber
+    );
+
+
     if (
       stepNumber === 3
     ) {
@@ -4093,9 +4635,16 @@ function showIntro() {
   );
 
 
+  introSpriteState.meliIntent =
+    null;
+
   setIntroStep(
     1
   );
+
+  /* hold the neutral pose while Meli fades in, then greet */
+  introSpriteState.meliTime =
+    -0.35;
 
   playerNameInput.value =
     "";
@@ -6418,8 +6967,9 @@ function openBottomMenu() {
   );
 
 
-  menuToggle.textContent =
-    "▼";
+  menuToggle.classList.add(
+    "is-open"
+  );
 
 
   menuToggle.setAttribute(
@@ -6446,8 +6996,9 @@ function closeBottomMenu() {
   );
 
 
-  menuToggle.textContent =
-    "▲";
+  menuToggle.classList.remove(
+    "is-open"
+  );
 
 
   menuToggle.setAttribute(
@@ -7827,6 +8378,14 @@ function gameLoop(
         dt
       );
 
+      updateAnxi(
+        dt
+      );
+
+      updateMeliIdle(
+        dt
+      );
+
     }
 
 
@@ -8180,6 +8739,17 @@ function update(
 
   if (
     direction !==
+    "idle"
+  ) {
+
+    meli.facing =
+      direction;
+
+  }
+
+
+  if (
+    direction !==
     meli.direction
   ) {
 
@@ -8460,6 +9030,1658 @@ function update(
 
 
 /* =========================================================
+   MELI + ANXI SPRITE SHEETS
+   One sheet per animation (32 frames, same crop and same ground
+   anchor, so the body never shifts between animations).
+========================================================= */
+
+const MELI_SHEET_PATH =
+  "Meli/sheets/";
+
+const MELI_FRAME_W =
+  316;
+
+const MELI_FRAME_H =
+  310;
+
+const MELI_ANCHOR_X =
+  177.8;
+
+const MELI_ANCHOR_Y =
+  304;
+
+const MELI_COLS =
+  8;
+
+/* playback speeds: calm, never rushed */
+const MELI_ANIMS = {
+
+  wave: {
+    file: "idle-wave-greeting-1313", frames: 32, fps: 18
+  },
+
+  breathe: {
+    file: "idle-character-breathe-1322", frames: 32, fps: 12
+  },
+
+  nervous: {
+    file: "meli-nervous-idle-1327", frames: 32, fps: 14
+  },
+
+  worried: {
+    file: "character-worried-idle-1333", frames: 32, fps: 14
+  }
+
+};
+
+const meliSheets =
+  {};
+
+for (
+  const key
+  of Object.keys(
+    MELI_ANIMS
+  )
+) {
+
+  const image =
+    new Image();
+
+  image.onload =
+    function () {
+
+      meliSheets[key] =
+        image;
+
+    };
+
+  image.src =
+    MELI_SHEET_PATH +
+    MELI_ANIMS[key].file +
+    ".png";
+
+}
+
+
+/* lighter sheets (smaller frames) used on the map */
+const MELI_MAP_FRAME_W =
+  174;
+
+const MELI_MAP_FRAME_H =
+  170;
+
+const MELI_MAP_ANCHOR_X =
+  97.8;
+
+const MELI_MAP_ANCHOR_Y =
+  167.2;
+
+const MELI_MAP_BODY_H =
+  164.1;
+
+const meliMapSheets =
+  {};
+
+for (
+  const key
+  of [
+    "wave",
+    "breathe"
+  ]
+) {
+
+  const image =
+    new Image();
+
+  image.onload =
+    function () {
+
+      meliMapSheets[key] =
+        image;
+
+    };
+
+  image.src =
+    MELI_SHEET_PATH +
+    "map_" +
+    MELI_ANIMS[key].file +
+    ".png";
+
+}
+
+
+const reducedMotionQuery =
+  window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  );
+
+function prefersReducedMotion() {
+
+  return reducedMotionQuery.matches;
+
+}
+
+
+/* =========================================================
+   INTRO ANIMATIONS (Meli + Anxi)
+   A single requestAnimationFrame loop drives both characters
+   independently. It only runs while the intro is on screen, and
+   typing never touches it, so nothing restarts.
+========================================================= */
+
+const INTRO_ANXI_FPS =
+  10.8;
+
+const INTRO_ANXI_FRAMES =
+  32;
+
+const introMeliCanvas =
+  document.getElementById(
+    "intro-meli-canvas"
+  );
+
+const introAnxiCanvas =
+  document.getElementById(
+    "intro-anxi-canvas"
+  );
+
+const introSpriteState = {
+
+  meliIntent: null,
+
+  meliName: "wave",
+
+  meliThen: null,
+
+  meliTime: 0,
+
+  anxiOn: false,
+
+  anxiTime: 0,
+
+  last: 0,
+
+  tickId: 0
+
+};
+
+
+function applyIntroSpriteStep(
+  stepNumber
+) {
+
+  const intents = {
+    1: { name: "wave", then: "breathe" },
+    2: { name: "nervous", then: null },
+    3: { name: "worried", then: null },
+    4: { name: "breathe", then: null }
+  };
+
+  const intent =
+    intents[stepNumber];
+
+  /* same animation as before: keep playing, never restart */
+  if (
+    intent
+    &&
+    introSpriteState.meliIntent !==
+    stepNumber
+  ) {
+
+    introSpriteState.meliIntent =
+      stepNumber;
+
+    introSpriteState.meliName =
+      intent.name;
+
+    introSpriteState.meliThen =
+      intent.then;
+
+    introSpriteState.meliTime =
+      0;
+
+  }
+
+  if (
+    stepNumber === 3
+  ) {
+
+    if (
+      !introSpriteState.anxiOn
+    ) {
+
+      introSpriteState.anxiTime =
+        0;
+
+    }
+
+    introSpriteState.anxiOn =
+      true;
+
+  }
+
+  else {
+
+    introSpriteState.anxiOn =
+      false;
+
+  }
+
+  startIntroSpriteLoop();
+
+}
+
+
+function fitIntroCanvas(
+  canvas
+) {
+
+  const ratio =
+    Math.min(
+      window.devicePixelRatio || 1,
+      2
+    );
+
+  const w =
+    Math.max(
+      1,
+      Math.round(
+        canvas.offsetWidth * ratio
+      )
+    );
+
+  const h =
+    Math.max(
+      1,
+      Math.round(
+        canvas.offsetHeight * ratio
+      )
+    );
+
+  if (
+    canvas.width !== w
+    ||
+    canvas.height !== h
+  ) {
+
+    canvas.width =
+      w;
+
+    canvas.height =
+      h;
+
+  }
+
+}
+
+
+function drawIntroFrame(
+  canvas,
+  sheet,
+  frame,
+  frameW,
+  frameH
+) {
+
+  if (
+    !sheet
+    ||
+    !canvas.offsetWidth
+  ) {
+
+    return false;
+
+  }
+
+  fitIntroCanvas(
+    canvas
+  );
+
+  const c =
+    canvas.getContext(
+      "2d"
+    );
+
+  c.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  c.imageSmoothingEnabled =
+    true;
+
+  c.imageSmoothingQuality =
+    "high";
+
+  c.drawImage(
+    sheet,
+    (frame % MELI_COLS) *
+    frameW,
+    Math.floor(
+      frame /
+      MELI_COLS
+    ) *
+    frameH,
+    frameW,
+    frameH,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  return true;
+
+}
+
+
+function renderIntroSprites() {
+
+  const state =
+    introSpriteState;
+
+  /* Meli */
+  const def =
+    MELI_ANIMS[
+      state.meliName
+    ];
+
+  const frame =
+    prefersReducedMotion()
+    ?
+    0
+    :
+    Math.max(
+      0,
+      Math.min(
+        def.frames - 1,
+        Math.floor(
+          state.meliTime *
+          def.fps
+        )
+      )
+    );
+
+  if (
+    drawIntroFrame(
+      introMeliCanvas,
+      meliSheets[
+        state.meliName
+      ],
+      frame,
+      MELI_FRAME_W,
+      MELI_FRAME_H
+    )
+  ) {
+
+    introMeliImage.classList.add(
+      "has-sprite"
+    );
+
+  }
+
+  /* Anxi (screen 3) */
+  if (
+    state.anxiOn
+  ) {
+
+    const anxiSheet =
+      anxi.sheets[
+        "idle-nervous-anxi-1007"
+      ];
+
+    const anxiFrame =
+      prefersReducedMotion()
+      ?
+      0
+      :
+      Math.floor(
+        state.anxiTime *
+        INTRO_ANXI_FPS
+      ) %
+      INTRO_ANXI_FRAMES;
+
+    drawIntroFrame(
+      introAnxiCanvas,
+      anxiSheet,
+      anxiFrame,
+      ANXI_FRAME_W,
+      ANXI_FRAME_H
+    );
+
+  }
+
+}
+
+
+function introSpriteTick(
+  now
+) {
+
+  const state =
+    introSpriteState;
+
+  state.tickId =
+    0;
+
+  /* stop as soon as the intro is not on screen */
+  if (
+    introScreen.style.display !==
+    "block"
+  ) {
+
+    return;
+
+  }
+
+  const dt =
+    Math.min(
+      (now - state.last) / 1000,
+      0.1
+    );
+
+  state.last =
+    now;
+
+  if (
+    !prefersReducedMotion()
+  ) {
+
+    state.meliTime +=
+      dt;
+
+    state.anxiTime +=
+      dt;
+
+    const def =
+      MELI_ANIMS[
+        state.meliName
+      ];
+
+    const duration =
+      def.frames /
+      def.fps;
+
+    if (
+      state.meliTime >=
+      duration
+    ) {
+
+      if (
+        state.meliThen
+      ) {
+
+        /* greeting finished: settle into breathing */
+        state.meliName =
+          state.meliThen;
+
+        state.meliThen =
+          null;
+
+        state.meliTime =
+          0;
+
+      }
+
+      else {
+
+        state.meliTime %=
+          duration;
+
+      }
+
+    }
+
+  }
+
+  renderIntroSprites();
+
+  state.tickId =
+    requestAnimationFrame(
+      introSpriteTick
+    );
+
+}
+
+
+/* only one loop can exist at any time */
+function startIntroSpriteLoop() {
+
+  if (
+    introSpriteState.tickId
+  ) {
+
+    return;
+
+  }
+
+  introSpriteState.last =
+    performance.now();
+
+  introSpriteState.tickId =
+    requestAnimationFrame(
+      introSpriteTick
+    );
+
+}
+
+
+/* =========================================================
+   MELI IDLE ON THE MAP
+   Standing still: keeps the last facing pose for a moment, fades
+   into the greeting, waves with small pauses, and after 15-20 s
+   without moving breathes once before greeting again. Any
+   movement interrupts it immediately.
+========================================================= */
+
+/* Meli stays still on her last movement frame this long before greeting */
+const MELI_IDLE_HOLD_MS =
+  3000;
+
+const MELI_IDLE_FADE_MS =
+  350;
+
+const MELI_IDLE_PAUSE_MIN_MS =
+  2200;
+
+const MELI_IDLE_PAUSE_MAX_MS =
+  4500;
+
+const MELI_IDLE_BREATHE_MIN_MS =
+  15000;
+
+const MELI_IDLE_BREATHE_MAX_MS =
+  20000;
+
+/* last standing/walking sprite that was actually drawn while moving */
+const meliLastSprite = {
+
+  key: "idle_01",
+
+  flip: false
+
+};
+
+const meliIdle = {
+
+  active: false,
+
+  phase: "hold",
+
+  phaseT: 0,
+
+  stillMs: 0,
+
+  pauseLen: 0,
+
+  nextBreatheAt: 0,
+
+  sourceKey: "idle_01",
+
+  sourceFlip: false
+
+};
+
+
+function randomBetween(
+  min,
+  max
+) {
+
+  return min +
+    Math.random() *
+    (max - min);
+
+}
+
+
+function startMeliIdle() {
+
+  meliIdle.active =
+    true;
+
+  meliIdle.stillMs =
+    0;
+
+  meliIdle.phaseT =
+    0;
+
+  meliIdle.nextBreatheAt =
+    randomBetween(
+      MELI_IDLE_BREATHE_MIN_MS,
+      MELI_IDLE_BREATHE_MAX_MS
+    );
+
+  /* keep the very last movement frame, unchanged, for the full wait */
+  meliIdle.sourceKey =
+    meliLastSprite.key;
+
+  meliIdle.sourceFlip =
+    meliLastSprite.flip;
+
+  meliIdle.phase =
+    "hold";
+
+}
+
+
+function updateMeliIdle(
+  dt
+) {
+
+  if (
+    meli.direction !== "idle"
+    ||
+    prefersReducedMotion()
+  ) {
+
+    meliIdle.active =
+      false;
+
+    return;
+
+  }
+
+  if (
+    !meliMapSheets.wave
+    ||
+    !meliMapSheets.breathe
+  ) {
+
+    return;
+
+  }
+
+  if (
+    !meliIdle.active
+  ) {
+
+    startMeliIdle();
+
+  }
+
+  meliIdle.stillMs +=
+    dt;
+
+  meliIdle.phaseT +=
+    dt;
+
+  const phase =
+    meliIdle.phase;
+
+  if (
+    phase === "hold"
+    &&
+    meliIdle.phaseT >=
+    MELI_IDLE_HOLD_MS
+  ) {
+
+    meliIdle.phase =
+      "fade";
+
+    meliIdle.phaseT =
+      0;
+
+  }
+
+  else if (
+    phase === "fade"
+    &&
+    meliIdle.phaseT >=
+    MELI_IDLE_FADE_MS
+  ) {
+
+    meliIdle.phase =
+      "wave";
+
+    meliIdle.phaseT =
+      0;
+
+  }
+
+  else if (
+    phase === "wave"
+    ||
+    phase === "breathe"
+  ) {
+
+    const def =
+      MELI_ANIMS[
+        phase
+      ];
+
+    if (
+      meliIdle.phaseT >=
+      def.frames /
+      def.fps *
+      1000
+    ) {
+
+      if (
+        phase === "breathe"
+      ) {
+
+        meliIdle.nextBreatheAt =
+          meliIdle.stillMs +
+          randomBetween(
+            MELI_IDLE_BREATHE_MIN_MS,
+            MELI_IDLE_BREATHE_MAX_MS
+          );
+
+      }
+
+      meliIdle.phase =
+        "pause";
+
+      meliIdle.phaseT =
+        0;
+
+      meliIdle.pauseLen =
+        randomBetween(
+          MELI_IDLE_PAUSE_MIN_MS,
+          MELI_IDLE_PAUSE_MAX_MS
+        );
+
+    }
+
+  }
+
+  else if (
+    phase === "pause"
+    &&
+    (
+      meliIdle.phaseT >=
+      meliIdle.pauseLen
+      ||
+      (
+        meliIdle.stillMs >=
+        meliIdle.nextBreatheAt
+        &&
+        meliIdle.phaseT >=
+        400
+      )
+    )
+  ) {
+
+    meliIdle.phase =
+      meliIdle.stillMs >=
+      meliIdle.nextBreatheAt
+      ?
+      "breathe"
+      :
+      "wave";
+
+    meliIdle.phaseT =
+      0;
+
+  }
+
+}
+
+
+function drawMeliSpriteKey(
+  key,
+  flip,
+  alpha,
+  screenX,
+  screenY
+) {
+
+  const sprite =
+    images[
+      key
+    ];
+
+  if (
+    !sprite
+  ) {
+
+    return;
+
+  }
+
+  ctx.save();
+
+  ctx.globalAlpha =
+    alpha;
+
+  if (
+    flip
+  ) {
+
+    ctx.translate(
+      screenX,
+      screenY
+    );
+
+    ctx.scale(
+      -1,
+      1
+    );
+
+    ctx.drawImage(
+      sprite,
+      -meli.width /
+      2,
+      -meli.height /
+      2,
+      meli.width,
+      meli.height
+    );
+
+  }
+
+  else {
+
+    ctx.drawImage(
+      sprite,
+      screenX -
+      meli.width /
+      2,
+      screenY -
+      meli.height /
+      2,
+      meli.width,
+      meli.height
+    );
+
+  }
+
+  ctx.restore();
+
+}
+
+
+function drawMeliSheetFrame(
+  key,
+  frame,
+  alpha,
+  screenX,
+  screenY
+) {
+
+  const sheet =
+    meliMapSheets[
+      key
+    ];
+
+  /* same body height and feet line as the standing sprite */
+  const k =
+    (
+      meli.height *
+      132 /
+      162
+    ) /
+    MELI_MAP_BODY_H;
+
+  const feet =
+    meli.height *
+    (147 - 81) /
+    162;
+
+  ctx.save();
+
+  ctx.globalAlpha =
+    alpha;
+
+  ctx.imageSmoothingEnabled =
+    true;
+
+  ctx.imageSmoothingQuality =
+    "high";
+
+  ctx.drawImage(
+    sheet,
+    (frame % MELI_COLS) *
+    MELI_MAP_FRAME_W,
+    Math.floor(
+      frame /
+      MELI_COLS
+    ) *
+    MELI_MAP_FRAME_H,
+    MELI_MAP_FRAME_W,
+    MELI_MAP_FRAME_H,
+    screenX -
+    MELI_MAP_ANCHOR_X * k,
+    screenY +
+    feet -
+    MELI_MAP_ANCHOR_Y * k,
+    MELI_MAP_FRAME_W * k,
+    MELI_MAP_FRAME_H * k
+  );
+
+  ctx.restore();
+
+}
+
+
+/* returns true when the idle animation drew Meli */
+function drawMeliIdle(
+  screenX,
+  screenY
+) {
+
+  if (
+    !meliIdle.active
+    ||
+    !meliMapSheets.wave
+    ||
+    !meliMapSheets.breathe
+  ) {
+
+    return false;
+
+  }
+
+  const phase =
+    meliIdle.phase;
+
+  if (
+    phase === "hold"
+  ) {
+
+    drawMeliSpriteKey(
+      meliIdle.sourceKey,
+      meliIdle.sourceFlip,
+      1,
+      screenX,
+      screenY
+    );
+
+    return true;
+
+  }
+
+  if (
+    phase === "fade"
+  ) {
+
+    const t =
+      Math.min(
+        1,
+        meliIdle.phaseT /
+        MELI_IDLE_FADE_MS
+      );
+
+    drawMeliSpriteKey(
+      meliIdle.sourceKey,
+      meliIdle.sourceFlip,
+      1 - t,
+      screenX,
+      screenY
+    );
+
+    drawMeliSheetFrame(
+      "wave",
+      0,
+      t,
+      screenX,
+      screenY
+    );
+
+    return true;
+
+  }
+
+  if (
+    phase === "pause"
+  ) {
+
+    drawMeliSheetFrame(
+      "wave",
+      0,
+      1,
+      screenX,
+      screenY
+    );
+
+    return true;
+
+  }
+
+  const def =
+    MELI_ANIMS[
+      phase
+    ];
+
+  drawMeliSheetFrame(
+    phase,
+    Math.min(
+      def.frames - 1,
+      Math.floor(
+        meliIdle.phaseT /
+        1000 *
+        def.fps
+      )
+    ),
+    1,
+    screenX,
+    screenY
+  );
+
+  return true;
+
+}
+
+
+/* =========================================================
+   PINK PADS — shrink when Meli stands on them
+   The pads are painted inside map.png, so map_pads.png carries,
+   for every pad, a clean background patch and the pad itself.
+   While a pad is at 100% nothing extra is drawn (the map shows
+   the original); while it shrinks the patch hides the original
+   and the pad is redrawn smaller from its own centre.
+========================================================= */
+
+const PAD_CELL_W =
+  64;
+
+const PAD_CELL_H =
+  48;
+
+const PAD_MIN_SCALE =
+  0.85;
+
+const PAD_TWEEN_MS =
+  250;
+
+/* Meli "on" the pad: inside this ellipse (map px) around the pad;
+   a larger one is used to release it, so it never flickers. */
+const PAD_ENTER_RX =
+  26;
+
+const PAD_ENTER_RY =
+  22;
+
+const PAD_LEAVE_FACTOR =
+  1.25;
+
+const padsImage =
+  new Image();
+
+let padsReady =
+  false;
+
+padsImage.onload =
+  function () {
+    padsReady = true;
+  };
+
+padsImage.src =
+  "map_pads.png";
+
+const MAP_PADS = [
+  { nx: 0.21736, ny: 0.27783, cell: 0, cx: 31.00, cy: 24.50, wx: 282, wy: 260 },
+  { nx: 0.18542, ny: 0.46729, cell: 1, cx: 34.00, cy: 23.50, wx: 233, wy: 455 },
+  { nx: 0.51076, ny: 0.35840, cell: 2, cx: 32.50, cy: 23.00, wx: 703, wy: 344 },
+  { nx: 0.73507, ny: 0.41162, cell: 3, cx: 33.50, cy: 23.50, wx: 1025, wy: 398 },
+  { nx: 0.85451, ny: 0.28223, cell: 4, cx: 32.50, cy: 24.00, wx: 1198, wy: 265 },
+  { nx: 0.75139, ny: 0.77783, cell: 5, cx: 33.00, cy: 25.50, wx: 1049, wy: 771 },
+  { nx: 0.49340, ny: 0.82520, cell: 6, cx: 32.50, cy: 24.00, wx: 678, wy: 821 }
+].map(
+  function (pad) {
+
+    pad.scale =
+      1;
+
+    pad.from =
+      1;
+
+    pad.to =
+      1;
+
+    pad.t0 =
+      0;
+
+    pad.active =
+      false;
+
+    return pad;
+
+  }
+);
+
+
+function easeInOut(
+  t
+) {
+
+  return t < 0.5
+    ?
+    2 * t * t
+    :
+    1 - Math.pow(-2 * t + 2, 2) / 2;
+
+}
+
+
+function updatePads(
+  now
+) {
+
+  for (
+    const pad
+    of MAP_PADS
+  ) {
+
+    const px =
+      pad.nx *
+      mapW;
+
+    const py =
+      pad.ny *
+      mapH;
+
+    const ex =
+      (meli.x - px) /
+      PAD_ENTER_RX;
+
+    const ey =
+      (meli.y - py) /
+      PAD_ENTER_RY;
+
+    const d =
+      Math.sqrt(
+        ex * ex +
+        ey * ey
+      );
+
+    const limit =
+      pad.active
+      ?
+      PAD_LEAVE_FACTOR
+      :
+      1;
+
+    const on =
+      d <=
+      limit;
+
+    if (
+      on !==
+      pad.active
+    ) {
+
+      pad.active =
+        on;
+
+      pad.from =
+        pad.scale;
+
+      pad.to =
+        on
+        ?
+        PAD_MIN_SCALE
+        :
+        1;
+
+      pad.t0 =
+        now;
+
+    }
+
+    if (
+      pad.scale !==
+      pad.to
+    ) {
+
+      const t =
+        Math.min(
+          1,
+          (now - pad.t0) /
+          PAD_TWEEN_MS
+        );
+
+      pad.scale =
+        pad.from +
+        (pad.to - pad.from) *
+        easeInOut(t);
+
+      if (
+        t >=
+        1
+      ) {
+
+        pad.scale =
+          pad.to;
+
+      }
+
+    }
+
+  }
+
+}
+
+
+function drawPads(
+  offsetX,
+  offsetY
+) {
+
+  if (
+    !padsReady
+  ) {
+
+    return;
+
+  }
+
+  for (
+    const pad
+    of MAP_PADS
+  ) {
+
+    if (
+      pad.scale >
+      0.9995
+    ) {
+
+      continue;
+
+    }
+
+    const sy =
+      pad.cell *
+      PAD_CELL_H;
+
+    const dx =
+      Math.round(
+        pad.wx + offsetX
+      );
+
+    const dy =
+      Math.round(
+        pad.wy + offsetY
+      );
+
+    /* clean background that hides the original pad */
+    ctx.drawImage(
+      padsImage,
+      0,
+      sy,
+      PAD_CELL_W,
+      PAD_CELL_H,
+      dx,
+      dy,
+      PAD_CELL_W,
+      PAD_CELL_H
+    );
+
+    /* the pad, scaled from its own centre */
+    const w =
+      PAD_CELL_W *
+      pad.scale;
+
+    const h =
+      PAD_CELL_H *
+      pad.scale;
+
+    ctx.drawImage(
+      padsImage,
+      PAD_CELL_W,
+      sy,
+      PAD_CELL_W,
+      PAD_CELL_H,
+      dx + pad.cx - pad.cx * pad.scale,
+      dy + pad.cy - pad.cy * pad.scale,
+      w,
+      h
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   ANXI — animated character standing on the free pad
+   (lower road, far right). It is part of the world: drawn on
+   the same canvas with the camera offset, never walks.
+   Each animation is one sprite sheet (32 frames, same crop and
+   same ground anchor, so the character never shifts between
+   animations).
+========================================================= */
+
+const ANXI_SHEET_PATH =
+  "Anxi/sheets/";
+
+const ANXI_FRAME_W =
+  211;
+
+const ANXI_FRAME_H =
+  179;
+
+const ANXI_ANCHOR_X =
+  105;
+
+const ANXI_ANCHOR_Y =
+  176.25;
+
+const ANXI_COLS =
+  8;
+
+/* body ~63 px tall on screen (25% smaller than before) */
+const ANXI_DRAW_SCALE =
+  0.39;
+
+/* feet on the pad centre */
+const ANXI_WORLD_X =
+  0.75139;
+
+const ANXI_WORLD_Y =
+  0.78174;
+
+const ANXI_ANIMS = {
+
+  "idle-nervous-anxi-1007": {
+    frames: 32, fps: 10.8, weight: 45, special: false
+  },
+
+  "idle-nervous-sway-1016": {
+    frames: 32, fps: 9.6, weight: 35, special: false
+  },
+
+  "anxi-startle-jump-1042": {
+    frames: 32, fps: 24, weight: 8, special: true
+  },
+
+  "idle-character-breathe-1034": {
+    frames: 32, fps: 16, weight: 7, special: true
+  },
+
+  "idle-nervous-shiver-1023": {
+    frames: 32, fps: 20, weight: 5, special: true
+  }
+
+};
+
+const anxi = {
+
+  sheets: {},
+
+  current: "idle-nervous-anxi-1007",
+
+  time: 0,
+
+  lastWasSpecial: false
+
+};
+
+for (
+  const name
+  of Object.keys(
+    ANXI_ANIMS
+  )
+) {
+
+  const image =
+    new Image();
+
+  image.onload =
+    function () {
+
+      anxi.sheets[name] =
+        image;
+
+    };
+
+  image.src =
+    ANXI_SHEET_PATH +
+    name +
+    ".png";
+
+}
+
+
+/*
+  Weighted random pick. Two specials never play back to back
+  (so the jump never repeats and the rare ones are spaced out),
+  and only animations that are already loaded are chosen.
+*/
+function pickNextAnxiAnimation() {
+
+  const names =
+    Object.keys(
+      ANXI_ANIMS
+    ).filter(
+      function (name) {
+
+        if (
+          !anxi.sheets[name]
+        ) {
+
+          return false;
+
+        }
+
+        return !(
+          anxi.lastWasSpecial
+          &&
+          ANXI_ANIMS[name].special
+        );
+
+      }
+    );
+
+  if (
+    !names.length
+  ) {
+
+    return anxi.current;
+
+  }
+
+  let total =
+    0;
+
+  for (
+    const name
+    of names
+  ) {
+
+    total +=
+      ANXI_ANIMS[name].weight;
+
+  }
+
+  let roll =
+    Math.random() *
+    total;
+
+  for (
+    const name
+    of names
+  ) {
+
+    roll -=
+      ANXI_ANIMS[name].weight;
+
+    if (
+      roll <
+      0
+    ) {
+
+      return name;
+
+    }
+
+  }
+
+  return names[
+    names.length - 1
+  ];
+
+}
+
+
+/* runs only while the map is visible (called from the game loop) */
+function updateAnxi(
+  dt
+) {
+
+  const def =
+    ANXI_ANIMS[
+      anxi.current
+    ];
+
+  anxi.time +=
+    dt / 1000;
+
+  const duration =
+    def.frames /
+    def.fps;
+
+  /* play the whole animation, then start the next one with no gap */
+  while (
+    anxi.time >=
+    duration
+  ) {
+
+    anxi.time -=
+      duration;
+
+    anxi.lastWasSpecial =
+      def.special;
+
+    anxi.current =
+      pickNextAnxiAnimation();
+
+    return updateAnxiCarry();
+
+  }
+
+}
+
+
+function updateAnxiCarry() {
+
+  const def =
+    ANXI_ANIMS[
+      anxi.current
+    ];
+
+  const duration =
+    def.frames /
+    def.fps;
+
+  if (
+    anxi.time >=
+    duration
+  ) {
+
+    anxi.time =
+      0;
+
+  }
+
+}
+
+
+function anxiFootY() {
+
+  return ANXI_WORLD_Y *
+    mapH;
+
+}
+
+
+function drawAnxi(
+  offsetX,
+  offsetY
+) {
+
+  const sheet =
+    anxi.sheets[
+      anxi.current
+    ];
+
+  if (
+    !sheet
+  ) {
+
+    return;
+
+  }
+
+  const def =
+    ANXI_ANIMS[
+      anxi.current
+    ];
+
+  const frame =
+    Math.min(
+      def.frames - 1,
+      Math.floor(
+        anxi.time *
+        def.fps
+      )
+    );
+
+  const w =
+    ANXI_FRAME_W *
+    ANXI_DRAW_SCALE;
+
+  const h =
+    ANXI_FRAME_H *
+    ANXI_DRAW_SCALE;
+
+  const x =
+    Math.round(
+      ANXI_WORLD_X *
+      mapW +
+      offsetX -
+      ANXI_ANCHOR_X *
+      ANXI_DRAW_SCALE
+    );
+
+  const y =
+    Math.round(
+      ANXI_WORLD_Y *
+      mapH +
+      offsetY -
+      ANXI_ANCHOR_Y *
+      ANXI_DRAW_SCALE
+    );
+
+  /* off screen: nothing to draw */
+  if (
+    x > canvas.width
+    ||
+    y > canvas.height
+    ||
+    x + w < 0
+    ||
+    y + h < 0
+  ) {
+
+    return;
+
+  }
+
+  ctx.drawImage(
+    sheet,
+    (frame % ANXI_COLS) *
+    ANXI_FRAME_W,
+    Math.floor(
+      frame /
+      ANXI_COLS
+    ) *
+    ANXI_FRAME_H,
+    ANXI_FRAME_W,
+    ANXI_FRAME_H,
+    x,
+    y,
+    w,
+    h
+  );
+
+}
+
+
+/* =========================================================
    RENDER
 ========================================================= */
 
@@ -8511,6 +10733,36 @@ function render() {
   );
 
 
+  updatePads(
+    performance.now()
+  );
+
+  drawPads(
+    offsetX,
+    offsetY
+  );
+
+
+  /* depth: whoever stands lower on the map is drawn in front */
+  const anxiInFront =
+    meli.y +
+    meli.height *
+    0.4
+    <
+    anxiFootY();
+
+  if (
+    !anxiInFront
+  ) {
+
+    drawAnxi(
+      offsetX,
+      offsetY
+    );
+
+  }
+
+
   const spriteKey =
     animations[
       meli.direction
@@ -8526,8 +10778,60 @@ function render() {
 
 
   if (
+    meli.direction !==
+    "idle"
+  ) {
+
+    meliLastSprite.key =
+      spriteKey;
+
+    meliLastSprite.flip =
+      meli.direction ===
+      "left";
+
+  }
+
+
+  if (
+    meli.direction ===
+    "idle"
+    &&
+    drawMeliIdle(
+      meli.x + offsetX,
+      meli.y + offsetY
+    )
+  ) {
+
+    if (
+      anxiInFront
+    ) {
+
+      drawAnxi(
+        offsetX,
+        offsetY
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  if (
     !sprite
   ) {
+
+    if (
+      anxiInFront
+    ) {
+
+      drawAnxi(
+        offsetX,
+        offsetY
+      );
+
+    }
 
     return;
 
@@ -8606,6 +10910,18 @@ function render() {
 
 
   ctx.restore();
+
+
+  if (
+    anxiInFront
+  ) {
+
+    drawAnxi(
+      offsetX,
+      offsetY
+    );
+
+  }
 
 }
 
