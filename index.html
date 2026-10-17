@@ -70,8 +70,14 @@ button {
    GAME CANVAS
 ========================================================= */
 
+#game-canvas.dragging-map {
+  cursor: grabbing !important;
+}
+
 #game-canvas {
   position: absolute;
+
+  touch-action: none;
 
   inset: 0;
 
@@ -2311,6 +2317,130 @@ button {
   cursor: pointer;
 }
 
+
+
+/* =========================================================
+   COVER — SUBTLE ANIMATIONS (heart, clock, logo)
+
+   The heart and clock sit on a layer that reproduces the
+   background's "cover" scaling (same crop/anchor as the
+   background image), so they stay exactly where they were
+   placed on the artwork at every screen size. Only
+   transform/translate are animated (GPU friendly).
+========================================================= */
+
+#cover-screen {
+  container-type: size;
+}
+
+.cover-art-layer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  width: max(100vw, calc(100vh * 1920 / 1080));
+  aspect-ratio: 1920 / 1080;
+
+  pointer-events: none;
+  z-index: 2;
+}
+
+@supports (width: 1cqw) {
+  .cover-art-layer {
+    width: max(100cqw, calc(100cqh * 1920 / 1080));
+  }
+}
+
+.cover-deco {
+  position: absolute;
+  height: auto;
+  translate: -50% -50%;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 8px 6px rgba(97, 46, 18, 0.18));
+  will-change: transform;
+}
+
+.cover-heart {
+  left: 72.1%;
+  top: 41%;
+  width: 6.9%;
+  transform-origin: 50% 55%;
+  animation: coverHeartbeat 1.8s ease-in-out infinite;
+}
+
+.cover-clock {
+  left: 23.6%;
+  top: 40.6%;
+  width: 7%;
+  transform-origin: 50% 18%;
+  animation: coverClockSway 4.2s ease-in-out infinite;
+}
+
+.cover-logo {
+  animation: coverLogoFloat 5.5s ease-in-out infinite;
+  will-change: translate;
+}
+
+@keyframes coverHeartbeat {
+  0%, 100% { transform: scale(1); }
+  12%      { transform: scale(1.07); }
+  24%      { transform: scale(1); }
+  36%      { transform: scale(1.045); }
+  52%      { transform: scale(1); }
+}
+
+@keyframes coverClockSway {
+  0%, 100% { transform: rotate(-2.5deg) translateY(0); }
+  50%      { transform: rotate(2.5deg) translateY(-4px); }
+}
+
+/* uses the individual "translate" property so it never fights with
+   the logo's own transform (centering on portrait screens) */
+@keyframes coverLogoFloat {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -6px; }
+}
+
+@media (orientation: portrait) {
+
+  .cover-art-layer {
+    top: 0;
+    transform: translateX(-50%);
+
+    width: max(100vw, calc(100vh * 402 / 818));
+    aspect-ratio: 402 / 818;
+  }
+
+  @supports (width: 1cqw) {
+    .cover-art-layer {
+      width: max(100cqw, calc(100cqh * 402 / 818));
+    }
+  }
+
+  .cover-heart {
+    left: 82.1%;
+    top: 33.4%;
+    width: 17.2%;
+  }
+
+  .cover-clock {
+    left: 17.2%;
+    top: 29.9%;
+    width: 16.5%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .cover-heart,
+  .cover-clock,
+  .cover-logo {
+    animation: none;
+  }
+}
+
 </style>
 
 </head>
@@ -2354,6 +2484,22 @@ button {
 
 <section id="cover-screen">
 
+  <div class="cover-art-layer" aria-hidden="true">
+
+    <img
+      src="Intro/Cover_clock.png"
+      class="cover-deco cover-clock"
+      alt=""
+      draggable="false">
+
+    <img
+      src="Intro/Cover_heart.png"
+      class="cover-deco cover-heart"
+      alt=""
+      draggable="false">
+
+  </div>
+
   <img
     src="Intro/Logo_BOC.png"
     class="cover-logo"
@@ -2363,7 +2509,7 @@ button {
     id="cover-settings"
     type="button"
     class="cover-settings"
-    aria-label="Settings">
+    aria-label="Configuración">
 
     ⚙
 
@@ -2376,7 +2522,7 @@ button {
       type="button"
       class="game-pink-button">
 
-      New Game
+      Nuevo Juego
 
     </button>
 
@@ -2385,7 +2531,7 @@ button {
       type="button"
       class="game-pink-button">
 
-      Resume
+      Continuar
 
     </button>
 
@@ -3887,7 +4033,10 @@ function showCover() {
     audioSettingsButton.style.display = "none";
   }
 
-  stopWorldAudio();
+  // The same ambient music used on the map plays from the cover.
+  // Only the map-only birds are paused; the music is never restarted.
+  birdsAudio.pause();
+  startIntroMusic();
 
   refreshResumeButton();
 
@@ -4466,10 +4615,42 @@ function setAudioMuted(value) {
   audioMuted = value;
   localStorage.setItem(AUDIO_MUTED_KEY, String(audioMuted));
   updateAudioControls();
-  if (!audioMuted && gameStarted) startWorldAudio();
+  if (!audioMuted) {
+    if (gameStarted) startWorldAudio();
+    else startIntroMusic();
+  }
 }
 
 updateAudioControls();
+
+/*
+  Music from the cover screen.
+  Browsers may block autoplay, so we try right away and, if blocked,
+  start on the person's first interaction (tap, click or key).
+  The listeners remove themselves as soon as the music is really
+  playing, so there is never a second start or a second audio.
+*/
+const AUDIO_UNLOCK_EVENTS = ["pointerdown", "touchend", "click", "keydown"];
+
+function unlockAudioOnInteraction() {
+  if (audioMuted) return;
+  if (gameStarted) startWorldAudio();
+  else startIntroMusic();
+}
+
+function removeAudioUnlockListeners() {
+  AUDIO_UNLOCK_EVENTS.forEach(function (name) {
+    document.removeEventListener(name, unlockAudioOnInteraction, true);
+  });
+}
+
+AUDIO_UNLOCK_EVENTS.forEach(function (name) {
+  document.addEventListener(name, unlockAudioOnInteraction, true);
+});
+
+worldMusic.addEventListener("playing", removeAudioUnlockListeners);
+
+startIntroMusic();
 
 audioSettingsButton.addEventListener("click", function () {
   audioSettingsModal.classList.add("visible");
@@ -4904,6 +5085,42 @@ const camera = {
 };
 
 
+/*
+  Manual camera exploration (drag).
+  exploring = true  -> automatic follow is paused
+  The follow resumes when Meli starts walking again.
+*/
+const cameraExplore = {
+
+  exploring: false,
+
+  dragging: false,
+
+  pointerId: null,
+
+  startX: 0,
+
+  startY: 0,
+
+  lastX: 0,
+
+  lastY: 0,
+
+  lastT: 0,
+
+  moved: false,
+
+  vx: 0,
+
+  vy: 0,
+
+  wasMoving: false,
+
+  suppressClick: false
+
+};
+
+
 /* =========================================================
    TRIGGERS
 ========================================================= */
@@ -5024,6 +5241,16 @@ function startAutoWalk(
 
   autoWalk.location =
     location;
+
+
+  cameraExplore.exploring =
+    false;
+
+  cameraExplore.vx =
+    0;
+
+  cameraExplore.vy =
+    0;
 
 
   closeBottomMenu();
@@ -8027,22 +8254,100 @@ function update(
      CAMERA
   ===================================================== */
 
-  camera.x +=
-    (
-      meli.x -
-      camera.x
-    )
-    *
-    CAMERA_LERP;
+  /*
+    Follow resumes when Meli starts walking (keys, D-pad or a
+    destination). While the person explores, no follow happens.
+  */
+  const meliMoving =
+    dx !== 0
+    ||
+    dy !== 0;
+
+  if (
+    meliMoving
+    &&
+    !cameraExplore.wasMoving
+    &&
+    !cameraExplore.dragging
+  ) {
+
+    cameraExplore.exploring =
+      false;
+
+    cameraExplore.vx =
+      0;
+
+    cameraExplore.vy =
+      0;
+
+  }
+
+  cameraExplore.wasMoving =
+    meliMoving;
 
 
-  camera.y +=
-    (
-      meli.y -
-      camera.y
-    )
-    *
-    CAMERA_LERP;
+  if (
+    !cameraExplore.exploring
+  ) {
+
+    camera.x +=
+      (
+        meli.x -
+        camera.x
+      )
+      *
+      CAMERA_LERP;
+
+
+    camera.y +=
+      (
+        meli.y -
+        camera.y
+      )
+      *
+      CAMERA_LERP;
+
+  }
+
+  else if (
+    !cameraExplore.dragging
+  ) {
+
+    /* light inertia after releasing the drag */
+
+    const decay =
+      Math.pow(
+        0.9,
+        dt / 16.67
+      );
+
+    camera.x +=
+      cameraExplore.vx *
+      (dt / 16.67);
+
+    camera.y +=
+      cameraExplore.vy *
+      (dt / 16.67);
+
+    cameraExplore.vx *=
+      decay;
+
+    cameraExplore.vy *=
+      decay;
+
+    if (
+      Math.abs(cameraExplore.vx) < 0.3
+    ) {
+      cameraExplore.vx = 0;
+    }
+
+    if (
+      Math.abs(cameraExplore.vy) < 0.3
+    ) {
+      cameraExplore.vy = 0;
+    }
+
+  }
 
 
   const halfW =
@@ -8478,6 +8783,402 @@ function getClickedLocation(
   return null;
 
 }
+
+
+/* =========================================================
+   DRAG THE MAP (mouse, touch, pen)
+   A small movement threshold separates a click/tap from a drag.
+========================================================= */
+
+const DRAG_THRESHOLD =
+  8;
+
+function clampCameraToMap() {
+
+  if (
+    canvas.width <
+    mapW
+  ) {
+
+    camera.x =
+      Math.max(
+        canvas.width / 2,
+        Math.min(
+          mapW - canvas.width / 2,
+          camera.x
+        )
+      );
+
+  }
+
+  else {
+
+    camera.x =
+      mapW / 2;
+
+  }
+
+
+  if (
+    canvas.height <
+    mapH
+  ) {
+
+    camera.y =
+      Math.max(
+        canvas.height / 2,
+        Math.min(
+          mapH - canvas.height / 2,
+          camera.y
+        )
+      );
+
+  }
+
+  else {
+
+    camera.y =
+      mapH / 2;
+
+  }
+
+}
+
+
+function endMapDrag(
+  event
+) {
+
+  if (
+    !cameraExplore.dragging
+    ||
+    event.pointerId !==
+    cameraExplore.pointerId
+  ) {
+
+    return;
+
+  }
+
+  cameraExplore.dragging =
+    false;
+
+  cameraExplore.pointerId =
+    null;
+
+  canvas.classList.remove(
+    "dragging-map"
+  );
+
+  try {
+
+    canvas.releasePointerCapture(
+      event.pointerId
+    );
+
+  }
+
+  catch (error) {}
+
+
+  /* a stale velocity must not launch the map after a pause */
+  if (
+    performance.now() -
+    cameraExplore.lastT >
+    80
+  ) {
+
+    cameraExplore.vx =
+      0;
+
+    cameraExplore.vy =
+      0;
+
+  }
+
+}
+
+
+canvas.addEventListener(
+  "pointerdown",
+  function (
+    event
+  ) {
+
+    if (
+      gameMode !==
+      "map"
+      ||
+      cameraExplore.dragging
+      ||
+      (
+        event.pointerType ===
+        "mouse"
+        &&
+        event.button !==
+        0
+      )
+    ) {
+
+      return;
+
+    }
+
+    cameraExplore.dragging =
+      true;
+
+    cameraExplore.moved =
+      false;
+
+    cameraExplore.pointerId =
+      event.pointerId;
+
+    cameraExplore.startX =
+      event.clientX;
+
+    cameraExplore.startY =
+      event.clientY;
+
+    cameraExplore.lastX =
+      event.clientX;
+
+    cameraExplore.lastY =
+      event.clientY;
+
+    cameraExplore.lastT =
+      performance.now();
+
+    cameraExplore.vx =
+      0;
+
+    cameraExplore.vy =
+      0;
+
+  }
+);
+
+
+canvas.addEventListener(
+  "pointermove",
+  function (
+    event
+  ) {
+
+    if (
+      !cameraExplore.dragging
+      ||
+      event.pointerId !==
+      cameraExplore.pointerId
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      !cameraExplore.moved
+    ) {
+
+      const totalX =
+        event.clientX -
+        cameraExplore.startX;
+
+      const totalY =
+        event.clientY -
+        cameraExplore.startY;
+
+      if (
+        Math.sqrt(
+          totalX * totalX +
+          totalY * totalY
+        ) <
+        DRAG_THRESHOLD
+      ) {
+
+        return;
+
+      }
+
+      /* it is a drag, not a click */
+      cameraExplore.moved =
+        true;
+
+      cameraExplore.exploring =
+        true;
+
+      canvas.classList.add(
+        "dragging-map"
+      );
+
+      try {
+
+        canvas.setPointerCapture(
+          event.pointerId
+        );
+
+      }
+
+      catch (error) {}
+
+      /* continue from here so the map does not jump by the threshold */
+      cameraExplore.lastX =
+        event.clientX;
+
+      cameraExplore.lastY =
+        event.clientY;
+
+      cameraExplore.lastT =
+        performance.now();
+
+      return;
+
+    }
+
+
+    const rect =
+      canvas.getBoundingClientRect();
+
+    const scaleX =
+      canvas.width /
+      rect.width;
+
+    const scaleY =
+      canvas.height /
+      rect.height;
+
+    const moveX =
+      (
+        event.clientX -
+        cameraExplore.lastX
+      ) *
+      scaleX;
+
+    const moveY =
+      (
+        event.clientY -
+        cameraExplore.lastY
+      ) *
+      scaleY;
+
+    const now =
+      performance.now();
+
+    const elapsed =
+      Math.max(
+        now -
+        cameraExplore.lastT,
+        8
+      );
+
+    camera.x -=
+      moveX;
+
+    camera.y -=
+      moveY;
+
+    clampCameraToMap();
+
+    /* velocity in px per 16.67 ms frame, smoothed */
+    cameraExplore.vx =
+      cameraExplore.vx * 0.5
+      +
+      (-moveX / elapsed * 16.67) * 0.5;
+
+    cameraExplore.vy =
+      cameraExplore.vy * 0.5
+      +
+      (-moveY / elapsed * 16.67) * 0.5;
+
+    /* keep the glide gentle, never a launch */
+    cameraExplore.vx =
+      Math.max(-30, Math.min(30, cameraExplore.vx));
+
+    cameraExplore.vy =
+      Math.max(-30, Math.min(30, cameraExplore.vy));
+
+    cameraExplore.lastX =
+      event.clientX;
+
+    cameraExplore.lastY =
+      event.clientY;
+
+    cameraExplore.lastT =
+      now;
+
+    event.preventDefault();
+
+  }
+);
+
+
+canvas.addEventListener(
+  "pointerup",
+  function (
+    event
+  ) {
+
+    if (
+      cameraExplore.dragging
+      &&
+      event.pointerId ===
+      cameraExplore.pointerId
+      &&
+      cameraExplore.moved
+    ) {
+
+      /* swallow the click that follows a drag */
+      cameraExplore.suppressClick =
+        true;
+
+      setTimeout(
+        function () {
+          cameraExplore.suppressClick =
+            false;
+        },
+        60
+      );
+
+    }
+
+    endMapDrag(
+      event
+    );
+
+  }
+);
+
+
+canvas.addEventListener(
+  "pointercancel",
+  endMapDrag
+);
+
+
+canvas.addEventListener(
+  "lostpointercapture",
+  endMapDrag
+);
+
+
+canvas.addEventListener(
+  "click",
+  function (
+    event
+  ) {
+
+    if (
+      cameraExplore.suppressClick
+    ) {
+
+      event.stopImmediatePropagation();
+
+      event.preventDefault();
+
+    }
+
+  }
+);
 
 
 /* =========================================================
