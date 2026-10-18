@@ -39,6 +39,67 @@ if (location.protocol.substr(0, 4) === "file")
 			<p class="notSupportedMessage">JavaScript appears to be disabled. Please enable it to view this content.</p>
 		</div>
 	</noscript>
+
+	<!-- ===== Bites of Control: salida de vuelta a Bakery =====
+	     Este juego (Construct 3) no tiene salida propia. Este boton vive
+	     fuera del canvas, no toca ninguna mecanica del juego y solo
+	     navega a ../index.html (el interior explorable de Bakery). -->
+	<style>
+		#boc-exit-btn {
+			position: fixed; top: 14px; right: 14px; z-index: 2147483000;
+			width: 46px; height: 46px; padding: 0; margin: 0;
+			display: flex; align-items: center; justify-content: center;
+			border: 3px solid #f5b444; border-radius: 50%;
+			background: #d83a8f; color: #fff;
+			box-shadow: 0 4px 0 #98305e; cursor: pointer;
+			touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+		}
+		#boc-exit-btn:active { transform: scale(0.94); box-shadow: 0 2px 0 #98305e; }
+		#boc-exit-btn svg { width: 46%; height: 46%; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; pointer-events: none; }
+		#boc-exit-confirm {
+			position: fixed; inset: 0; z-index: 2147483001; display: none;
+			align-items: center; justify-content: center; padding: 16px;
+			background: rgba(60, 20, 45, 0.55);
+			font-family: Arial, Helvetica, sans-serif;
+		}
+		#boc-exit-confirm.open { display: flex; }
+		#boc-exit-confirm .boc-card {
+			width: min(420px, 92vw); padding: 26px 24px; text-align: center;
+			background: #fffaf3; border-radius: 26px;
+			box-shadow: 0 18px 40px rgba(79, 26, 64, 0.35);
+		}
+		#boc-exit-confirm h2 { margin: 0 0 8px; color: #d63f93; font-size: 24px; line-height: 1.15; }
+		#boc-exit-confirm p { margin: 0 0 20px; color: #71334a; font-size: 16px; line-height: 1.4; }
+		#boc-exit-confirm .boc-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+		#boc-exit-confirm button {
+			font-family: inherit; font-size: 16px; font-weight: bold; cursor: pointer;
+			padding: 11px 24px; border-radius: 26px;
+		}
+		#boc-exit-confirm .boc-stay { border: 3px solid #f5c451; background: #d63f93; color: #fff; box-shadow: 0 5px 0 #4f1a40; }
+		#boc-exit-confirm .boc-leave { border: 3px solid #d63f93; background: transparent; color: #d63f93; }
+	</style>
+	<button id="boc-exit-btn" type="button" aria-label="Salir a Bakery">
+		<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+	</button>
+	<div id="boc-exit-confirm" role="dialog" aria-modal="true">
+		<div class="boc-card">
+			<h2>&iquest;Salir del nivel?</h2>
+			<p>Volver&aacute;s a la pasteler&iacute;a.</p>
+			<div class="boc-row">
+				<button type="button" class="boc-stay" id="boc-exit-stay">Seguir jugando</button>
+				<button type="button" class="boc-leave" id="boc-exit-leave">Salir</button>
+			</div>
+		</div>
+	</div>
+	<script>
+	(function () {
+		var dlg = document.getElementById("boc-exit-confirm");
+		document.getElementById("boc-exit-btn").addEventListener("click", function () { dlg.classList.add("open"); });
+		document.getElementById("boc-exit-stay").addEventListener("click", function () { dlg.classList.remove("open"); });
+		document.getElementById("boc-exit-leave").addEventListener("click", function () { window.location.href = "../index.html"; });
+	})();
+	</script>
+	<!-- ===== fin salida Bakery ===== -->
 	<script src="scripts/modernjscheck.js"></script>
 	<script src="scripts/supportcheck.js"></script>
 	<script src="scripts/offlineclient.js" type="module"></script>

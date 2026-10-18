@@ -4800,6 +4800,22 @@ function beginMapGame(
 
 function finishNewGameIntro() {
 
+  /* A brand-new game starts Bakery from scratch: welcome shown again,
+     no pending return zone, no completed Bakery levels. */
+  [
+    "boc_bakery_intro_seen",
+    "boc_bakery_return",
+    "bakeryLevelProgress"
+  ].forEach(
+    function (key) {
+
+      localStorage.removeItem(
+        key
+      );
+
+    }
+  );
+
   localStorage.setItem(
     SAVE_KEYS.hasSave,
     "true"

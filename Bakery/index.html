@@ -7,11 +7,10 @@
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
   >
 
   <title>Bakery - Bites of Control</title>
-
 
   <style>
 
@@ -25,136 +24,641 @@
       box-sizing: border-box;
     }
 
-
     html, body {
-      min-height: 100%;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #78b13a;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+    }
+
+    .ui-icon {
+      display: block;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+      overflow: visible;
     }
 
 
-    body {
-      position: relative;
+    /* =====================================================
+       BACKGROUND OF THE LETTERBOX
+       Same artwork, blurred, so bars never look like bars.
+    ===================================================== */
 
-      min-height: 100dvh;
+    #stage-bg {
+      position: fixed;
+      inset: -40px;
+      background-color: #76ad33;
+      background-position: center center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      filter: blur(16px) saturate(1.05);
+      z-index: 0;
+    }
+
+
+    /* =====================================================
+       CAMERA (zoom-in target) + SCENE (native pixel space)
+       Everything inside #scene (image, markers, Meli) uses the
+       image's own pixel coordinates, so nothing can drift when
+       the window changes size: only one scale() is applied.
+    ===================================================== */
+
+    #camera {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      will-change: transform, opacity;
+    }
+
+    #camera.zoom-start {
+      opacity: 0;
+      transform: scale(0.62);
+    }
+
+    #camera.zoom-run {
+      animation: bakeryZoomIn 1300ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+    }
+
+    @keyframes bakeryZoomIn {
+      0%   { opacity: 0; transform: scale(0.62); }
+      35%  { opacity: 1; }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    #scene {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 0 0;
+
+      /* soft 14px feather so the artwork melts into the blurred bg */
+      -webkit-mask-image:
+        linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%),
+        linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+      -webkit-mask-composite: source-in;
+      mask-image:
+        linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%),
+        linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+      mask-composite: intersect;
+    }
+
+    #scene-img {
+      position: absolute;
+      left: 0;
+      top: 0;
       width: 100%;
+      height: 100%;
+      display: block;
+      pointer-events: none;
+    }
 
-      overflow-x: hidden;
-      overflow-y: auto;
+
+    /* =====================================================
+       ZONE MARKERS
+       The delivered art has no pink dots, so they are drawn
+       here in the same look as the reference screenshots.
+       BAKERY_DRAW_MARKERS = false hides them (use it if the
+       final artwork already includes its own dots).
+    ===================================================== */
+
+    .zone-marker {
+      position: absolute;
+      width: 52px;
+      height: 23px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #f6c445 0%, #f0952f 55%, #d9582a 100%);
+      box-shadow: 0 2px 3px rgba(120, 50, 10, 0.25);
+      pointer-events: none;
+      transition: transform 0.25s ease;
+    }
+
+    .zone-marker::after {
+      content: "";
+      position: absolute;
+      left: 11%;
+      right: 11%;
+      top: 9%;
+      bottom: 14%;
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse at 50% 18%, rgba(255, 150, 205, 0.85) 0%, rgba(255, 150, 205, 0) 52%),
+        linear-gradient(180deg, #ea4da5 0%, #e0358f 45%, #cf2d7f 100%);
+    }
+
+    .zone-marker.is-active {
+      transform: scale(0.86);
+    }
+
+    .zone-marker.is-pending {
+      filter: saturate(0.9);
+    }
+
+
+    /* =====================================================
+       MELI
+    ===================================================== */
+
+    #meli {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 0 0;
+      pointer-events: none;
+      will-change: transform;
+    }
+
+
+    /* =====================================================
+       DEBUG OVERLAY (?debug=1 only)
+    ===================================================== */
+
+    #debug-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+
+    /* =====================================================
+       CONTEXT BUBBLE  ("Presiona E para entrar")
+       Floats above Meli's head, never over her, and never
+       intercepts clicks.
+    ===================================================== */
+
+    #bubble {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 30;
+      display: none;
+      pointer-events: none;
+      text-align: center;
+      white-space: nowrap;
+
+      padding: 9px 20px 10px;
+
+      background: rgba(123, 45, 84, 0.94);
+      border: 3px solid #f6ba44;
+      border-radius: 18px;
+      color: #fff;
+
+      box-shadow: 0 5px 0 rgba(87, 34, 55, 0.45);
+    }
+
+    #bubble.is-visible {
+      display: block;
+      animation: bubbleIn 0.18s ease-out both;
+    }
+
+    @keyframes bubbleIn {
+      from { opacity: 0; margin-top: 6px; }
+      to   { opacity: 1; margin-top: 0; }
+    }
+
+    #bubble .bubble-name {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffd98a;
+    }
+
+    #bubble .bubble-action {
+      display: block;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    #bubble .key {
+      display: inline-block;
+      min-width: 28px;
+      margin: 0 5px;
+      padding: 2px 8px;
+      border-radius: 7px;
+      background: #fff;
+      color: #7b2d54;
+    }
+
+    body.touch-ui #bubble .bubble-action {
+      display: none;
+    }
+
+    /* "Próximamente" zones: just the name, no "Presiona E" */
+    #bubble.is-pending .bubble-action {
+      display: none;
+    }
+
+    #bubble.is-pending .bubble-name {
+      margin-bottom: 0;
+    }
+
+    body.zone-pending #mobile-enter {
+      display: none !important;
+    }
+
+    body.touch-ui #bubble {
+      padding: 6px 14px 7px;
+    }
+
+
+    /* =====================================================
+       TOAST (levels not available yet)
+    ===================================================== */
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      top: 22px;
+      z-index: 60;
+      max-width: min(92vw, 420px);
+
+      padding: 12px 22px;
+
+      background: rgba(123, 45, 84, 0.96);
+      border: 3px solid #f6ba44;
+      border-radius: 18px;
+      color: #fff;
+
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.3;
+      text-align: center;
+
+      box-shadow: 0 5px 0 rgba(87, 34, 55, 0.45);
+
+      opacity: 0;
+      transform: translate(-50%, -12px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    #toast.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+
+    /* =====================================================
+       MOBILE "ENTRAR" BUTTON  (same look as the map's)
+    ===================================================== */
+
+    #mobile-enter {
+      position: fixed;
+      right: 20px;
+      bottom: 25px;
+      z-index: 40;
+
+      display: none;
+
+      min-height: 50px;
+      padding: 0 22px;
+
+      border: 3px solid #f7b83c;
+      border-radius: 25px;
+      background: #d33b91;
+      color: #fff;
+
+      font-size: 17px;
+      font-weight: 800;
+      font-family: inherit;
+
+      box-shadow: 0 5px 0 #8e275f;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    #mobile-enter:active {
+      transform: translateY(2px) scale(0.97);
+      box-shadow: 0 2px 0 #8e275f;
+    }
+
+    body.touch-ui.zone-near:not(.intro-open) #mobile-enter {
+      display: block;
+    }
+
+
+    /* =====================================================
+       D-PAD  (same markup/look as the map's)
+    ===================================================== */
+
+    #dpad {
+      display: none;
+      position: fixed;
+      bottom: 18px;
+      left: 25px;
+      width: 168px;
+      height: 168px;
+      opacity: 0.92;
+      z-index: 40;
+    }
+
+    body.touch-ui:not(.intro-open) #dpad {
+      display: block;
+    }
+
+    #dpad .btn {
+      position: absolute;
+      width: 54px;
+      height: 54px;
 
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
 
-      font-family: Arial, sans-serif;
+      background: #d83a8f;
+      color: #fff;
 
-      background: #f7c7b5;
+      border: 3px solid #f7b83c;
+      border-radius: 16px;
+      box-shadow: 0 4px 0 #98305e;
+
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      touch-action: none;
+    }
+
+    #dpad .btn .ui-icon {
+      width: 52%;
+      height: 52%;
+    }
+
+    #dpad .btn.pressed {
+      transform: scale(0.9);
+      box-shadow: 0 1px 0 #98305e;
+    }
+
+    #btn-up    { top: 0;     left: 57px; }
+    #btn-down  { bottom: 0;  left: 57px; }
+    #btn-left  { top: 57px;  left: 0; }
+    #btn-right { top: 57px;  right: 0; }
+
+    #btn-down  .ui-icon { transform: rotate(180deg); }
+    #btn-left  .ui-icon { transform: rotate(-90deg); }
+    #btn-right .ui-icon { transform: rotate(90deg); }
+
+    @media (max-width: 420px) {
+      #dpad {
+        transform: scale(0.86);
+        transform-origin: left bottom;
+        left: 14px;
+        bottom: 14px;
+      }
+    }
+
+
+    /* =====================================================
+       EXIT BUTTON  (back to the main map)
+       Same look as the map's own close button.
+    ===================================================== */
+
+    .exit-button {
+      position: fixed;
+      top: max(24px, env(safe-area-inset-top));
+      right: max(28px, env(safe-area-inset-right));
+      z-index: 50;
+
+      width: 54px;
+      height: 54px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border: 4px solid #f5b444;
+      border-radius: 50%;
+      background: #d83a8f;
+      color: #fff;
+
+      box-shadow: 0 4px 0 #98305e;
+      cursor: pointer;
+      padding: 0;
+
+      transition: transform 0.15s ease;
+    }
+
+    .exit-button .ui-icon {
+      width: 46%;
+      height: 46%;
+    }
+
+    .exit-button:hover {
+      transform: scale(1.06);
+    }
+
+    .exit-button:active {
+      transform: scale(0.94);
+      box-shadow: 0 2px 0 #98305e;
+    }
+
+    @media (max-width: 768px) {
+      .exit-button {
+        top: max(14px, env(safe-area-inset-top));
+        right: max(14px, env(safe-area-inset-right));
+        width: 45px;
+        height: 45px;
+        border-width: 3px;
+      }
+    }
+
+
+    /* =====================================================
+       SOUND SETTINGS  (same look as the map's gear + modal)
+    ===================================================== */
+
+    #audio-settings-button {
+      position: fixed;
+      top: max(24px, env(safe-area-inset-top));
+      right: calc(max(28px, env(safe-area-inset-right)) + 66px);
+      z-index: 50;
+
+      width: 54px;
+      height: 54px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border: 4px solid #f5b444;
+      border-radius: 50%;
+      background: #d83a8f;
+      color: #fff;
+
+      box-shadow: 0 4px 0 #98305e;
+      cursor: pointer;
+      padding: 0;
+
+      transition: transform 0.15s ease;
+    }
+
+    #audio-settings-button .ui-icon {
+      width: 50%;
+      height: 50%;
+      stroke: none;
+    }
+
+    #audio-settings-button:hover { transform: scale(1.06); }
+
+    #audio-settings-button:active {
+      transform: scale(0.94);
+      box-shadow: 0 2px 0 #98305e;
+    }
+
+    @media (max-width: 768px) {
+      #audio-settings-button {
+        top: max(14px, env(safe-area-inset-top));
+        right: calc(max(14px, env(safe-area-inset-right)) + 55px);
+        width: 45px;
+        height: 45px;
+        border-width: 3px;
+      }
+    }
+
+    #audio-settings-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(35, 26, 30, 0.46);
+      touch-action: auto;
+    }
+
+    #audio-settings-modal.visible { display: flex; }
+
+    .audio-settings-card {
+      width: min(420px, 90vw);
+      padding: 30px 28px 26px;
+      border: 4px solid #f5b444;
+      border-radius: 28px;
+      background: #fff7e8;
+      color: #5b3347;
+      text-align: center;
+      box-shadow: 0 14px 35px rgba(77, 47, 18, 0.25);
+    }
+
+    .audio-settings-card h3 {
+      margin: 0 0 22px;
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+    .audio-setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 24px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: #fff;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    #audio-toggle-button {
+      min-width: 92px;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 999px;
+      background: #62b84f;
+      color: #fff;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    #audio-toggle-button.muted { background: #a7a7a7; }
+
+    #audio-settings-close {
+      padding: 11px 24px;
+      border: 3px solid #f5b444;
+      border-radius: 999px;
+      background: #d83a8f;
+      color: #fff;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+
+    /* =====================================================
+       SCREEN TRANSITION  (same orange as the map's)
+    ===================================================== */
+
+    #screen-transition {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: #f6a31b;
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 0.32s ease;
+    }
+
+    #screen-transition.is-clear {
+      opacity: 0;
+    }
+
+
+    /* =====================================================
+       WELCOME INTRO  (design kept from the previous Bakery
+       intro: cream card, rounded corners, pink buttons)
+    ===================================================== */
+
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+
+      display: none;
+      align-items: center;
+      justify-content: center;
 
       padding:
         max(16px, env(safe-area-inset-top))
         max(16px, env(safe-area-inset-right))
         max(16px, env(safe-area-inset-bottom))
         max(16px, env(safe-area-inset-left));
-    }
-
-
-    /* =====================================================
-       BACKGROUND ILLUSTRATION
-       (own layer so it can use background-size: cover
-       without ever stretching/deforming the artwork;
-       cover crops but always keeps original proportions)
-    ===================================================== */
-
-    .bakery-bg {
-      position: fixed;
-      inset: 0;
-
-      background-image: url("assets/bakery-interior.jpg");
-      background-repeat: no-repeat;
-      background-position: center center;
-      background-size: cover;
-
-      z-index: 0;
-    }
-
-
-    /* soft readability veil behind the card only, doesn't touch the art */
-    .bakery-bg::after {
-      content: "";
-      position: absolute;
-      inset: 0;
 
       background:
-        radial-gradient(
-          ellipse at center,
-          rgba(0, 0, 0, 0.18) 0%,
-          rgba(0, 0, 0, 0.32) 100%
-        );
+        radial-gradient(ellipse at center, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.34) 100%);
+
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      touch-action: auto;
     }
 
-
-    /* =====================================================
-       EXIT BUTTON
-    ===================================================== */
-
-    .exit-button {
-      position: fixed;
-
-      top: max(24px, env(safe-area-inset-top));
-      right: max(24px, env(safe-area-inset-right));
-
-      width: clamp(44px, 6vw, 56px);
-      height: clamp(44px, 6vw, 56px);
-
+    #intro.is-shown {
       display: flex;
-      align-items: center;
-      justify-content: center;
-
-      border: 4px solid #f5c451;
-      border-radius: 50%;
-
-      background: #d63f93;
-      color: white;
-
-      font-size: clamp(22px, 3vw, 31px);
-      font-weight: bold;
-      line-height: 1;
-
-      cursor: pointer;
-
-      box-shadow: 0 4px 0 #4f1a40;
-
-      z-index: 9999;
-
-      transition:
-        transform 0.15s ease;
     }
 
-
-    .exit-button:hover {
-      transform: scale(1.06);
+    #intro.is-visible {
+      opacity: 1;
     }
 
-
-    .exit-button:active {
-      transform: scale(0.94);
-      box-shadow: 0 2px 0 #4f1a40;
-    }
-
-
-    /* =====================================================
-       PANEL
-       One single card. Its content (title/paragraphs/
-       buttons) is swapped by JS between step 1 and step 2 —
-       there is never more than one step in the DOM at once.
-       A fixed-ish min-height keeps both steps a similar size
-       so the card doesn't jump when the content changes.
-    ===================================================== */
-
-    .panel {
+    #intro .panel {
       position: relative;
-      z-index: 1;
 
       width: min(640px, 92vw);
-
       min-height: clamp(320px, 44vh, 420px);
       max-height: calc(100dvh - 48px);
       overflow-y: auto;
@@ -166,257 +670,159 @@
 
       padding: clamp(28px, 4.5vw, 50px);
 
-      margin: clamp(60px, 10vh, 90px) 0 24px;
-
       background: #fffaf3;
-
       border-radius: clamp(24px, 4vw, 40px);
       box-shadow: 0 18px 40px rgba(79, 26, 64, 0.35);
 
       text-align: center;
     }
 
-
-    /* =====================================================
-       STEP CONTENT + TRANSITION
-    ===================================================== */
-
-    .step-content {
+    #intro .step-content {
       width: 100%;
-
       display: flex;
       flex-direction: column;
       align-items: center;
 
       opacity: 1;
       transform: translateY(0);
-
-      transition:
-        opacity 0.22s ease,
-        transform 0.22s ease;
+      transition: opacity 0.22s ease, transform 0.22s ease;
     }
 
-
-    .step-content.step-transitioning {
+    #intro .step-content.step-transitioning {
       opacity: 0;
       transform: translateY(8px);
     }
 
-
-    /* =====================================================
-       STEP INDICATOR ("1 de 2" / "2 de 2")
-    ===================================================== */
-
-    .step-indicator {
+    #intro .step-indicator {
       margin-bottom: clamp(10px, 1.8vw, 16px);
-
       padding: 4px 16px;
-
       border-radius: 999px;
-
       background: rgba(214, 63, 147, 0.12);
       color: #c23172;
-
       font-size: clamp(12px, 1.4vw, 14px);
       font-weight: bold;
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
 
-
-    /* =====================================================
-       TITLE
-    ===================================================== */
-
-    h1 {
+    #intro h1 {
       margin-bottom: clamp(14px, 2.5vw, 22px);
-
       color: #d63f93;
-
-      font-size:
-        clamp(
-          24px,
-          5vw,
-          40px
-        );
-
+      font-size: clamp(24px, 5vw, 40px);
       line-height: 1.15;
+      overflow-wrap: anywhere;
     }
 
-
-    /* =====================================================
-       DESCRIPTION
-    ===================================================== */
-
-    p {
+    #intro p {
       color: #71334a;
-
-      font-size:
-        clamp(
-          16px,
-          2vw,
-          18px
-        );
-
+      font-size: clamp(16px, 2vw, 18px);
       line-height: 1.5;
     }
 
-    p + p {
+    #intro p + p {
       margin-top: clamp(10px, 1.6vw, 14px);
     }
 
-    p strong {
+    #intro p strong {
       color: #c23172;
     }
 
-
-    /* =====================================================
-       BUTTON ROW
-    ===================================================== */
-
-    .step-buttons {
+    #intro .step-buttons {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: center;
       gap: clamp(10px, 2vw, 16px);
-
       margin-top: clamp(22px, 3.5vw, 32px);
     }
 
-
-    /* =====================================================
-       PRIMARY BUTTON (Siguiente / ¡Comencemos!)
-    ===================================================== */
-
-    .play-button {
+    #intro .play-button {
       padding: clamp(12px, 1.8vw, 15px) clamp(32px, 5vw, 44px);
-
       border: 3px solid #f5c451;
       border-radius: 30px;
-
       background: #d63f93;
-      color: white;
-
+      color: #fff;
+      font-family: inherit;
       font-size: clamp(17px, 2.2vw, 21px);
       font-weight: bold;
-
       cursor: pointer;
-
       box-shadow: 0 6px 0 #4f1a40;
-
-      transition:
-        transform 0.15s ease;
+      transition: transform 0.15s ease;
     }
 
+    #intro .play-button:hover { transform: scale(1.05); }
 
-    .play-button:hover {
-      transform: scale(1.05);
-    }
-
-
-    .play-button:active {
+    #intro .play-button:active {
       transform: scale(0.96) translateY(2px);
       box-shadow: 0 3px 0 #4f1a40;
     }
 
-
-    /* =====================================================
-       SECONDARY BUTTON (← Atrás)
-    ===================================================== */
-
-    .back-step-button {
+    #intro .back-step-button {
       padding: clamp(12px, 1.8vw, 15px) clamp(24px, 4vw, 34px);
-
       border: 3px solid #d63f93;
       border-radius: 30px;
-
       background: transparent;
       color: #d63f93;
-
+      font-family: inherit;
       font-size: clamp(16px, 2vw, 19px);
       font-weight: bold;
-
       cursor: pointer;
-
-      transition:
-        transform 0.15s ease,
-        background 0.15s ease;
+      transition: transform 0.15s ease, background 0.15s ease;
     }
 
-
-    .back-step-button:hover {
+    #intro .back-step-button:hover {
       background: rgba(214, 63, 147, 0.08);
       transform: scale(1.03);
     }
 
+    #intro .back-step-button:active { transform: scale(0.96); }
 
-    .back-step-button:active {
-      transform: scale(0.96);
+    #intro .skip-button {
+      margin-top: clamp(12px, 2vw, 18px);
+      padding: 6px 12px;
+      border: 0;
+      background: transparent;
+      color: #a8607f;
+      font-family: inherit;
+      font-size: clamp(13px, 1.6vw, 15px);
+      font-weight: bold;
+      text-decoration: underline;
+      cursor: pointer;
     }
 
+    #intro .skip-button:hover { color: #c23172; }
 
-    /* =====================================================
-       RESPONSIVE
-    ===================================================== */
-
-    /* tablet / small laptop */
     @media (max-width: 900px) {
-
-      .panel {
-        width: min(560px, 94vw);
-      }
-
+      #intro .panel { width: min(560px, 94vw); }
     }
 
-
-    /* mobile portrait + narrow mobile landscape
-       — shrink the card, not the text */
     @media (max-width: 700px) {
-
-      .panel {
+      #intro .panel {
         width: 94vw;
-
         min-height: clamp(280px, 50vh, 380px);
-
         padding: 26px 20px;
-
         border-radius: 26px;
-
-        margin-top: clamp(56px, 14vh, 80px);
       }
-
-
-      p {
-        font-size: clamp(16px, 4vw, 18px);
-      }
-
-
-      .exit-button {
-        width: 46px;
-        height: 46px;
-
-        border-width: 3px;
-
-        font-size: 24px;
-      }
-
+      #intro p { font-size: clamp(16px, 4vw, 18px); }
     }
 
-
-    /* short / landscape phones: keep the card reachable without clipping */
     @media (max-height: 480px) {
-
-      body {
-        align-items: flex-start;
-      }
-
-      .panel {
-        margin-top: 70px;
-        max-height: calc(100dvh - 90px);
+      #intro .panel {
         min-height: 0;
+        max-height: calc(100dvh - 24px);
+        padding: 18px 26px;
       }
+      #intro h1 { margin-bottom: 8px; font-size: 24px; }
+      #intro p { font-size: 15px; line-height: 1.35; }
+      #intro .step-buttons { margin-top: 14px; }
+      #intro .play-button, #intro .back-step-button { padding-top: 8px; padding-bottom: 8px; }
+    }
 
+    @media (prefers-reduced-motion: reduce) {
+      #camera.zoom-run { animation-duration: 1ms; }
+      #bubble.is-visible { animation: none; }
+      #screen-transition { transition-duration: 0.1s; }
+      #intro, #intro .step-content { transition-duration: 0.01s; }
     }
 
   </style>
@@ -426,194 +832,1118 @@
 
 <body>
 
+  <!-- UI ICONS (SVG), same ones the map uses -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="ic-arrow" viewBox="0 0 24 24">
+      <path d="M12 20V5M5.5 11.5L12 5l6.5 6.5"/>
+    </symbol>
+    <symbol id="ic-close" viewBox="0 0 24 24">
+      <path d="M6 6l12 12M18 6L6 18"/>
+    </symbol>
+    <symbol id="ic-gear" viewBox="0 0 24 24">
+      <path d="M9.75 4.64 L10.49 1.91 L13.51 1.91 L14.25 4.64 L15.61 5.20 L18.07 3.80 L20.20 5.93 L18.80 8.39 L19.36 9.75 L22.09 10.49 L22.09 13.51 L19.36 14.25 L18.80 15.61 L20.20 18.07 L18.07 20.20 L15.61 18.80 L14.25 19.36 L13.51 22.09 L10.49 22.09 L9.75 19.36 L8.39 18.80 L5.93 20.20 L3.80 18.07 L5.20 15.61 L4.64 14.25 L1.91 13.51 L1.91 10.49 L4.64 9.75 L5.20 8.39 L3.80 5.93 L5.93 3.80 L8.39 5.20Z M8.7 12a3.3 3.3 0 1 0 6.6 0a3.3 3.3 0 1 0 -6.6 0Z" fill="#fff" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" fill-rule="evenodd"/>
+    </symbol>
+  </svg>
 
-  <!-- ===================================================
-       BACKGROUND — interior de la pastelería
-  ==================================================== -->
 
-  <div class="bakery-bg" aria-hidden="true"></div>
-
-
-  <!-- ===================================================
-       EXIT BAKERY → MAP
-  ==================================================== -->
-
-  <button
-    class="exit-button"
-    type="button"
-    onclick="exitBakery()"
-    aria-label="Salir de Bakery"
-  >
-
-    ×
-
-  </button>
+  <div id="stage-bg" aria-hidden="true"></div>
 
 
   <!-- ===================================================
-       BAKERY INTRO — una sola tarjeta, contenido en 2 pasos
+       WORLD: camera > scene (image + markers + Meli)
   ==================================================== -->
 
-  <div class="panel">
-
-    <div class="step-content" id="stepContent">
-      <!-- el contenido del paso actual se inserta aquí vía JS -->
+  <div id="camera" class="zoom-start">
+    <div id="scene">
+      <img id="scene-img" alt="Interior de la pastelería" draggable="false">
+      <div id="markers"></div>
+      <canvas id="meli" width="148" height="162" aria-label="Meli"></canvas>
+      <svg id="debug-layer" hidden></svg>
     </div>
-
   </div>
 
 
+  <!-- Context bubble that floats over Meli -->
+  <div id="bubble" role="status" aria-live="polite">
+    <span class="bubble-name" id="bubble-name"></span>
+    <span class="bubble-action" id="bubble-action">Presiona <span class="key">E</span> para entrar</span>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+
+  <!-- Mobile controls -->
+  <button id="mobile-enter" type="button">Entrar</button>
+
+  <div id="dpad">
+    <div class="btn" id="btn-up" role="button" aria-label="Arriba">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
+    </div>
+    <div class="btn" id="btn-down" role="button" aria-label="Abajo">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
+    </div>
+    <div class="btn" id="btn-left" role="button" aria-label="Izquierda">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
+    </div>
+    <div class="btn" id="btn-right" role="button" aria-label="Derecha">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-arrow"/></svg>
+    </div>
+  </div>
+
+
+  <!-- EXIT BAKERY → MAP -->
+  <button
+    class="exit-button"
+    id="exit-button"
+    type="button"
+    aria-label="Salir de Bakery"
+  >
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-close"/></svg>
+  </button>
+
+
+  <!-- SOUND SETTINGS (same switch as the map: localStorage "bocAudioMuted") -->
+  <button
+    id="audio-settings-button"
+    type="button"
+    aria-label="Configuración de sonido"
+  >
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-gear"/></svg>
+  </button>
+
+  <div id="audio-settings-modal" role="dialog" aria-modal="true" aria-labelledby="audio-settings-title">
+    <div class="audio-settings-card">
+      <h3 id="audio-settings-title">Configuración</h3>
+      <div class="audio-setting-row">
+        <span>Sonido</span>
+        <button id="audio-toggle-button" type="button" aria-pressed="true">ON</button>
+      </div>
+      <button id="audio-settings-close" type="button">Cerrar</button>
+    </div>
+  </div>
+
+  <audio id="bakery-music" src="../Audio/Bakery.wav" loop preload="auto"></audio>
+
+
+  <!-- WELCOME (first visit only) -->
+  <div id="intro" role="dialog" aria-modal="true" aria-label="Bienvenida a la pastelería">
+    <div class="panel">
+      <div class="step-content" id="stepContent"></div>
+    </div>
+  </div>
+
+
+  <div id="screen-transition" aria-hidden="true"></div>
+
+
   <script>
+  (function () {
+    "use strict";
 
     /* =====================================================
-       PASOS DE LA BIENVENIDA
-       -----------------------------------------------------
-       Un solo panel, el contenido se sustituye con un
-       pequeño fade — nunca hay dos pasos en pantalla a la
-       vez. El comportamiento de CUÁNDO se muestra esta
-       bienvenida no cambió: sigue apareciendo siempre al
-       cargar index.html.
+       STORAGE KEYS
+       Same "boc_" namespace as the main game's save system.
+         boc_player_name        -> written by the main game
+         boc_bakery_intro_seen  -> welcome already shown
+         boc_bakery_return      -> zone to return to after a minigame
+         bakeryLevelProgress    -> { levelId: true } (same key
+                                   levels.html already reads)
+       "Nuevo Juego" clears the first three (see main index.html).
     ===================================================== */
 
-    const STEPS = [
-      {
-        indicator: "1 de 2",
-        title: "¡TE PRESENTO LA GRAN PASTELERÍA!",
-        paragraphs: [
-          "Pero antes de la <strong>gran inauguración</strong>, todavía hay mucho por hacer.",
-          "Juntos tendremos que preparar recetas, organizar pedidos y enfrentar desafíos inesperados en el camino."
-        ]
-      },
-      {
-        indicator: "2 de 2",
-        title: "¡UN PASO A LA VEZ!",
-        paragraphs: [
-          "Recuerda: <strong>no todo tiene que salir perfecto ni necesitamos tener todas las respuestas para seguir avanzando.</strong>",
-          "<strong>¡Hagamos realidad este sueño!</strong>"
-        ]
-      }
+    var KEY_NAME = "boc_player_name";
+    var KEY_INTRO_SEEN = "boc_bakery_intro_seen";
+    var KEY_RETURN = "boc_bakery_return";
+    var KEY_PROGRESS = "bakeryLevelProgress";
+
+    function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+    function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+    var params = new URLSearchParams(location.search);
+    var DEBUG = params.get("debug") === "1" || lsGet("boc_debug") === "1";
+
+    /* Set to false if the final artwork already has its own pink dots */
+    var BAKERY_DRAW_MARKERS = true;
+
+    /* While true every implemented level is open (same switch
+       and same sequential rule as levels.html). */
+    var TESTING_MODE = true;
+
+
+    /* =====================================================
+       LEVELS
+       status "ready"   -> real minigame route
+              "pending" -> reserved, no route, never a fake link
+    ===================================================== */
+
+    var LEVELS = [
+      /* num / verb are internal only (order + zone); `name` is the official title shown to the player */
+      { id: "manchas-escondidas", num: 1, verb: "Limpiar",    name: "Manchas escondidas",    status: "ready",   href: "Manchas%20Escondidas/index.html" },
+      { id: "kitchen",            num: 2, verb: "Ordenar",    name: "Utensilios inquietos",  status: "ready",   href: "Kitchen/index.html" },
+      { id: "labels",             num: 3, verb: "Etiquetar",  name: "Etiquetas imperfectas", status: "ready",   href: "Labels/index.html" },
+      { id: "decorar",            num: 4, verb: "Decorar",    name: "Próximamente",          status: "pending", href: null },
+      { id: "acomodar",           num: 5, verb: "Acomodar",   name: "Próximamente",          status: "pending", href: null },
+      { id: "delivery",           num: 6, verb: "Empaquetar", name: "Bakery Delivery",       status: "ready",   href: "Delivery/index.html" }
     ];
 
-    let currentStepIndex = 0;
+    function readProgress() {
+      try { return JSON.parse(lsGet(KEY_PROGRESS)) || {}; } catch (e) { return {}; }
+    }
+
+    function isLevelUnlocked(index) {
+      if (TESTING_MODE) { return true; }
+      if (index === 0) { return true; }
+      return Boolean(readProgress()[LEVELS[index - 1].id]);
+    }
 
 
-    function buildStepButtons(stepIndex) {
+    /* =====================================================
+       LAYOUTS
+       Coordinates are in each artwork's own pixels.
+       "feet" positions: Meli's feet are what is tested
+       against the walkable polygon and the blockers.
+       poly   = walkable floor (clockwise)
+       blocks = furniture inside the floor Meli must not cross
+    ===================================================== */
 
-      const wrap = document.createElement("div");
+    var LAYOUTS = {
+
+      desktop: {
+        src: "assets/bakery-explore-desktop.jpg",
+        w: 1672, h: 941,
+        meliScale: 0.65,
+        speed: 225,
+        start: [836, 850],
+        door: [836, 770],
+        zones: {
+          "manchas-escondidas": [520, 666],
+          "kitchen":            [819, 370],
+          "labels":             [1078, 378],
+          "decorar":            [845, 623],
+          "acomodar":           [514, 467],
+          "delivery":           [1126, 638]
+        },
+        exit: [835, 900],
+        zoneRx: 54, zoneRy: 40,
+        poly: [
+          [660, 380], [745, 380], [745, 340], [925, 340], [925, 372],
+          [1000, 372], [1000, 365], [1190, 365], [1190, 418], [1095, 418],
+          [1095, 578], [1470, 578], [1545, 712], [900, 712], [900, 925],
+          [785, 925], [785, 712], [470, 712], [470, 632], [565, 632],
+          [565, 493], [440, 493], [440, 452], [660, 452]
+        ],
+        blocks: [
+          { t: "ellipse", c: [848, 540], r: [82, 62] },
+          { t: "rect", r: [662, 648, 702, 714] },
+          { t: "rect", r: [972, 648, 1012, 714] },
+          { t: "rect", r: [1160, 560, 1360, 694] },
+          { t: "rect", r: [1285, 648, 1356, 724] },
+          { t: "rect", r: [1398, 580, 1512, 724] }
+        ]
+      },
+
+      mobile: {
+        src: "assets/bakery-explore-mobile.jpg",
+        w: 941, h: 1672,
+        meliScale: 0.66,
+        speed: 270,
+        start: [470, 1440],
+        door: [470, 1330],
+        zones: {
+          "manchas-escondidas": [307, 1118],
+          "kitchen":            [485, 541],
+          "labels":             [604, 675],
+          "decorar":            [472, 924],
+          "acomodar":           [271, 793],
+          "delivery":           [620, 1106]
+        },
+        exit: [467, 1550],
+        zoneRx: 54, zoneRy: 42,
+        poly: [
+          [400, 525], [565, 525], [565, 552], [660, 552], [660, 452],
+          [890, 452], [890, 772], [650, 772], [650, 1000], [890, 1000],
+          [890, 1232], [525, 1232], [525, 1595], [415, 1595], [415, 1232],
+          [296, 1232], [296, 1010], [290, 1010], [290, 832], [200, 832],
+          [200, 785], [380, 785], [380, 556], [400, 556]
+        ],
+        blocks: [
+          { t: "ellipse", c: [472, 862], r: [80, 44] },
+          { t: "rect", r: [640, 585, 850, 712] },
+          { t: "rect", r: [836, 400, 900, 770] },
+          { t: "rect", r: [726, 686, 784, 754] },
+          { t: "rect", r: [812, 990, 910, 1030] },
+          { t: "rect", r: [640, 1010, 818, 1172] },
+          { t: "rect", r: [752, 1146, 810, 1224] },
+          { t: "rect", r: [836, 1056, 932, 1216] },
+          { t: "rect", r: [296, 1160, 360, 1240] },
+          { t: "rect", r: [580, 1160, 626, 1240] }
+        ]
+      }
+
+    };
+
+
+    /* =====================================================
+       MELI SPRITES (same files the map uses, ../ relative)
+       Only walking frames. Stopped = static frame facing the
+       last direction. No wave / breathe idle in here.
+    ===================================================== */
+
+    var SPR_W = 148, SPR_H = 162;
+    var FEET_X = 74, FEET_Y = 148;     /* feet anchor inside a frame */
+    var ANIM_FPS = 9;
+
+    var SPRITE_FILES = {
+      stand_down:  "../Idle_01.png",
+      down:  ["../down_01.png", "../down_02.png", "../down_03.png", "../down_04.png"],
+      up:    ["../up_01.png", "../up_02.png", "../up_03.png", "../up_04.png"],
+      right: ["../right_01.png", "../right_02.png", "../right_03.png", "../right_04.png"]
+    };
+
+    var sprites = { down: [], up: [], right: [], stand_down: null };
+
+    function loadImage(src) {
+      return new Promise(function (resolve) {
+        var img = new Image();
+        img.onload = function () { resolve(img); };
+        img.onerror = function () { resolve(null); };
+        img.src = src;
+      });
+    }
+
+
+    /* =====================================================
+       DOM
+    ===================================================== */
+
+    var elBg = document.getElementById("stage-bg");
+    var elCamera = document.getElementById("camera");
+    var elScene = document.getElementById("scene");
+    var elSceneImg = document.getElementById("scene-img");
+    var elMarkers = document.getElementById("markers");
+    var elMeli = document.getElementById("meli");
+    var ctxMeli = elMeli.getContext("2d");
+    var elBubble = document.getElementById("bubble");
+    var elBubbleName = document.getElementById("bubble-name");
+    var elBubbleAction = document.getElementById("bubble-action");
+    var elToast = document.getElementById("toast");
+    var elMobileEnter = document.getElementById("mobile-enter");
+    var elTransition = document.getElementById("screen-transition");
+    var elIntro = document.getElementById("intro");
+    var elDebug = document.getElementById("debug-layer");
+
+    var reducedMotion = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+
+    /* =====================================================
+       STATE
+    ===================================================== */
+
+    var layoutName = null;
+    var layout = null;
+    var view = { k: 1, offX: 0, offY: 0, vw: 0, vh: 0 };
+
+    var meli = { x: 0, y: 0, facing: "up", moving: false, frame: 0, animT: 0 };
+    var inputLocked = true;          /* locked until intro/zoom are done */
+    var leaving = false;
+    var activeZone = null;           /* { key, level|null, kind } */
+    var zoneEls = {};
+
+    var keys = {};
+    var touch = { up: false, down: false, left: false, right: false };
+
+
+    /* =====================================================
+       GEOMETRY
+    ===================================================== */
+
+    function inPoly(x, y, poly) {
+      var inside = false;
+      for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+        if (((yi > y) !== (yj > y)) &&
+            (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+          inside = !inside;
+        }
+      }
+      return inside;
+    }
+
+    function blocked(x, y, blocks) {
+      for (var i = 0; i < blocks.length; i++) {
+        var b = blocks[i];
+        if (b.t === "rect") {
+          if (x >= b.r[0] && x <= b.r[2] && y >= b.r[1] && y <= b.r[3]) { return true; }
+        } else {
+          var dx = (x - b.c[0]) / b.r[0], dy = (y - b.c[1]) / b.r[1];
+          if (dx * dx + dy * dy < 1) { return true; }
+        }
+      }
+      return false;
+    }
+
+    function pointOk(x, y) {
+      return inPoly(x, y, layout.poly) && !blocked(x, y, layout.blocks);
+    }
+
+    /* Meli's feet are about 18px wide: test centre + both sides */
+    function walkable(x, y) {
+      return pointOk(x, y) && pointOk(x - 9, y) && pointOk(x + 9, y);
+    }
+
+    function nearestWalkable(x, y) {
+      if (walkable(x, y)) { return [x, y]; }
+      for (var r = 6; r < 700; r += 6) {
+        for (var a = 0; a < 360; a += 15) {
+          var px = x + Math.cos(a * Math.PI / 180) * r;
+          var py = y + Math.sin(a * Math.PI / 180) * r;
+          if (walkable(px, py)) { return [px, py]; }
+        }
+      }
+      return layout.start.slice();
+    }
+
+
+    /* =====================================================
+       LAYOUT / RESIZE
+    ===================================================== */
+
+    function isTouchUI() {
+      return window.innerWidth <= 768 ||
+        (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+    }
+
+    function pickLayoutName() {
+      return window.innerHeight > window.innerWidth ? "mobile" : "desktop";
+    }
+
+    function buildMarkers() {
+      elMarkers.innerHTML = "";
+      zoneEls = {};
+      if (!BAKERY_DRAW_MARKERS) { return; }
+
+      function add(key, pos, pending) {
+        var d = document.createElement("div");
+        d.className = "zone-marker" + (pending ? " is-pending" : "");
+        d.style.left = (pos[0] - 26) + "px";
+        d.style.top = (pos[1] - 11.5) + "px";
+        elMarkers.appendChild(d);
+        zoneEls[key] = d;
+      }
+
+      LEVELS.forEach(function (lv) { add(lv.id, layout.zones[lv.id], lv.status === "pending"); });
+      add("exit", layout.exit, false);
+    }
+
+    function buildDebug() {
+      if (!DEBUG) { elDebug.hidden = true; return; }
+      elDebug.hidden = false;
+      elDebug.setAttribute("viewBox", "0 0 " + layout.w + " " + layout.h);
+      var s = "";
+      s += '<polygon points="' + layout.poly.map(function (p) { return p.join(","); }).join(" ") +
+        '" fill="rgba(0,200,255,0.18)" stroke="#00b7ff" stroke-width="3"/>';
+      layout.blocks.forEach(function (b) {
+        if (b.t === "rect") {
+          s += '<rect x="' + b.r[0] + '" y="' + b.r[1] + '" width="' + (b.r[2] - b.r[0]) +
+            '" height="' + (b.r[3] - b.r[1]) + '" fill="rgba(255,0,0,0.30)" stroke="red" stroke-width="2"/>';
+        } else {
+          s += '<ellipse cx="' + b.c[0] + '" cy="' + b.c[1] + '" rx="' + b.r[0] + '" ry="' + b.r[1] +
+            '" fill="rgba(255,0,0,0.30)" stroke="red" stroke-width="2"/>';
+        }
+      });
+      Object.keys(layout.zones).concat(["exit"]).forEach(function (k) {
+        var p = k === "exit" ? layout.exit : layout.zones[k];
+        s += '<ellipse cx="' + p[0] + '" cy="' + p[1] + '" rx="' + layout.zoneRx + '" ry="' + layout.zoneRy +
+          '" fill="none" stroke="#ffee00" stroke-width="2" stroke-dasharray="6 4"/>';
+      });
+      elDebug.innerHTML = s;
+    }
+
+    function applyLayout(name, keepPosition) {
+      var prev = layout;
+      var nx = null, ny = null;
+      if (prev && keepPosition) { nx = meli.x / prev.w; ny = meli.y / prev.h; }
+
+      layoutName = name;
+      layout = LAYOUTS[name];
+
+      elSceneImg.src = layout.src;
+      elScene.style.width = layout.w + "px";
+      elScene.style.height = layout.h + "px";
+      /* desktop: blurred copy of the art fills the side bars;
+         mobile: plain grass (a blurred road under the D-pad looks muddy) */
+      elBg.style.backgroundImage = name === "desktop" ? 'url("' + layout.src + '")' : "none";
+
+      buildMarkers();
+      buildDebug();
+
+      if (nx !== null) {
+        var p = nearestWalkable(nx * layout.w, ny * layout.h);
+        meli.x = p[0]; meli.y = p[1];
+      }
+    }
+
+    function fitView() {
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var k = Math.min(vw / layout.w, vh / layout.h);
+      var sw = layout.w * k, sh = layout.h * k;
+      var offX = (vw - sw) / 2;
+      var offY = (vh - sh) / 2;
+
+      /* Tall phones: keep the scene on top so the D-pad lives in the
+         free strip underneath instead of covering the floor. */
+      if (layoutName === "mobile" && isTouchUI()) {
+        var free = vh - sh;
+        if (free >= 130) { offY = 0; }
+      }
+
+      view = { k: k, offX: offX, offY: offY, vw: vw, vh: vh };
+      elScene.style.transform =
+        "translate(" + offX + "px," + offY + "px) scale(" + k + ")";
+
+      document.body.classList.toggle("touch-ui", isTouchUI());
+      positionMeli();
+      updateBubblePosition();
+    }
+
+    function onResize() {
+      var wanted = pickLayoutName();
+      if (wanted !== layoutName) { applyLayout(wanted, true); }
+      fitView();
+    }
+
+
+    /* =====================================================
+       MELI DRAW
+    ===================================================== */
+
+    function currentSprite() {
+      if (!meli.moving) {
+        if (meli.facing === "down") { return sprites.stand_down || sprites.down[0]; }
+        var arr0 = meli.facing === "up" ? sprites.up : sprites.right;
+        return arr0[0];
+      }
+      var arr = meli.facing === "up" ? sprites.up :
+                meli.facing === "down" ? sprites.down : sprites.right;
+      return arr[meli.frame % arr.length];
+    }
+
+    var lastDrawn = null, lastFlip = null;
+
+    function drawMeli() {
+      var img = currentSprite();
+      var flip = meli.facing === "left";
+      if (!img || (img === lastDrawn && flip === lastFlip)) { return; }
+      lastDrawn = img; lastFlip = flip;
+      ctxMeli.clearRect(0, 0, SPR_W, SPR_H);
+      ctxMeli.save();
+      if (flip) {
+        /* mirror around the feet anchor so she does not jump sideways */
+        ctxMeli.translate(FEET_X * 2, 0);
+        ctxMeli.scale(-1, 1);
+      }
+      ctxMeli.drawImage(img, 0, 0);
+      ctxMeli.restore();
+    }
+
+    function positionMeli() {
+      var s = layout.meliScale;
+      elMeli.style.transform =
+        "translate(" + (meli.x - FEET_X * s) + "px," + (meli.y - FEET_Y * s) + "px) scale(" + s + ")";
+    }
+
+
+    /* =====================================================
+       ZONES / PROXIMITY
+    ===================================================== */
+
+    function zoneDistance(pos) {
+      var dx = (meli.x - pos[0]) / layout.zoneRx;
+      var dy = (meli.y - pos[1]) / layout.zoneRy;
+      return dx * dx + dy * dy;
+    }
+
+    function findActiveZone() {
+      var best = null, bestD = 1;
+      LEVELS.forEach(function (lv, i) {
+        var d = zoneDistance(layout.zones[lv.id]);
+        if (d < bestD) { bestD = d; best = { key: lv.id, kind: "level", level: lv, index: i }; }
+      });
+      var de = zoneDistance(layout.exit);
+      if (de < bestD) { best = { key: "exit", kind: "exit", level: null }; }
+      return best;
+    }
+
+    function setActiveZone(z) {
+      var oldKey = activeZone ? activeZone.key : null;
+      var newKey = z ? z.key : null;
+      if (oldKey === newKey) { return; }
+
+      if (oldKey && zoneEls[oldKey]) { zoneEls[oldKey].classList.remove("is-active"); }
+      activeZone = z;
+      if (newKey && zoneEls[newKey]) { zoneEls[newKey].classList.add("is-active"); }
+
+      document.body.classList.toggle("zone-near", Boolean(z));
+
+      if (!z) {
+        elBubble.classList.remove("is-visible");
+        document.body.classList.remove("zone-pending");
+        return;
+      }
+
+      if (z.kind === "exit") {
+        elBubbleName.textContent = "Salir al mapa";
+        elBubbleAction.innerHTML = 'Presiona <span class="key">E</span> para salir';
+        elMobileEnter.textContent = "Salir";
+      } else {
+        elBubbleName.textContent = z.level.name;
+        elBubbleAction.innerHTML = 'Presiona <span class="key">E</span> para entrar';
+        elMobileEnter.textContent = "Entrar";
+      }
+      var isPending = z.kind === "level" && z.level.status !== "ready";
+      elBubble.classList.toggle("is-pending", isPending);
+      document.body.classList.toggle("zone-pending", isPending);
+      elBubble.classList.add("is-visible");
+      updateBubblePosition();
+    }
+
+    function updateBubblePosition() {
+      if (!activeZone) { return; }
+      var s = layout.meliScale;
+      var headY = view.offY + (meli.y - 150 * s) * view.k;      /* top of her head */
+      var x = view.offX + meli.x * view.k;
+      var bw = elBubble.offsetWidth || 160;
+      var bh = elBubble.offsetHeight || 50;
+      var left = Math.max(bw / 2 + 8, Math.min(view.vw - bw / 2 - 8, x));
+      var top = Math.max(76, headY - 12);
+      elBubble.style.left = left + "px";
+      elBubble.style.top = top + "px";
+      elBubble.style.transform = "translate(-50%, -100%)";
+      if (top - bh < 0) { elBubble.style.top = (bh + 8) + "px"; }
+    }
+
+    var toastTimer = null;
+    function showToast(text) {
+      elToast.textContent = text;
+      elToast.classList.add("is-visible");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { elToast.classList.remove("is-visible"); }, 2600);
+    }
+
+
+    /* =====================================================
+       NAVIGATION
+    ===================================================== */
+
+    function navigateWithTransition(url) {
+      if (leaving) { return; }
+      leaving = true;
+      inputLocked = true;
+      clearKeys();
+      stopMusic();          /* never overlaps the next page's own audio */
+      elTransition.classList.remove("is-clear");
+      setTimeout(function () { window.location.href = url; }, reducedMotion ? 120 : 320);
+    }
+
+    function enterActiveZone() {
+      if (inputLocked || leaving || !activeZone) { return; }
+
+      if (activeZone.kind === "exit") { exitBakery(); return; }
+
+      var lv = activeZone.level;
+      if (lv.status !== "ready" || !lv.href) {
+        showToast("Próximamente");
+        return;
+      }
+      if (!isLevelUnlocked(activeZone.index)) {
+        showToast("Completa primero el nivel anterior.");
+        return;
+      }
+
+      /* so we come back right next to this zone */
+      lsSet(KEY_RETURN, lv.id);
+      navigateWithTransition(lv.href);
+    }
+
+    function exitBakery() {
+      if (leaving) { return; }
+      lsDel(KEY_RETURN);
+      navigateWithTransition("../index.html");
+    }
+
+    document.getElementById("exit-button").addEventListener("click", exitBakery);
+    elMobileEnter.addEventListener("click", enterActiveZone);
+
+
+    /* =====================================================
+       INPUT: keyboard
+    ===================================================== */
+
+    var MOVE_KEYS = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"];
+
+    function clearKeys() {
+      keys = {};
+      touch.up = touch.down = touch.left = touch.right = false;
+      var pressed = document.querySelectorAll("#dpad .btn.pressed");
+      for (var i = 0; i < pressed.length; i++) { pressed[i].classList.remove("pressed"); }
+    }
+
+    window.addEventListener("keydown", function (e) {
+      var key = e.key.toLowerCase();
+      if (MOVE_KEYS.indexOf(key) !== -1 || key === "e") { e.preventDefault(); }
+      if (inputLocked) { return; }
+
+      if (MOVE_KEYS.indexOf(key) !== -1) { keys[key] = true; }
+      if (key === "e" && !e.repeat) { enterActiveZone(); }
+    });
+
+    window.addEventListener("keyup", function (e) {
+      keys[e.key.toLowerCase()] = false;
+    });
+
+    window.addEventListener("blur", clearKeys);
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { clearKeys(); }
+    });
+
+
+    /* =====================================================
+       INPUT: touch D-pad (pointer events, multi-touch safe)
+    ===================================================== */
+
+    (function setupDpad() {
+      var map = { "btn-up": "up", "btn-down": "down", "btn-left": "left", "btn-right": "right" };
+
+      Object.keys(map).forEach(function (id) {
+        var btn = document.getElementById(id);
+        var dir = map[id];
+
+        function press(e) {
+          e.preventDefault();
+          if (inputLocked) { return; }
+          touch[dir] = true;
+          btn.classList.add("pressed");
+          try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+        }
+
+        function release(e) {
+          if (e) { e.preventDefault(); }
+          touch[dir] = false;
+          btn.classList.remove("pressed");
+        }
+
+        btn.addEventListener("pointerdown", press);
+        btn.addEventListener("pointerup", release);
+        btn.addEventListener("pointercancel", release);
+        btn.addEventListener("lostpointercapture", release);
+        btn.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+      });
+    })();
+
+
+    /* =====================================================
+       MOVEMENT LOOP
+    ===================================================== */
+
+    var lastTs = 0;
+
+    function tick(ts) {
+      requestAnimationFrame(tick);
+
+      var dt = Math.min(50, ts - (lastTs || ts));
+      lastTs = ts;
+      if (!layout) { return; }
+
+      var dx = 0, dy = 0;
+
+      if (!inputLocked && !leaving) {
+        if (keys["w"] || keys["arrowup"] || touch.up) { dy -= 1; }
+        if (keys["s"] || keys["arrowdown"] || touch.down) { dy += 1; }
+        if (keys["a"] || keys["arrowleft"] || touch.left) { dx -= 1; }
+        if (keys["d"] || keys["arrowright"] || touch.right) { dx += 1; }
+      }
+
+      if (dx !== 0 && dy !== 0) { dx /= Math.SQRT2; dy /= Math.SQRT2; }
+
+      if (dx !== 0 || dy !== 0) {
+        var step = layout.speed * dt / 1000;
+        var nx = meli.x + dx * step;
+        if (walkable(nx, meli.y)) { meli.x = nx; }
+        var ny = meli.y + dy * step;
+        if (walkable(meli.x, ny)) { meli.y = ny; }
+
+        if (Math.abs(dx) > Math.abs(dy)) { meli.facing = dx > 0 ? "right" : "left"; }
+        else { meli.facing = dy > 0 ? "down" : "up"; }
+
+        if (!meli.moving) { meli.moving = true; meli.frame = 0; meli.animT = 0; }
+        meli.animT += dt;
+        var interval = 1000 / ANIM_FPS;
+        while (meli.animT >= interval) { meli.animT -= interval; meli.frame = (meli.frame + 1) % 4; }
+      } else if (meli.moving) {
+        meli.moving = false;
+        meli.frame = 0;
+        meli.animT = 0;
+      }
+
+      drawMeli();
+      positionMeli();
+      setActiveZone(inputLocked ? null : findActiveZone());
+      if (activeZone) { updateBubblePosition(); }
+    }
+
+
+    /* =====================================================
+       WELCOME INTRO (first visit only)
+    ===================================================== */
+
+    function playerName() {
+      var n = (lsGet(KEY_NAME) || "").trim();
+      return n;
+    }
+
+    function buildSteps() {
+      var name = playerName();
+      return [
+        {
+          indicator: "1 de 2",
+          title: name
+            ? "¡Hola, " + name + "! Te presento la pastelería."
+            : "¡Hola! Te presento la pastelería.",
+          paragraphs: [
+            "Pero antes de la <strong>gran inauguración</strong>, todavía hay mucho por hacer.",
+            "Juntos tendremos que preparar recetas, organizar pedidos y enfrentar desafíos inesperados en el camino."
+          ]
+        },
+        {
+          indicator: "2 de 2",
+          title: "¡UN PASO A LA VEZ!",
+          paragraphs: [
+            "Recuerda: <strong>no todo tiene que salir perfecto ni necesitamos tener todas las respuestas para seguir avanzando.</strong>",
+            "<strong>¡Hagamos realidad este sueño!</strong>"
+          ]
+        }
+      ];
+    }
+
+    var steps = null;
+    var stepIndex = 0;
+
+    function buildStepButtons(i) {
+      var wrap = document.createElement("div");
       wrap.className = "step-buttons";
 
-      if (stepIndex === 1) {
-
-        const back = document.createElement("button");
+      if (i === 1) {
+        var back = document.createElement("button");
         back.type = "button";
         back.className = "back-step-button";
         back.textContent = "← Atrás";
         back.onclick = function () { goToStep(0); };
         wrap.appendChild(back);
 
-        const start = document.createElement("button");
+        var start = document.createElement("button");
         start.type = "button";
         start.className = "play-button";
         start.textContent = "¡Comencemos!";
-        start.onclick = goToLevels;
+        start.onclick = finishIntro;
         wrap.appendChild(start);
-
       } else {
-
-        const next = document.createElement("button");
+        var next = document.createElement("button");
         next.type = "button";
         next.className = "play-button";
         next.textContent = "Siguiente →";
         next.onclick = function () { goToStep(1); };
         wrap.appendChild(next);
-
       }
-
       return wrap;
-
     }
 
-
-    function renderStep(stepIndex) {
-
-      const container = document.getElementById("stepContent");
-      const step = STEPS[stepIndex];
-
+    function renderStep(i) {
+      var container = document.getElementById("stepContent");
+      var step = steps[i];
       container.innerHTML = "";
 
-      const indicator = document.createElement("span");
+      var indicator = document.createElement("span");
       indicator.className = "step-indicator";
       indicator.textContent = step.indicator;
       container.appendChild(indicator);
 
-      const h1 = document.createElement("h1");
-      h1.textContent = step.title;
+      var h1 = document.createElement("h1");
+      h1.textContent = step.title;            /* textContent: name can never inject HTML */
       container.appendChild(h1);
 
       step.paragraphs.forEach(function (html) {
-        const p = document.createElement("p");
+        var p = document.createElement("p");
         p.innerHTML = html;
         container.appendChild(p);
       });
 
-      container.appendChild(buildStepButtons(stepIndex));
+      container.appendChild(buildStepButtons(i));
 
+      var skip = document.createElement("button");
+      skip.type = "button";
+      skip.className = "skip-button";
+      skip.textContent = "Saltar introducción";
+      skip.onclick = finishIntro;
+      container.appendChild(skip);
+    }
+
+    function goToStep(i) {
+      if (i === stepIndex) { return; }
+      var container = document.getElementById("stepContent");
+      container.classList.add("step-transitioning");
+      setTimeout(function () {
+        stepIndex = i;
+        renderStep(i);
+        void container.offsetWidth;
+        container.classList.remove("step-transitioning");
+      }, reducedMotion ? 10 : 220);
+    }
+
+    function showIntro() {
+      steps = buildSteps();
+      stepIndex = 0;
+      renderStep(0);
+      document.body.classList.add("intro-open");
+      elIntro.classList.add("is-shown");
+      void elIntro.offsetWidth;
+      elIntro.classList.add("is-visible");
+    }
+
+    function finishIntro() {
+      lsSet(KEY_INTRO_SEEN, "true");        /* finished OR skipped */
+      elIntro.classList.remove("is-visible");
+      setTimeout(function () {
+        elIntro.classList.remove("is-shown");
+        document.body.classList.remove("intro-open");
+        inputLocked = false;
+      }, reducedMotion ? 20 : 300);
     }
 
 
-    function goToStep(stepIndex) {
+    /* =====================================================
+       AMBIENT MUSIC
+       One single <audio> element (so two copies can never play
+       at once), loop, same volume as the map's music and the
+       same mute switch ("bocAudioMuted").
+       Autoplay: we try on load; if the browser refuses, the
+       first tap / click / key starts it and the listeners are
+       removed as soon as it is really playing.
+    ===================================================== */
 
-      if (stepIndex === currentStepIndex) {
+    var KEY_MUTED = "bocAudioMuted";
+    var MUSIC_VOLUME = 0.38;
+
+    var music = document.getElementById("bakery-music");
+    var elAudioBtn = document.getElementById("audio-settings-button");
+    var elAudioModal = document.getElementById("audio-settings-modal");
+    var elAudioToggle = document.getElementById("audio-toggle-button");
+
+    var audioMuted = lsGet(KEY_MUTED) === "true";
+    var musicStopped = false;                 /* true once we are leaving the page */
+    var fadeTimer = null;
+
+    music.volume = MUSIC_VOLUME;
+
+    function fadeMusicIn() {
+      clearInterval(fadeTimer);
+      if (reducedMotion) { music.volume = MUSIC_VOLUME; return; }
+      music.volume = 0;
+      var t0 = performance.now();
+      fadeTimer = setInterval(function () {
+        var k = Math.min(1, (performance.now() - t0) / 900);
+        music.volume = MUSIC_VOLUME * k;
+        if (k >= 1) { clearInterval(fadeTimer); }
+      }, 50);
+    }
+
+    function startMusic() {
+      if (audioMuted || musicStopped || !music.paused) { return; }
+      var wasAtStart = music.currentTime === 0;
+      var pr = music.play();
+      if (pr && typeof pr.catch === "function") { pr.catch(function () {}); }
+      if (wasAtStart) { fadeMusicIn(); }
+    }
+
+    function stopMusic() {
+      musicStopped = true;
+      clearInterval(fadeTimer);
+      removeUnlockListeners();
+      music.pause();
+    }
+
+    function updateAudioControls() {
+      elAudioToggle.textContent = audioMuted ? "OFF" : "ON";
+      elAudioToggle.classList.toggle("muted", audioMuted);
+      elAudioToggle.setAttribute("aria-pressed", String(!audioMuted));
+      music.muted = audioMuted;
+    }
+
+    function setAudioMuted(value) {
+      audioMuted = value;
+      lsSet(KEY_MUTED, String(audioMuted));
+      updateAudioControls();
+      if (audioMuted) { music.pause(); }
+      else { clearInterval(fadeTimer); music.volume = MUSIC_VOLUME; startMusic(); }
+    }
+
+    var UNLOCK_EVENTS = ["pointerdown", "touchend", "click", "keydown"];
+
+    function onUnlock() { startMusic(); }
+
+    function addUnlockListeners() {
+      UNLOCK_EVENTS.forEach(function (n) { document.addEventListener(n, onUnlock, true); });
+    }
+
+    function removeUnlockListeners() {
+      UNLOCK_EVENTS.forEach(function (n) { document.removeEventListener(n, onUnlock, true); });
+    }
+
+    addUnlockListeners();
+    music.addEventListener("playing", removeUnlockListeners);
+
+    elAudioBtn.addEventListener("click", function () { elAudioModal.classList.add("visible"); });
+    document.getElementById("audio-settings-close").addEventListener("click", function () {
+      elAudioModal.classList.remove("visible");
+    });
+    elAudioModal.addEventListener("click", function (e) {
+      if (e.target === elAudioModal) { elAudioModal.classList.remove("visible"); }
+    });
+    elAudioToggle.addEventListener("click", function () { setAudioMuted(!audioMuted); });
+
+    /* a hidden tab should not keep playing; it resumes when it is back */
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { music.pause(); }
+      else { startMusic(); }
+    });
+
+    window.addEventListener("pagehide", function () { music.pause(); });
+
+    updateAudioControls();
+
+
+    /* =====================================================
+       START UP
+    ===================================================== */
+
+    function placeAtReturnZone() {
+      var id = lsGet(KEY_RETURN);
+      lsDel(KEY_RETURN);                     /* only applies once */
+      if (!id || !layout.zones[id]) { return false; }
+
+      var z = layout.zones[id];
+      var tries = [[0, 52], [0, -52], [-74, 0], [74, 0], [0, 70], [0, -70]];
+      for (var i = 0; i < tries.length; i++) {
+        var px = z[0] + tries[i][0], py = z[1] + tries[i][1];
+        if (walkable(px, py)) { meli.x = px; meli.y = py; return true; }
+      }
+      var p = nearestWalkable(z[0], z[1]);
+      meli.x = p[0]; meli.y = p[1];
+      return true;
+    }
+
+    function revealScene(firstVisit) {
+      /* zoom pivots on the doorway: the camera "walks in" */
+      var ox = view.offX + layout.door[0] * view.k;
+      var oy = view.offY + layout.door[1] * view.k;
+      elCamera.style.transformOrigin = ox + "px " + oy + "px";
+
+      elTransition.classList.add("is-clear");     /* orange fades out */
+
+      if (!firstVisit) {
+        elCamera.classList.remove("zoom-start");
+        inputLocked = false;
         return;
       }
 
-      const container = document.getElementById("stepContent");
+      elCamera.classList.remove("zoom-start");
+      elCamera.classList.add("zoom-run");
 
-      container.classList.add("step-transitioning");
-
-      window.setTimeout(function () {
-        currentStepIndex = stepIndex;
-        renderStep(currentStepIndex);
-        // forzar reflow antes de quitar la clase, para que la
-        // transición de entrada se reproduzca
-        void container.offsetWidth;
-        container.classList.remove("step-transitioning");
-      }, 220);
-
+      var done = false;
+      function after() {
+        if (done) { return; }
+        done = true;
+        elCamera.classList.remove("zoom-run");
+        elCamera.style.transformOrigin = "";
+        showIntro();
+      }
+      elCamera.addEventListener("animationend", after, { once: true });
+      setTimeout(after, reducedMotion ? 80 : 1500);          /* safety net */
     }
 
+    function init() {
+      var firstVisit = lsGet(KEY_INTRO_SEEN) !== "true";
 
-    renderStep(currentStepIndex);
+      applyLayout(pickLayoutName(), false);
+      fitView();
 
+      var p = nearestWalkable(layout.start[0], layout.start[1]);
+      meli.x = p[0]; meli.y = p[1];
+      meli.facing = "up";
 
-    /* =====================================================
-       COMENZAR → BAKERY LEVELS
-       (comportamiento sin cambios: siempre navega a
-       levels.html; no hay lógica de progreso/almacenamiento
-       que condicione cuándo se muestra esta bienvenida)
-    ===================================================== */
+      if (!firstVisit) { placeAtReturnZone(); }
+      else { lsDel(KEY_RETURN); }
 
-    function goToLevels() {
+      drawMeli();
+      positionMeli();
 
-      window.location.href =
-        "levels.html";
+      window.addEventListener("resize", onResize);
+      window.addEventListener("orientationchange", function () { setTimeout(onResize, 120); });
 
+      /* wait for artwork + sprites before showing anything */
+      var all = [loadImage(layout.src)];
+      all.push(loadImage(SPRITE_FILES.stand_down).then(function (i) { sprites.stand_down = i; }));
+      ["down", "up", "right"].forEach(function (d) {
+        SPRITE_FILES[d].forEach(function (src, idx) {
+          all.push(loadImage(src).then(function (i) { sprites[d][idx] = i; }));
+        });
+      });
+
+      var timeout = new Promise(function (r) { setTimeout(r, 6000); });
+      Promise.race([Promise.all(all), timeout]).then(function () {
+        lastDrawn = null;
+        drawMeli();
+        fitView();
+        /* one frame so the transform-origin is applied before animating */
+        requestAnimationFrame(function () { revealScene(firstVisit); });
+      });
+
+      requestAnimationFrame(tick);
+
+      startMusic();
+
+      if (DEBUG) {
+        window.__bakery = {
+          meli: meli,
+          get layout() { return layoutName; },
+          get view() { return view; },
+          get zone() { return activeZone && activeZone.key; },
+          get locked() { return inputLocked; },
+          walkable: walkable,
+          setPos: function (x, y) { meli.x = x; meli.y = y; }
+        };
+      }
     }
 
+    /* Back/forward cache: the page can come back already "left" */
+    window.addEventListener("pageshow", function (e) {
+      if (e.persisted) {
+        leaving = false;
+        clearKeys();
+        elTransition.classList.add("is-clear");
+        if (!document.body.classList.contains("intro-open")) { inputLocked = false; }
+        placeAtReturnZone();
+        musicStopped = false;
+        addUnlockListeners();
+        startMusic();
+      }
+    });
 
-    /* =====================================================
-       SALIR → MAPA PRINCIPAL
-    ===================================================== */
+    init();
 
-    function exitBakery() {
-
-      window.location.href =
-        "../index.html";
-
-    }
-
+  })();
   </script>
-
 
 </body>
 

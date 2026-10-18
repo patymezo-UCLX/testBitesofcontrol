@@ -97,8 +97,8 @@ BakeryDelivery.exitControl = {
     window.dispatchEvent(new CustomEvent('bakerydelivery:exit'));
 
     // Integrated Bites of Control build: Bakery Delivery is Level 3
-    // inside the Bakery, so X always returns to the Bakery level selector.
-    // Relative to Bakery/Delivery/index.html, that's ../levels.html.
+    // inside the Bakery, so X always returns to the explorable Bakery interior.
+    // Relative to Bakery/Delivery/index.html, that's ../index.html.
     try {
       BakeryDelivery.audioSystem.stopAll();
       BakeryDelivery.timerSystem.reset();
@@ -111,7 +111,7 @@ BakeryDelivery.exitControl = {
       // Navigation must still work even if a gameplay subsystem is not active.
     }
 
-    window.location.href = '../levels.html';
+    window.location.href = '../index.html';
   },
 
   resetToIntro() {
